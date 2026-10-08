@@ -10,7 +10,7 @@ struct AppRootView: View {
             if let coordinator {
                 TabView {
                     NavigationStack {
-                        CaptionScreen(model: coordinator.caption, newSession: { await coordinator.newSession() })
+                        CaptionScreen(model: coordinator.caption, settings: coordinator.settings, newSession: { await coordinator.newSession() })
                             .toolbar {
                                 Button("Save Session") { coordinator.saveCurrent(ended: coordinator.caption.state == .ended) }
                             }
@@ -18,8 +18,11 @@ struct AppRootView: View {
                     .tabItem { Label("Captions", systemImage: "captions.bubble") }
                     NavigationStack { SessionHistoryView(coordinator: coordinator) }
                         .tabItem { Label("Sessions", systemImage: "clock") }
+                    NavigationStack { SettingsView(settings: coordinator.settings, coordinator: coordinator) }
+                        .tabItem { Label("Settings", systemImage: "gear") }
                 }
                 .modelContainer(coordinator.repository.container)
+                .preferredColorScheme(coordinator.settings.colorScheme)
                 .alert("Storage problem", isPresented: Binding(
                     get: { coordinator.storageMessage != nil },
                     set: { if !$0 { coordinator.storageMessage = nil } })) {

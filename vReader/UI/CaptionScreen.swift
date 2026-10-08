@@ -3,12 +3,11 @@ import UIKit
 
 struct CaptionScreen: View {
     @Bindable var model: CaptionViewModel
+    @Bindable var settings: AppSettings = AppSettings()
     var newSession: (() async -> Void)? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo: .title) private var scaledSize = 28
-    @State private var textSize = 28.0
     @State private var followLive = true
-    @State private var keepAwake = true
     @State private var confirmNewSession = false
 
     var body: some View {
@@ -54,7 +53,7 @@ struct CaptionScreen: View {
                         }
                         Color.clear.frame(height: 1).id("liveBottom")
                     }
-                    .font(.system(size: scaledSize * textSize / 28))
+                    .font(.system(size: scaledSize * settings.captionSize / 28))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical)
                 }
@@ -86,10 +85,10 @@ struct CaptionScreen: View {
             DisclosureGroup("Reading options") {
                 VStack(alignment: .leading) {
                     Text("Caption size")
-                    Slider(value: $textSize, in: 20...44, step: 2)
+                    Slider(value: $settings.captionSize, in: 20...44, step: 2)
                         .accessibilityLabel("Caption size")
                     Toggle("Follow live captions", isOn: $followLive)
-                    Toggle("Keep screen awake while listening", isOn: $keepAwake)
+                    Toggle("Keep screen awake while listening", isOn: $settings.keepAwake)
                 }
             }
             Text("On-device English captions. Accuracy varies with distance, noise and speech.")
@@ -107,7 +106,7 @@ struct CaptionScreen: View {
         }
         .task { await model.checkReadiness() }
         .onChange(of: model.state) { _, _ in applyWakePreference() }
-        .onChange(of: keepAwake) { _, _ in applyWakePreference() }
+        .onChange(of: settings.keepAwake) { _, _ in applyWakePreference() }
         .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
     }
 
@@ -115,7 +114,7 @@ struct CaptionScreen: View {
     private var readinessProblem: Bool { if case .problem = model.readiness { true } else { false } }
 
     private func applyWakePreference() {
-        UIApplication.shared.isIdleTimerDisabled = keepAwake && model.state == .listening
+        UIApplication.shared.isIdleTimerDisabled = settings.keepAwake && model.state == .listening
     }
 
     private func scrollToLive(_ proxy: ScrollViewProxy) {

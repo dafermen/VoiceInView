@@ -8,13 +8,18 @@ final class SessionCoordinator {
     let repository: TranscriptRepository
     private(set) var currentSession: ConferenceSession?
     var storageMessage: String?
-    var autoSave = true
+    let settings = AppSettings()
+    var autoSave: Bool { settings.autoSave }
     var sessionTitle = "Conference"
 
     init(repository: TranscriptRepository) {
         self.repository = repository
         caption.onWillStart = { [weak self] in
             guard let self, self.currentSession == nil, self.autoSave else { return }
+            let capacity = StorageReadiness.check(at: self.repository.storageURL)
+            if let bytes = capacity.availableBytes, bytes < StorageReadiness.minimumBytes {
+                throw StorageFailure.lowCapacity
+            }
             self.currentSession = try self.repository.create(title: self.sessionTitle)
         }
         caption.onFinalized = { [weak self] change in
@@ -30,7 +35,10 @@ final class SessionCoordinator {
             do { try self.repository.checkpoint(session, duration: duration, ended: false) }
             catch { self.storageMessage = "Could not save session time. Retry Save Session." }
         }
-        caption.onEnded = { [weak self] in self?.saveCurrent(ended: true) }
+        caption.onEnded = { [weak self] in
+            guard let self, self.autoSave else { return }
+            self.saveCurrent(ended: true)
+        }
     }
 
     func saveCurrent(ended: Bool = false) {
