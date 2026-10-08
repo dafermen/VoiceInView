@@ -10,7 +10,7 @@ struct PrivacyPolicyView: View {
                 Text("Downloading an English speech model uses Apple's model installation service and requires connectivity. Captioning with installed compatible assets is designed to work without Internet.")
                 Text("Export, Copy and Share are explicit actions. The destination you choose may sync or transmit the transcript according to its own privacy policy.")
                 Text("vReader includes no advertising, tracking, analytics or required account.")
-                Text("Privacy contact and public policy URL must be supplied before App Store distribution.")
+                Text("Last updated: October 7, 2026.")
                     .font(.footnote)
             }
             .frame(maxWidth: .infinity, alignment: .leading).padding()

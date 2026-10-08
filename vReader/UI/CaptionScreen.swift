@@ -100,6 +100,8 @@ struct CaptionScreen: View {
                     Toggle("Keep screen awake while listening", isOn: $settings.keepAwake)
                 }
             }
+            Text(settings.autoSave ? "Final captions save on this iPhone." : "Captions are unsaved until you tap Save Session.")
+                .font(.footnote)
             Text("On-device English captions. Accuracy varies with distance, noise and speech.")
                 .font(.footnote).foregroundStyle(.secondary)
         }
@@ -109,7 +111,7 @@ struct CaptionScreen: View {
             Button("New Session") { confirmNewSession = true }
                 .disabled(model.state.active || model.state.busy)
         }
-        .confirmationDialog("Start a new session? Save current captions first if auto-save is off.",
+        .confirmationDialog("Start a new session? Any captions that have not been saved will be cleared.",
                             isPresented: $confirmNewSession, titleVisibility: .visible) {
             Button("New Session", role: .destructive) { Task { if let newSession { await newSession() } else { await model.reset() } } }
         }
