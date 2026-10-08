@@ -2,7 +2,8 @@ import AVFoundation
 import Foundation
 
 @MainActor
-final class AudioCaptureService: AudioCapturing {
+final class AudioCaptureService: SpeechAudioCapturing {
+    var audioSink: (@Sendable (CapturedAudio) -> Void)?
     var onFailure: (@MainActor @Sendable (CaptureFailure) -> Void)?
     private let session = AVAudioSession.sharedInstance()
     private var engine: AVAudioEngine?
@@ -58,6 +59,7 @@ final class AudioCaptureService: AudioCapturing {
             // Explicit Sendable closure avoids inheriting MainActor on the audio thread.
             // installTap is supported by the selected iOS 26 SDK; its successor requires iOS 27.
             let deliver = stream.continuation
+            let sink = audioSink
             let tap: @Sendable (AVAudioPCMBuffer, AVAudioTime) -> Void = { buffer, _ in
                 guard let channels = buffer.floatChannelData, buffer.frameLength > 0 else { return }
                 let frames = Int(buffer.frameLength)
@@ -70,6 +72,16 @@ final class AudioCaptureService: AudioCapturing {
                 let rms = sqrt(energy / Float(frames))
                 let decibels = 20 * log10(max(rms, 0.000001))
                 deliver.yield(min(max((decibels + 60) / 60, 0), 1))
+                if let sink, let copy = AVAudioPCMBuffer(pcmFormat: buffer.format, frameCapacity: buffer.frameLength),
+                   let destination = copy.floatChannelData {
+                    copy.frameLength = buffer.frameLength
+                    for channel in 0..<Int(buffer.format.channelCount) {
+                        for frame in 0..<frames {
+                            destination[channel][frame * copy.stride] = channels[channel][frame * stride]
+                        }
+                    }
+                    sink(CapturedAudio(buffer: copy))
+                }
             }
             input.installTap(onBus: 0, bufferSize: 1024, format: format, block: tap)
             tapInstalled = true
