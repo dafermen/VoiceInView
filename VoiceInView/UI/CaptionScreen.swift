@@ -111,7 +111,7 @@ struct CaptionScreen: View {
                 .font(.footnote).foregroundStyle(.secondary)
         }
         .padding()
-        .navigationTitle("vReader")
+        .navigationTitle("VoiceInView")
         .toolbar {
             Button("New Session") { confirmNewSession = true }
                 .disabled(model.state.active || model.state.busy || model.preparationPending)

@@ -1,10 +1,10 @@
 import XCTest
-@testable import vReader
+@testable import VoiceInView
 
 @MainActor
 final class AppSettingsTests: XCTestCase {
     func testPreferencesPersistAndInvalidValuesUseSafeDefaults() {
-        let name = "vReaderTests.\(UUID().uuidString)"
+        let name = "VoiceInViewTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: name)!
         defer { defaults.removePersistentDomain(forName: name) }
         defaults.set(200, forKey: "captionSize")

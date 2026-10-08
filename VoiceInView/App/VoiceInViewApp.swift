@@ -2,7 +2,7 @@ import SwiftUI
 
 @main
 @MainActor
-struct vReaderApp: App {
+struct VoiceInViewApp: App {
     var body: some Scene {
         WindowGroup { AppRootView() }
     }

@@ -34,7 +34,7 @@ Generated logs and result bundles remain under build/ and are ignored by Git:
 - build/compatibility-tests-fixed.log and build/compatibility/Tests-fixed.xcresult: full suite passed after the fix.
 - build/compatibility-repository-tests.log and build/compatibility/Repository-tests.xcresult: three final persistence regressions passed without SQLite cleanup diagnostics.
 
-Run bash scripts/validate-macos.sh for Debug, unit/UI tests, Release and bundle checks. Set VREADER_SIMULATOR_ID to choose a particular installed compatible simulator. The focused bash scripts/validate-assembler.sh is still available.
+Run bash scripts/validate-macos.sh for Debug, unit/UI tests, Release and bundle checks. Set VOICEINVIEW_SIMULATOR_ID to choose a particular installed compatible simulator. The focused bash scripts/validate-assembler.sh is still available.
 
 ### Physical iPhone follow-up
 
@@ -117,3 +117,13 @@ The source is implementation-ready for this validation handoff; App Store readin
 - Configured automatic signing for team `7799N4RYUG`, app ID `com.dafermen.vReader`, and matching test target identifiers. Apple registration is pending.
 - Release arm64 device build passed with Xcode 15.2 and signing disabled after the configuration change. Bundle metadata verified: version 0.1.0, build 1, minimum iOS 17.0. Log: `build/testflight-preparation-build.log`.
 - Prepared branch `codex/testflight-preparation` for Xcode Cloud. Cloud onboarding, a build with an eligible Xcode 26+ SDK, TestFlight upload, and physical speech testing remain pending. This local build is not an uploaded or distribution-signed binary.
+
+## VoiceInView rename (2026-10-08)
+
+- Renamed the Xcode project, shared scheme, app/test targets and source folders to VoiceInView. Updated user-visible captions title, permission descriptions, privacy text, export fallback, metadata, scripts and documentation.
+- Kept `com.dafermen.vReader`, the existing test bundle identifiers and the internal `vReader/Sessions.store` location. The schema and model definitions were not changed. Migration from a previously installed development build has not been separately tested.
+- Debug simulator build passed. On iPhone SE (3rd generation), iOS 17.2: 40 unit tests and 3 UI tests passed with zero failures, including the new navigation title and transcript export fallback.
+- Release simulator build passed. Verified display name/executable `VoiceInView`, unchanged bundle identifier, iOS 17 minimum, microphone/speech purpose strings, compiled assets and privacy manifest.
+- Project references, shared-scheme targets, metadata field lengths, shell-script syntax and Git whitespace checks passed. The PowerShell validator was updated but not executed on this Mac.
+- Logs/result bundle: `build/rename-validation.log` and `build/validation-20261008-113618/Tests.xcresult`. These checks ran before moving the workspace folder from vReader to VoiceInView; log paths retain the former directory. Earlier validation artifacts belonged to the previous checkout and were deleted when the user replaced that checkout.
+- The GitHub repository is now `dafermen/VoiceInView`. App Store Connect name registration, Xcode Cloud onboarding/build and TestFlight upload remain pending.

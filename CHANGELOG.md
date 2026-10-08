@@ -3,6 +3,11 @@
 ## Unreleased — 0.1.0 development, through Phase 9
 iOS 17 compatibility builds with Xcode 15.2; physical speech and release verification remain pending. This is not a release-certified binary.
 
+### Changed
+- Renamed the app, Xcode project and scheme, source/test targets, exported filename fallback, permission text, documentation and repository to VoiceInView.
+- Adopted the subtitle "Live English Captions" and tagline "See what's being said."
+- Kept `com.dafermen.vReader` and the original internal session-storage directory for continuity. Validation/archive scripts also accept their previous environment-variable names.
+
 ### Added
 - iOS 17/Xcode 15.2 compatibility engine with required on-device recognition, explicit speech authorization, bounded buffering and 50-second request rotation. Modern iOS 26 engine retained for newer toolchains.
 - Native simulator coverage for compatibility recognition lifecycle and offline policy.

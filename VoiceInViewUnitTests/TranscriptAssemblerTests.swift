@@ -1,5 +1,5 @@
 import XCTest
-@testable import vReader
+@testable import VoiceInView
 
 final class TranscriptAssemblerTests: XCTestCase {
     func testRevisedFinalFromEarlierRunRetainsRunOrderAndIdentifier() {

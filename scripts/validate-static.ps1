@@ -1,15 +1,15 @@
 param([string]$ProjectRoot = (Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference = 'Stop'
 $projectRoot = [System.IO.Path]::GetFullPath($ProjectRoot)
-$projectSource = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'vReader.xcodeproj\project.pbxproj')
+$projectSource = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'VoiceInView.xcodeproj\project.pbxproj')
 $parserCode = @'
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-public sealed class VReaderProjectParser {
+public sealed class VoiceInViewProjectParser {
  private string[] tokens;
  private int position;
- public VReaderProjectParser(string source) {
+ public VoiceInViewProjectParser(string source) {
   var matches = Regex.Matches(source, @"//[^\r\n]*|/\*[\s\S]*?\*/|""(?:\\.|[^""\\])*""|[{}()=;,]|[^\s{}()=;,]+");
   var items = new List<string>();
   foreach (Match match in matches) {
@@ -58,7 +58,7 @@ public sealed class VReaderProjectParser {
 }
 '@
 Add-Type -TypeDefinition $parserCode
-$parsedProject = ([VReaderProjectParser]::new($projectSource)).Parse()
+$parsedProject = ([VoiceInViewProjectParser]::new($projectSource)).Parse()
 $projectObjects = $parsedProject['objects']
 if ($projectObjects.Count -lt 37) { throw 'Incomplete project object graph' }
 foreach ($reference in [regex]::Matches($projectSource, '[0-9A-F]{24}')) {
@@ -71,8 +71,8 @@ foreach ($targetId in $projectObject['targets']) {
  $configurations = $projectObjects[$target['buildConfigurationList']]['buildConfigurations']
  foreach ($configurationId in $configurations) {
   $settings = $projectObjects[$configurationId]['buildSettings']
-  if ($target['name'] -eq 'vReader' -and -not $settings.ContainsKey('INFOPLIST_KEY_NSMicrophoneUsageDescription')) { throw 'Missing microphone purpose' }
-  if ($target['name'] -eq 'vReader' -and -not $settings.ContainsKey('INFOPLIST_KEY_NSSpeechRecognitionUsageDescription')) { throw 'Missing speech recognition purpose' }
+  if ($target['name'] -eq 'VoiceInView' -and -not $settings.ContainsKey('INFOPLIST_KEY_NSMicrophoneUsageDescription')) { throw 'Missing microphone purpose' }
+  if ($target['name'] -eq 'VoiceInView' -and -not $settings.ContainsKey('INFOPLIST_KEY_NSSpeechRecognitionUsageDescription')) { throw 'Missing speech recognition purpose' }
  }
  foreach ($phaseId in $target['buildPhases']) {
   foreach ($buildId in $projectObjects[$phaseId]['files']) {
@@ -91,19 +91,19 @@ foreach ($group in $projectObjects.Values) {
   }
  }
 }
-[xml]$scheme = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'vReader.xcodeproj\xcshareddata\xcschemes\vReader.xcscheme')
+[xml]$scheme = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'VoiceInView.xcodeproj\xcshareddata\xcschemes\VoiceInView.xcscheme')
 if ($scheme.SelectNodes('//TestableReference').Count -ne 2) { throw 'Missing unit or UI test in scheme' }
 foreach ($reference in $scheme.SelectNodes('//BuildableReference')) {
  if (-not $projectObjects.ContainsKey($reference.BlueprintIdentifier)) { throw 'Scheme references unknown target' }
 }
-$unitSource = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'vReaderUnitTests\ListeningViewModelTests.swift')
+$unitSource = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'VoiceInViewUnitTests\ListeningViewModelTests.swift')
 $unitCount = [regex]::Matches($unitSource, 'func test\w+\(').Count
 if ($unitCount -ne 12) { throw 'Missing original microphone regressions' }
 $allUnitCount = 0
-foreach ($unitFile in Get-ChildItem -LiteralPath (Join-Path $projectRoot 'vReaderUnitTests') -Filter '*.swift') {
+foreach ($unitFile in Get-ChildItem -LiteralPath (Join-Path $projectRoot 'VoiceInViewUnitTests') -Filter '*.swift') {
  $allUnitCount += [regex]::Matches((Get-Content -Raw -LiteralPath $unitFile.FullName), 'func test\w+\(').Count
 }
-$uiSource = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'vReaderTests\HomeScreenTests.swift')
+$uiSource = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'VoiceInViewTests\HomeScreenTests.swift')
 if ([regex]::Matches($uiSource, 'func test\w+\(').Count -ne 3) { throw 'Expected three UI tests' }
 $authoredFiles = Get-ChildItem -LiteralPath $projectRoot -Recurse -File | Where-Object { $_.FullName -notmatch '[\\/](\.git|build|DerivedData)[\\/]' -and $_.Name -ne 'project-brief.txt' -and $_.Extension -ne '.png' }
 foreach ($file in $authoredFiles) {
@@ -118,21 +118,21 @@ foreach ($file in $authoredFiles) {
  }
 }
 
-$legacySource = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'vReader/Services/Speech/LegacySpeechBackend.swift')
+$legacySource = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'VoiceInView/Services/Speech/LegacySpeechBackend.swift')
 if (-not $legacySource.Contains('request.requiresOnDeviceRecognition = true') -or -not $legacySource.Contains('recognizer.supportsOnDeviceRecognition')) { throw 'Missing offline-only legacy speech policy' }
-[xml]$privacy = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'vReader\PrivacyInfo.xcprivacy')
-$privacySource = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'vReader\PrivacyInfo.xcprivacy')
+[xml]$privacy = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'VoiceInView\PrivacyInfo.xcprivacy')
+$privacySource = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'VoiceInView\PrivacyInfo.xcprivacy')
 foreach ($reason in @('CA92.1','E174.1')) { if (-not $privacySource.Contains($reason)) { throw 'Missing privacy reason' } }
 $metadata = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'docs\app-store-metadata.json') | ConvertFrom-Json
 if ($metadata.name.Length -gt 30 -or $metadata.subtitle.Length -gt 30 -or [System.Text.Encoding]::UTF8.GetByteCount($metadata.keywords) -gt 100 -or $metadata.description.Length -gt 4000) { throw 'App Store draft exceeds field limits' }
-foreach ($jsonFile in Get-ChildItem -LiteralPath (Join-Path $projectRoot 'vReader\Assets.xcassets') -Recurse -Filter '*.json') { Get-Content -Raw -LiteralPath $jsonFile.FullName | ConvertFrom-Json | Out-Null }
-$iconBytes = [System.IO.File]::ReadAllBytes((Join-Path $projectRoot 'vReader\Assets.xcassets\AppIcon.appiconset\AppIcon.png'))
+foreach ($jsonFile in Get-ChildItem -LiteralPath (Join-Path $projectRoot 'VoiceInView\Assets.xcassets') -Recurse -Filter '*.json') { Get-Content -Raw -LiteralPath $jsonFile.FullName | ConvertFrom-Json | Out-Null }
+$iconBytes = [System.IO.File]::ReadAllBytes((Join-Path $projectRoot 'VoiceInView\Assets.xcassets\AppIcon.appiconset\AppIcon.png'))
 if ($iconBytes[25] -ne 2) { throw 'Expected opaque RGB PNG' }
 Add-Type -AssemblyName System.Drawing
-$icon = [System.Drawing.Image]::FromFile((Join-Path $projectRoot 'vReader\Assets.xcassets\AppIcon.appiconset\AppIcon.png'))
+$icon = [System.Drawing.Image]::FromFile((Join-Path $projectRoot 'VoiceInView\Assets.xcassets\AppIcon.appiconset\AppIcon.png'))
 if ($icon.Width -ne 1024 -or $icon.Height -ne 1024) { $icon.Dispose(); throw 'Incorrect icon dimensions' }
 $icon.Dispose()
-foreach ($swiftFile in Get-ChildItem -LiteralPath (Join-Path $projectRoot 'vReader') -Recurse -Filter '*.swift') {
+foreach ($swiftFile in Get-ChildItem -LiteralPath (Join-Path $projectRoot 'VoiceInView') -Recurse -Filter '*.swift') {
  $swiftText = Get-Content -Raw -LiteralPath $swiftFile.FullName
  if ($swiftText -match '\b(URLSession|AVAudioRecorder|AVAudioFile|Firebase)\b' -or $swiftText -match 'sk-[A-Za-z0-9]{20,}') { throw "Unexpected network/recording/secret surface: $($swiftFile.Name)" }
  $masked = [regex]::Replace($swiftText, '(?s)""".*?"""|"(?:\\.|[^"\\])*"|/\*.*?\*/|//[^\r\n]*', '')

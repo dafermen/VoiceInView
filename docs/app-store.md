@@ -3,18 +3,19 @@ Status: release materials prepared; NOT a validated release candidate and NOT su
 Current Apple guidelines, privacy details and metadata/icon documentation checked 2026-10-07.
 
 ## Positioning and metadata
-Working name: vReader. Alternatives: vReader Captions, vReader Offline. Availability/trademark clearance not established.
-Subtitle: Offline English Live Captions (28 characters).
+Name: VoiceInView. App Store Connect registration and name availability remain pending.
+Subtitle: Live English Captions (21 characters).
+Tagline: See what's being said.
 Draft description, keywords, version/build and release notes: app-store-metadata.json.
 Do not publish draft claims until the feature, offline and supported-device tests pass.
 
 ## Owner inputs still required
-Final bundle identifier and Apple signing team, publisher/copyright/license decision, public Support URL with contact, published Privacy Policy URL, privacy contact and App Store Connect access.
-Current application identifiers are placeholders. No signing material or secrets are stored in source.
+Publisher/copyright/license decision, public Support URL with contact, published Privacy Policy URL, privacy contact and App Store Connect access.
+Signing uses team `7799N4RYUG` and the existing bundle identifier `com.dafermen.vReader`. The display-name change does not change that identity. No signing material or secrets are stored in source.
 
 ## Supported device and offline representation
-iOS 26 minimum; SpeechTranscriber.isAvailable, English support and installed assets are required. Establish a real tested device matrix before submission. Do not claim every iOS 26 iPhone is compatible.
-Install English model while online, then validate Airplane Mode with Wi-Fi off. Initial model installation is not offline. No cloud fallback or online AI is present.
+iOS 17 minimum. The compatibility engine requires on-device English support and Speech Recognition permission; builds with Xcode 26+ use the modern speech engine on iOS 26+ when available. Establish a real tested device matrix before submission. OS version alone does not guarantee compatibility.
+Prepare English Dictation or install the modern engine's English model while online, then validate Airplane Mode with Wi-Fi off. Initial model preparation is not offline. No cloud fallback or online AI is present.
 Captions can be wrong due to distance, noise, accent, speed, obstruction, simultaneous speakers and device hardware.
 Capture is foreground-only. Lock/background/interruption stops it; no automatic resume.
 

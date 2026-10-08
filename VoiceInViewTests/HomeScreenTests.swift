@@ -5,7 +5,7 @@ final class HomeScreenTests: XCTestCase {
     func testLaunchShowsCaptionsWithoutRequestingMicrophone() throws {
         let app = XCUIApplication()
         app.launch()
-        XCTAssertTrue(app.navigationBars["vReader"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.navigationBars["VoiceInView"].waitForExistence(timeout: 15))
         XCTAssertTrue(app.staticTexts["captionPlaceholder"].exists)
         XCTAssertTrue(app.buttons["Start Listening"].exists)
         XCTAssertFalse(app.buttons["Stop"].isEnabled)

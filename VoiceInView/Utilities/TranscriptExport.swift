@@ -21,7 +21,7 @@ enum TranscriptExport {
         let invalid = CharacterSet(charactersIn: "/\\:*?\"<>|\n\r")
         let cleaned = title.components(separatedBy: invalid).joined(separator: "-")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        return String((cleaned.isEmpty ? "vReader-transcript" : cleaned).prefix(80))
+        return String((cleaned.isEmpty ? "VoiceInView-transcript" : cleaned).prefix(80))
     }
 }
 

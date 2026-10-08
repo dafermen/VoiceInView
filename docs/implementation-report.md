@@ -1,6 +1,6 @@
-# vReader — delivery through Phase 9
+# VoiceInView — delivery through Phase 9
 This is the historical Phase 0–9 handoff. For the subsequent iOS 17/Xcode 15.2 migration and actual Mac test results, see [validation report](validation-report.md) and [ADR-006](decisions/ADR-006-xcode-15-compatibility.md).
-Project location: C:\Projects\vReader.
+Original Windows project location: C:\Projects\vReader. Current project: VoiceInView; see development.md for the Mac location and commands.
 Scope: continuous implementation from Phase 2 through Phase 9, expressly authorized by the user. Phase 10 remains unimplemented.
 Status: source and release-preparation materials delivered; Apple acceptance gates pending.
 

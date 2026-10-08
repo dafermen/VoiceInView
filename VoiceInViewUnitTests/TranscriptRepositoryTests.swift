@@ -1,6 +1,6 @@
 import XCTest
 import SwiftData
-@testable import vReader
+@testable import VoiceInView
 
 @MainActor
 final class TranscriptRepositoryTests: XCTestCase {
@@ -19,7 +19,7 @@ final class TranscriptRepositoryTests: XCTestCase {
 
     func testFinalCaptionsSurviveStoreReopen() throws {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("vReaderTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("VoiceInViewTests-\(UUID().uuidString)", isDirectory: true)
         // SwiftData can retain SQLite handles beyond an autoreleasepool on iOS 17.
         // Leave this unique temporary store for OS cleanup instead of unlinking an open database.
         let identifier: UUID = try autoreleasepool {

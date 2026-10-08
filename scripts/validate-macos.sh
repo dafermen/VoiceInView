@@ -18,7 +18,7 @@ fi
 run_dir="$project_root/build/validation-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$run_dir"
 xcrun simctl list devices available -j > "$run_dir/simulators.json"
-simulator_id="${VREADER_SIMULATOR_ID:-}"
+simulator_id="${VOICEINVIEW_SIMULATOR_ID:-${VREADER_SIMULATOR_ID:-}}"
 if [[ -z "$simulator_id" ]]; then
   simulator_id="$(python3 - "$run_dir/simulators.json" <<'PY'
 import json, re, sys
@@ -35,16 +35,16 @@ PY
 )"
 fi
 derived="$run_dir/DerivedData"
-xcodebuild -project vReader.xcodeproj -scheme vReader -configuration Debug \
+xcodebuild -project VoiceInView.xcodeproj -scheme VoiceInView -configuration Debug \
   -destination 'generic/platform=iOS Simulator' -derivedDataPath "$derived" \
   CODE_SIGNING_ALLOWED=NO build 2>&1 | tee "$run_dir/debug-build.log"
-xcodebuild -project vReader.xcodeproj -scheme vReader -configuration Debug \
+xcodebuild -project VoiceInView.xcodeproj -scheme VoiceInView -configuration Debug \
   -destination "platform=iOS Simulator,id=$simulator_id" -derivedDataPath "$derived" \
   -parallel-testing-enabled NO -resultBundlePath "$run_dir/Tests.xcresult" CODE_SIGNING_ALLOWED=NO test 2>&1 | tee "$run_dir/tests.log"
-xcodebuild -project vReader.xcodeproj -scheme vReader -configuration Release \
+xcodebuild -project VoiceInView.xcodeproj -scheme VoiceInView -configuration Release \
   -destination 'generic/platform=iOS Simulator' -derivedDataPath "$derived" \
   CODE_SIGNING_ALLOWED=NO build 2>&1 | tee "$run_dir/release-build.log"
-app="$derived/Build/Products/Release-iphonesimulator/vReader.app"
+app="$derived/Build/Products/Release-iphonesimulator/VoiceInView.app"
 plutil -lint "$app/Info.plist" "$app/PrivacyInfo.xcprivacy"
 python3 - "$app" <<'PY'
 import pathlib, plistlib, sys
@@ -54,6 +54,9 @@ with (app / "Info.plist").open("rb") as f:
 assert info.get("NSMicrophoneUsageDescription"), "Missing microphone purpose"
 assert info.get("NSSpeechRecognitionUsageDescription"), "Missing speech recognition purpose"
 assert info.get("MinimumOSVersion") == "17.0", "Unexpected minimum iOS version"
+assert info.get("CFBundleDisplayName") == "VoiceInView", "Unexpected app name"
+assert info.get("CFBundleIdentifier") == "com.dafermen.vReader", "App identity changed"
+assert info.get("CFBundleExecutable") == "VoiceInView", "Unexpected executable name"
 assert not info.get("UIBackgroundModes"), "Unexpected background capture"
 assert (app / "Assets.car").exists(), "Missing compiled assets"
 with (app / "PrivacyInfo.xcprivacy").open("rb") as f:

@@ -2,7 +2,7 @@
 import XCTest
 import AVFoundation
 import CoreMedia
-@testable import vReader
+@testable import VoiceInView
 
 final class AudioConversionTests: XCTestCase {
     func testSampleRateConversionProducesAnalyzerCompatibleInput() async throws {

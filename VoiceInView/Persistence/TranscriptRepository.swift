@@ -19,6 +19,7 @@ final class TranscriptRepository {
             configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true,
                                                cloudKitDatabase: .none)
         } else {
+            // Keep the original storage directory so existing sessions survive the app rename.
             var folder = try directory ?? FileManager.default.url(
                 for: .applicationSupportDirectory, in: .userDomainMask,
                 appropriateFor: nil, create: true).appendingPathComponent("vReader", isDirectory: true)

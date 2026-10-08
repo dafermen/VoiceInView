@@ -11,7 +11,7 @@ Follow docs/development.md to build/test on Mac; perform every Phase 0 check in 
 ## Limitations
 Foundation only; no microphone, recognition, persistence, readiness or production icon. Placeholder identifier and signing team require owner setup. Offline transcription remains unimplemented.
 ## Git
-Local repository initialized if absent. Review git status and git diff --check before staging. Suggested commit: chore: establish vReader iOS project foundation. No remote/push or automatic commit.
+Local repository initialized if absent. Review git status and git diff --check before staging. Suggested commit: chore: establish VoiceInView iOS project foundation. No remote/push or automatic commit.
 ## Next phase exact objectives
 After successful Phase 0 validation and explicit approval: microphone permission and usage description; AVAudioSession/AVAudioEngine capture; Start Listening/Stop and status; explicit permission/listening/error states; denied permission, unavailable input and engine failure; lifecycle behavior; optional level meter; practical transition tests and real-device procedure. No transcription in Phase 1.
 

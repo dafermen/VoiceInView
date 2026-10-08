@@ -1,4 +1,6 @@
-# vReader
+# VoiceInView
+
+**See what's being said.** Live English Captions.
 
 Native iPhone app designed to caption English speech on device during conferences, classes, meetings and presentations, without sending recognition audio to a server, when on-device English support is available.
 
@@ -26,13 +28,14 @@ Final device matrix is pending. System language/model setup may need Internet an
 No account, cloud recognition, OpenAI key or third-party package is required.
 
 ## Build and test on Mac
-Open vReader.xcodeproj, select shared scheme vReader and an iOS 17+ iPhone simulator.
+Open VoiceInView.xcodeproj, select shared scheme VoiceInView and an iOS 17+ iPhone simulator.
 From the project root:
 ~~~sh
 bash scripts/validate-macos.sh
 ~~~
 The script builds Debug, runs unit/UI tests, builds Release and checks the simulator bundle. Physical iPhone checks remain manual.
 Signing is configured for team `7799N4RYUG` and app identifier `com.dafermen.vReader`. Register this identifier with the same Apple team when configuring distribution.
+The existing bundle identifier and internal `vReader` storage directory are retained across the VoiceInView rename so app identity and saved-session location remain stable. Shell scripts accept `VOICEINVIEW_*` settings and the previous `VREADER_*` aliases.
 See [development](docs/development.md), [testing](docs/testing.md) and [release checklist](docs/release-checklist.md).
 
 ## How to use after validation
@@ -46,13 +49,13 @@ Leaving/locking the app stops microphone capture; restart requires user action. 
 Audio is never stored or uploaded by the app. Explicit sharing may transmit text through the chosen destination.
 
 ## Architecture / folders
-- vReader/App — application entry.
-- vReader/UI — captions, sessions, readiness, settings, diagnostics and policy.
-- vReader/ViewModels — observable presentation and session coordination.
-- vReader/Services/Audio and Speech — native capture and isolated speech engine.
-- vReader/Models and Persistence — transcript assembly, schema, local storage and settings.
-- vReader/Utilities — time formatting and text export.
-- vReaderUnitTests / vReaderTests — compatibility/lifecycle, transcript, storage, settings and UI tests; see the validation report for executed counts. Modern audio conversion tests require Xcode 26/iOS 26.
+- VoiceInView/App — application entry.
+- VoiceInView/UI — captions, sessions, readiness, settings, diagnostics and policy.
+- VoiceInView/ViewModels — observable presentation and session coordination.
+- VoiceInView/Services/Audio and Speech — native capture and isolated speech engine.
+- VoiceInView/Models and Persistence — transcript assembly, schema, local storage and settings.
+- VoiceInView/Utilities — time formatting and text export.
+- VoiceInViewUnitTests / VoiceInViewTests — compatibility/lifecycle, transcript, storage, settings and UI tests; see the validation report for executed counts. Modern audio conversion tests require Xcode 26/iOS 26.
 - scripts — Windows static checks and Mac build/archive validation.
 - docs — architecture, ADRs, phase reports, privacy and release material.
 

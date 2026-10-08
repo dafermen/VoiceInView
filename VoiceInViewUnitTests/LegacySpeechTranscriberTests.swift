@@ -1,7 +1,7 @@
 import AVFoundation
 import Speech
 import XCTest
-@testable import vReader
+@testable import VoiceInView
 
 @MainActor
 final class LegacySpeechTranscriberTests: XCTestCase {

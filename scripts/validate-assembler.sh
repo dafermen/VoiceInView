@@ -9,18 +9,18 @@ fi
 mkdir -p "$project_root/build"
 run_dir="$(mktemp -d "$project_root/build/assembler-validation.XXXXXX")"
 package_dir="$run_dir/Assembler"
-mkdir -p "$package_dir/Sources/vReader" "$package_dir/Tests/vReaderTests"
-cp "$project_root/vReader/Models/TranscriptAssembler.swift" "$package_dir/Sources/vReader/"
-cp "$project_root/vReaderUnitTests/TranscriptAssemblerTests.swift" "$package_dir/Tests/vReaderTests/"
+mkdir -p "$package_dir/Sources/VoiceInView" "$package_dir/Tests/VoiceInViewTests"
+cp "$project_root/VoiceInView/Models/TranscriptAssembler.swift" "$package_dir/Sources/VoiceInView/"
+cp "$project_root/VoiceInViewUnitTests/TranscriptAssemblerTests.swift" "$package_dir/Tests/VoiceInViewTests/"
 cat > "$package_dir/Package.swift" <<'SWIFT'
 // swift-tools-version: 5.9
 import PackageDescription
 let package = Package(
-    name: "vReaderAssemblerValidation",
+    name: "VoiceInViewAssemblerValidation",
     platforms: [.macOS(.v13)],
     targets: [
-        .target(name: "vReader"),
-        .testTarget(name: "vReaderTests", dependencies: ["vReader"])
+        .target(name: "VoiceInView"),
+        .testTarget(name: "VoiceInViewTests", dependencies: ["VoiceInView"])
     ]
 )
 SWIFT

@@ -7,7 +7,7 @@ Contextual AVAudioApplication microphone permission; Debug/Release usage descrip
 No speech recognition, captions, persistence, stored audio or network functionality.
 
 ## Files
-Added Models/ListeningState.swift, Services/Audio/AudioCapturing.swift, Services/Audio/AudioCaptureService.swift, ViewModels/ListeningViewModel.swift, vReaderUnitTests/ListeningViewModelTests.swift and ADR-003.
+Added Models/ListeningState.swift, Services/Audio/AudioCapturing.swift, Services/Audio/AudioCaptureService.swift, ViewModels/ListeningViewModel.swift, VoiceInViewUnitTests/ListeningViewModelTests.swift and ADR-003.
 Updated HomeView, UI smoke test, project/scheme, README, CHANGELOG, architecture, roadmap, development, testing, privacy and App Store notes.
 Original project brief and Phase 0 report retained.
 
@@ -42,4 +42,4 @@ Review all untracked files; the Phase 0 repository has no baseline commit yet. R
 Git status: all project files remain untracked; no commits exist.
 
 ## Next action on Mac
-Open vReader.xcodeproj, select your team/unique identifier for device use, build Debug and Release, run Product > Test, and execute the iPhone checklist in docs/testing.md. Record results before calling Phase 1 complete.
+Open VoiceInView.xcodeproj, select your team/unique identifier for device use, build Debug and Release, run Product > Test, and execute the iPhone checklist in docs/testing.md. Record results before calling Phase 1 complete.

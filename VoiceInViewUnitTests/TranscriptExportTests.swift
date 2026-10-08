@@ -1,5 +1,5 @@
 import XCTest
-@testable import vReader
+@testable import VoiceInView
 
 final class TranscriptExportTests: XCTestCase {
     func testExportContainsMetadataAndUnicode() {
@@ -16,6 +16,6 @@ final class TranscriptExportTests: XCTestCase {
         let name = TranscriptExport.filename(title: "a/b\\c:meeting")
         XCTAssertFalse(name.contains("/"))
         XCTAssertFalse(name.contains("\\"))
-        XCTAssertEqual(TranscriptExport.filename(title: "   "), "vReader-transcript")
+        XCTAssertEqual(TranscriptExport.filename(title: "   "), "VoiceInView-transcript")
     }
 }

@@ -1,5 +1,5 @@
 import XCTest
-@testable import vReader
+@testable import VoiceInView
 
 @MainActor
 final class CaptionViewModelTests: XCTestCase {
