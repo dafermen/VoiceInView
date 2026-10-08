@@ -3,6 +3,7 @@ import UIKit
 
 struct CaptionScreen: View {
     @Bindable var model: CaptionViewModel
+    var newSession: (() async -> Void)? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo: .title) private var scaledSize = 28
     @State private var textSize = 28.0
@@ -100,9 +101,9 @@ struct CaptionScreen: View {
             Button("New Session") { confirmNewSession = true }
                 .disabled(model.state.active || model.state.busy)
         }
-        .confirmationDialog("Start a new session? The current unsaved captions will be cleared.",
+        .confirmationDialog("Start a new session? Save current captions first if auto-save is off.",
                             isPresented: $confirmNewSession, titleVisibility: .visible) {
-            Button("New Session", role: .destructive) { Task { await model.reset() } }
+            Button("New Session", role: .destructive) { Task { if let newSession { await newSession() } else { await model.reset() } } }
         }
         .task { await model.checkReadiness() }
         .onChange(of: model.state) { _, _ in applyWakePreference() }

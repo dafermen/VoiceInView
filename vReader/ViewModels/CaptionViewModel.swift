@@ -19,6 +19,8 @@ final class CaptionViewModel {
     private(set) var permissionDenied = false
     var onFinalized: ((FinalizedChange) -> Void)?
     var onEnded: (() -> Void)?
+    var onWillStart: (() throws -> Void)?
+    var onCheckpoint: ((TimeInterval) -> Void)?
     @ObservationIgnored private let microphone: any AudioCapturing
     @ObservationIgnored private let speech: any SpeechTranscribing
     @ObservationIgnored private var generation = UUID()
@@ -64,6 +66,7 @@ final class CaptionViewModel {
         }
         permissionDenied = false
         do {
+            if startedAt == nil { try onWillStart?() }
             let updates = try await speech.start()
             guard generation == identifier, foreground else { await speech.cancel(); return }
             if startedAt == nil { startedAt = Date() }
@@ -155,6 +158,7 @@ final class CaptionViewModel {
     private func settleDuration() {
         if let activeSince { elapsed += max(0, Date().timeIntervalSince(activeSince)) }
         activeSince = nil
+        onCheckpoint?(elapsed)
     }
 
     private func abort(message: String) async {
