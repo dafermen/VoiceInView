@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct AppRootView: View {
     @Environment(\.scenePhase) private var scenePhase
@@ -43,6 +44,7 @@ struct AppRootView: View {
         .task { if coordinator == nil { openStorage() } }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background {
+                UIApplication.shared.isIdleTimerDisabled = false
                 Task { await coordinator?.caption.background() }
             } else if phase == .active {
                 coordinator?.caption.foregrounded()

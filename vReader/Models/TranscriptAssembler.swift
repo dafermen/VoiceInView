@@ -25,6 +25,7 @@ struct FinalizedChange {
 struct TranscriptAssembler {
     private(set) var finalized: [CaptionSegment] = []
     private(set) var partial: [CaptionSegment] = []
+    private var knownRuns: Set<UUID> = []
 
     mutating func apply(_ update: TranscriptionUpdate) -> FinalizedChange {
         guard update.start.isFinite, update.end.isFinite,
@@ -41,11 +42,23 @@ struct TranscriptAssembler {
         guard !text.isEmpty else { return FinalizedChange(removedIDs: [], upserted: []) }
         var segment = CaptionSegment(runID: update.runID, start: update.start, end: update.end, text: text)
         if update.isFinal {
+            if !knownRuns.contains(update.runID) {
+                finalized.append(segment)
+                knownRuns.insert(update.runID)
+                return FinalizedChange(removedIDs: [], upserted: [segment])
+            }
+            if let last = finalized.last,
+               (last.runID == update.runID && update.start >= last.end),
+               !(last.runID == update.runID && last.start == update.start && last.end == update.end) {
+                finalized.append(segment)
+                return FinalizedChange(removedIDs: [], upserted: [segment])
+            }
             let replaced = finalized.filter(overlaps)
             if let existing = replaced.first { segment.id = existing.id }
             finalized.removeAll(where: overlaps)
             // Insert in time order within this run; keep earlier runs before later ones.
             let insertion = finalized.firstIndex { $0.runID == update.runID && $0.start > segment.start }
+                ?? finalized.lastIndex(where: { $0.runID == update.runID }).map { $0 + 1 }
                 ?? finalized.endIndex
             finalized.insert(segment, at: insertion)
             return FinalizedChange(removedIDs: replaced.filter { $0.id != segment.id }.map(\.id),

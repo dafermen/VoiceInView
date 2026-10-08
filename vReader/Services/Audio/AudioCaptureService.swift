@@ -60,6 +60,7 @@ final class AudioCaptureService: SpeechAudioCapturing {
             // installTap is supported by the selected iOS 26 SDK; its successor requires iOS 27.
             let deliver = stream.continuation
             let sink = audioSink
+            let copyFailure = onFailure
             let tap: @Sendable (AVAudioPCMBuffer, AVAudioTime) -> Void = { buffer, _ in
                 guard let channels = buffer.floatChannelData, buffer.frameLength > 0 else { return }
                 let frames = Int(buffer.frameLength)
@@ -72,8 +73,12 @@ final class AudioCaptureService: SpeechAudioCapturing {
                 let rms = sqrt(energy / Float(frames))
                 let decibels = 20 * log10(max(rms, 0.000001))
                 deliver.yield(min(max((decibels + 60) / 60, 0), 1))
-                if let sink, let copy = AVAudioPCMBuffer(pcmFormat: buffer.format, frameCapacity: buffer.frameLength),
-                   let destination = copy.floatChannelData {
+                if let sink {
+                    guard let copy = AVAudioPCMBuffer(pcmFormat: buffer.format, frameCapacity: buffer.frameLength),
+                          let destination = copy.floatChannelData else {
+                        Task { @MainActor in copyFailure?(.engineFailure) }
+                        return
+                    }
                     copy.frameLength = buffer.frameLength
                     for channel in 0..<Int(buffer.format.channelCount) {
                         for frame in 0..<frames {

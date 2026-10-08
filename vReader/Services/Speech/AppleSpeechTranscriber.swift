@@ -13,7 +13,6 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
     private var rawInput: AsyncThrowingStream<CapturedAudio, Error>.Continuation?
     private var output: AsyncThrowingStream<TranscriptionUpdate, Error>.Continuation?
     private var generation = UUID()
-    private var finishing = false
     private var terminalError: (any Error)?
 
     init(audio: any SpeechAudioCapturing) { self.audio = audio }
@@ -52,20 +51,22 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
 
     func start() async throws -> AsyncThrowingStream<TranscriptionUpdate, Error> {
         await cancel()
+        let startIdentifier = UUID()
+        generation = startIdentifier
         guard await readiness() == .ready,
               let locale = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: "en-US")) else {
             throw TranscriptionFailure.notReady
         }
+        guard generation == startIdentifier, !Task.isCancelled else { throw CancellationError() }
         // Reserving installed assets does not request a model download.
         try await AssetInventory.reserve(locale: locale)
         let transcriber = module(locale: locale)
         guard let format = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber]) else {
             throw TranscriptionFailure.format
         }
-        let identifier = UUID()
-        generation = identifier
+        guard generation == startIdentifier, !Task.isCancelled else { throw CancellationError() }
+        let identifier = startIdentifier
         terminalError = nil
-        finishing = false
         let newAnalyzer = SpeechAnalyzer(modules: [transcriber])
         analyzer = newAnalyzer
         let raw = AsyncThrowingStream<CapturedAudio, Error>.makeStream(bufferingPolicy: .bufferingOldest(64))
@@ -96,7 +97,7 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
                 }
                 results.continuation.finish()
             } catch {
-                self?.terminalError = error
+                if self?.generation == identifier { self?.terminalError = error }
                 results.continuation.finish(throwing: error)
             }
         }
@@ -114,7 +115,7 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
                 }
                 inputs.continuation.finish()
             } catch {
-                self?.terminalError = error
+                if self?.generation == identifier { self?.terminalError = error }
                 inputs.continuation.finish(throwing: error)
                 results.continuation.finish(throwing: error)
                 await newAnalyzer.cancelAndFinishNow()
@@ -122,7 +123,9 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
         }
         do {
             try await newAnalyzer.prepareToAnalyze(in: format)
+            guard generation == identifier, !Task.isCancelled else { throw CancellationError() }
             try await newAnalyzer.start(inputSequence: inputs.stream)
+            guard generation == identifier, !Task.isCancelled else { throw CancellationError() }
             let levels = try audio.start()
             levelsTask = Task { @MainActor [weak self] in
                 var lastAudio = ContinuousClock.now
@@ -144,14 +147,13 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
             }
             return results.stream
         } catch {
-            await cancel()
+            if generation == identifier { await cancel() }
             throw error
         }
     }
 
     func finish() async throws {
         guard let analyzer else { return }
-        finishing = true
         var stopError: (any Error)?
         do { try audio.stop() } catch { stopError = error }
         audio.audioSink = nil
@@ -203,6 +205,5 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
         timeoutTask = nil
         rawInput = nil
         output = nil
-        finishing = false
     }
 }

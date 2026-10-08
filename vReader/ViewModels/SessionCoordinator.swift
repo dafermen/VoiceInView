@@ -11,6 +11,7 @@ final class SessionCoordinator {
     let settings = AppSettings()
     var autoSave: Bool { settings.autoSave }
     var sessionTitle = "Conference"
+    @ObservationIgnored private var monitorTask: Task<Void, Never>?
 
     init(repository: TranscriptRepository) {
         self.repository = repository
@@ -35,8 +36,10 @@ final class SessionCoordinator {
             do { try self.repository.checkpoint(session, duration: duration, ended: false) }
             catch { self.storageMessage = "Could not save session time. Retry Save Session." }
         }
+        caption.onRunStarted = { [weak self] in self?.monitorSession() }
         caption.onEnded = { [weak self] in
             guard let self, self.autoSave else { return }
+            self.monitorTask?.cancel()
             self.saveCurrent(ended: true)
         }
     }
@@ -62,5 +65,30 @@ final class SessionCoordinator {
         await caption.reset()
         currentSession = nil
         sessionTitle = "Conference"
+    }
+
+    private func monitorSession() {
+        monitorTask?.cancel()
+        monitorTask = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                do { try await Task.sleep(for: .seconds(30)) } catch { return }
+                guard let self, self.caption.state == .listening else { return }
+                let capacity = StorageReadiness.check(at: self.repository.storageURL)
+                if let bytes = capacity.availableBytes, bytes < StorageReadiness.minimumBytes {
+                    self.storageMessage = "Storage is low. Listening paused. Export sessions or free space before continuing."
+                    await self.caption.pause()
+                    return
+                }
+                if self.autoSave, let session = self.currentSession {
+                    do {
+                        try self.repository.checkpoint(session, duration: self.caption.currentDuration(at: Date()), ended: false)
+                    } catch {
+                        self.storageMessage = "Session checkpoint could not be saved. Listening paused; retry Save Session."
+                        await self.caption.pause()
+                        return
+                    }
+                }
+            }
+        }
     }
 }

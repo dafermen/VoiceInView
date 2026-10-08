@@ -17,9 +17,12 @@ final class CaptionViewModel {
     private(set) var startedAt: Date?
     private(set) var elapsed: TimeInterval = 0
     private(set) var permissionDenied = false
+    private(set) var preparationPending = false
+    private(set) var notice: String?
     var onFinalized: ((FinalizedChange) -> Void)?
     var onEnded: (() -> Void)?
     var onWillStart: (() throws -> Void)?
+    var onRunStarted: (() -> Void)?
     var onCheckpoint: ((TimeInterval) -> Void)?
     @ObservationIgnored private let microphone: any AudioCapturing
     @ObservationIgnored private let speech: any SpeechTranscribing
@@ -48,17 +51,22 @@ final class CaptionViewModel {
     }
 
     func start() async {
-        guard foreground, !state.active, !state.busy, state != .ended else { return }
+        guard foreground, !state.active, !state.busy, !preparationPending, state != .ended else { return }
+        preparationPending = true
+        defer { preparationPending = false }
         let identifier = UUID()
         generation = identifier
+        notice = nil
         state = .preparing
         readiness = await speech.readiness()
         guard generation == identifier, foreground else { return }
+        guard !Task.isCancelled else { await abort(message: "Start cancelled."); return }
         guard readiness == .ready else { state = .problem(readiness.description); return }
         if microphone.permission == .undetermined {
             _ = await microphone.requestPermission()
         }
-        guard generation == identifier, foreground, !Task.isCancelled else { return }
+        guard generation == identifier, foreground else { return }
+        guard !Task.isCancelled else { await abort(message: "Start cancelled."); return }
         guard microphone.permission == .granted else {
             permissionDenied = true
             state = .problem(CaptureFailure.permissionDenied.message)
@@ -72,11 +80,13 @@ final class CaptionViewModel {
             if startedAt == nil { startedAt = Date() }
             activeSince = Date()
             state = .listening
+            onRunStarted?()
             consumer = Task { @MainActor [weak self] in
                 do {
                     for try await update in updates {
                         guard let self, self.generation == identifier, !Task.isCancelled else { return }
                         let change = self.transcript.apply(update)
+                        if self.transcript.partial.count > 64 { throw TranscriptionFailure.overflow }
                         if !change.upserted.isEmpty || !change.removedIDs.isEmpty {
                             self.onFinalized?(change)
                         }
@@ -99,7 +109,8 @@ final class CaptionViewModel {
         if state == .listening {
             state = .stopping
             settleDuration()
-            do { try await speech.finish() } catch { state = .problem(error.localizedDescription) }
+            do { try await speech.finish() }
+            catch { notice = error.localizedDescription }
             await consumer?.value
         } else {
             generation = UUID()
@@ -109,7 +120,7 @@ final class CaptionViewModel {
         consumer?.cancel()
         consumer = nil
         transcript.discardPartial()
-        if !isProblem { state = .ended }
+        state = .ended
         onEnded?()
     }
 
@@ -131,21 +142,23 @@ final class CaptionViewModel {
     func background() async {
         foreground = false
         if state.active {
-            await abort(message: "Listening stopped in the background. Tap Resume to continue.")
+            // Capture stops immediately; retain already finalized captions and checkpoint time.
+            await abort(message: "Listening stopped in the background. Tap Resume to continue. The unfinished sentence may be incomplete.")
         }
     }
 
     func foregrounded() { foreground = true }
 
     func reset() async {
-        await speech.cancel()
         generation = UUID()
         consumer?.cancel()
         consumer = nil
+        await speech.cancel()
         transcript = TranscriptAssembler()
         startedAt = nil
         elapsed = 0
         activeSince = nil
+        notice = nil
         state = .idle
     }
 

@@ -6,7 +6,8 @@ struct CaptionScreen: View {
     @Bindable var settings: AppSettings = AppSettings()
     var newSession: (() async -> Void)? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @ScaledMetric(relativeTo: .title) private var scaledSize = 28
+    @ScaledMetric(relativeTo: .title) private var scaledSize: CGFloat = 28
+    @State private var visibleFinalCount = 300
     @State private var followLive = true
     @State private var confirmNewSession = false
 
@@ -25,6 +26,7 @@ struct CaptionScreen: View {
             if case .problem(let message) = model.state {
                 Text(message).font(.callout).accessibilityIdentifier("captureError")
             }
+            if let notice = model.notice { Text(notice).font(.callout) }
             if model.readiness != .ready {
                 Text(model.readiness.description).font(.callout)
                 if model.readiness == .missingAssets || readinessProblem {
@@ -42,7 +44,14 @@ struct CaptionScreen: View {
                                 .foregroundStyle(.secondary)
                                 .accessibilityIdentifier("captionPlaceholder")
                         }
-                        ForEach(model.transcript.finalized) { segment in
+                        if model.transcript.finalized.count > visibleFinalCount {
+                            Button("Load Earlier Captions") {
+                                followLive = false
+                                visibleFinalCount += 300
+                            }
+                            .font(.body).frame(minHeight: 44)
+                        }
+                        ForEach(model.transcript.finalized.suffix(visibleFinalCount)) { segment in
                             Text(segment.text).textSelection(.enabled)
                         }
                         ForEach(model.transcript.partial) { segment in
@@ -53,7 +62,7 @@ struct CaptionScreen: View {
                         }
                         Color.clear.frame(height: 1).id("liveBottom")
                     }
-                    .font(.system(size: scaledSize * settings.captionSize / 28))
+                    .font(.system(size: scaledSize * CGFloat(settings.captionSize) / 28))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical)
                 }
@@ -66,7 +75,7 @@ struct CaptionScreen: View {
                     Task { await model.start() }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(model.state.active || model.state.busy || model.state == .ended)
+                .disabled(model.state.active || model.state.busy || model.preparationPending || model.state == .ended)
                 if model.state == .listening {
                     Button("Pause") { Task { await model.pause() } }
                         .buttonStyle(.bordered)

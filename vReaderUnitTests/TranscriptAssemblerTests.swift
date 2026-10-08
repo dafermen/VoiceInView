@@ -2,6 +2,16 @@ import XCTest
 @testable import vReader
 
 final class TranscriptAssemblerTests: XCTestCase {
+    func testLongTranscriptRetainsEveryFinalSegment() {
+        let run = UUID()
+        var assembler = TranscriptAssembler()
+        for index in 0..<10000 {
+            _ = assembler.apply(.init(runID: run, start: Double(index), end: Double(index + 1),
+                                     text: "Sentence", isFinal: true))
+        }
+        XCTAssertEqual(assembler.finalized.count, 10000)
+        XCTAssertEqual(assembler.finalized.last?.start, 9999)
+    }
     func testPartialRevisionAndFinalizationDoNotDuplicate() {
         let run = UUID()
         var assembler = TranscriptAssembler()
