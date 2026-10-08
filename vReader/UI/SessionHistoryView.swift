@@ -1,5 +1,7 @@
 import SwiftUI
 import SwiftData
+import UniformTypeIdentifiers
+import UIKit
 
 struct SessionHistoryView: View {
     let coordinator: SessionCoordinator
@@ -61,6 +63,7 @@ struct SessionHistoryView: View {
 struct SessionDetailView: View {
     @Bindable var session: ConferenceSession
     let repository: TranscriptRepository
+    @State private var exporting = false
     @State private var renaming = false
     @State private var title = ""
     @State private var failure: String?
@@ -80,6 +83,15 @@ struct SessionDetailView: View {
         .navigationTitle(session.title)
         .toolbar {
             Button("Rename") { title = session.title; renaming = true }
+            Menu("Export") {
+                Button("Export Text File") { exporting = true }
+                Button("Copy Transcript") { UIPasteboard.general.string = exportText }
+                ShareLink(item: exportText) { Label("Share Transcript", systemImage: "square.and.arrow.up") }
+            }
+        }
+        .fileExporter(isPresented: $exporting, document: TextTranscriptDocument(text: exportText),
+                      contentType: .plainText, defaultFilename: TranscriptExport.filename(title: session.title)) { result in
+            if case .failure = result { failure = "The text file could not be exported." }
         }
         .alert("Rename session", isPresented: $renaming) {
             TextField("Title", text: $title)
@@ -93,5 +105,11 @@ struct SessionDetailView: View {
             get: { failure != nil }, set: { if !$0 { failure = nil } })) {
                 Button("OK") { failure = nil }
             } message: { Text(failure ?? "") }
+    }
+
+    private var exportText: String {
+        TranscriptExport.render(title: session.title, date: session.startedAt, duration: session.duration,
+                                language: session.language, transcript: session.fullTranscript,
+                                unfinished: session.endedAt == nil)
     }
 }
