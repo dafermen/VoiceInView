@@ -4,7 +4,7 @@ enum MicrophonePermission: Equatable, Sendable {
     case undetermined, granted, denied, unavailable
 }
 
-enum CaptureFailure: Error, Equatable, Sendable {
+enum CaptureFailure: LocalizedError, Equatable, Sendable {
     case permissionDenied
     case permissionUnavailable
     case noInput
@@ -16,6 +16,8 @@ enum CaptureFailure: Error, Equatable, Sendable {
     case configurationChanged
     case mediaServicesChanged
     case stalled
+
+    var errorDescription: String? { message }
 
     var message: String {
         switch self {

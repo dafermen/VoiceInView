@@ -2,7 +2,7 @@ import Foundation
 import Observation
 import SwiftUI
 
-enum AppAppearance: String, CaseIterable {
+enum AppAppearance: String, CaseIterable, Equatable, Hashable, Sendable {
     case system, light, dark
 }
 

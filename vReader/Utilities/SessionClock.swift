@@ -1,8 +1,13 @@
 import Foundation
 
 enum SessionClock {
+    static func seconds(_ duration: Duration) -> TimeInterval {
+        let parts = duration.components
+        return max(0, Double(parts.seconds) + Double(parts.attoseconds) / 1_000_000_000_000_000_000)
+    }
+
     static func format(_ duration: TimeInterval) -> String {
-        let seconds = Int(max(0, duration.isFinite ? duration : 0))
+        let seconds = Int(min(Double(Int.max / 2), max(0, duration.isFinite ? duration : 0)))
         return String(format: "%02d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, seconds % 60)
     }
 }

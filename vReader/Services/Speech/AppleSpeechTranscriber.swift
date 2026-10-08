@@ -14,6 +14,7 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
     private var output: AsyncThrowingStream<TranscriptionUpdate, Error>.Continuation?
     private var generation = UUID()
     private var terminalError: (any Error)?
+    private var lastAudioAt = ContinuousClock.now
 
     init(audio: any SpeechAudioCapturing) { self.audio = audio }
 
@@ -127,14 +128,14 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
             try await newAnalyzer.start(inputSequence: inputs.stream)
             guard generation == identifier, !Task.isCancelled else { throw CancellationError() }
             let levels = try audio.start()
+            lastAudioAt = .now
             levelsTask = Task { @MainActor [weak self] in
-                var lastAudio = ContinuousClock.now
                 let watch = Task { @MainActor [weak self] in
                     while !Task.isCancelled {
                         do { try await Task.sleep(for: .seconds(1)) } catch { return }
-                        guard self?.generation == identifier else { return }
-                        if lastAudio.duration(to: .now) > .seconds(5) {
-                            self?.rawInput?.finish(throwing: TranscriptionFailure.interrupted(CaptureFailure.stalled.message))
+                        guard let self, self.generation == identifier else { return }
+                        if self.lastAudioAt.duration(to: .now) > .seconds(5) {
+                            self.rawInput?.finish(throwing: TranscriptionFailure.interrupted(CaptureFailure.stalled.message))
                             return
                         }
                     }
@@ -142,7 +143,7 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
                 defer { watch.cancel() }
                 for await _ in levels {
                     guard !Task.isCancelled, self?.generation == identifier else { return }
-                    lastAudio = .now
+                    self?.lastAudioAt = .now
                 }
             }
             return results.stream
@@ -168,12 +169,16 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
             await analyzer.cancelAndFinishNow()
         }
         await inputTask?.value
+        guard generation == identifier else { throw CancellationError() }
         do {
             try await analyzer.finalizeAndFinishThroughEndOfInput()
             await resultTask?.value
+            guard generation == identifier else { throw CancellationError() }
         } catch {
-            timeoutTask?.cancel()
-            await cancel()
+            if generation == identifier {
+                timeoutTask?.cancel()
+                await cancel()
+            }
             throw error
         }
         timeoutTask?.cancel()
@@ -183,7 +188,9 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
     }
 
     func cancel() async {
-        generation = UUID()
+        let cancellationID = UUID()
+        generation = cancellationID
+        let previousAnalyzer = analyzer
         do { try audio.stop() } catch { terminalError = error }
         audio.audioSink = nil
         rawInput?.finish()
@@ -191,8 +198,9 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
         resultTask?.cancel()
         levelsTask?.cancel()
         timeoutTask?.cancel()
-        await analyzer?.cancelAndFinishNow()
         output?.finish()
+        await previousAnalyzer?.cancelAndFinishNow()
+        guard generation == cancellationID else { return }
         cleanup()
     }
 

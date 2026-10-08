@@ -5,8 +5,10 @@ import SwiftData
 final class TranscriptRepository {
     let container: ModelContainer
     private let context: ModelContext
+    private var cacheSessionID: UUID?
     private var currentCaptions: [UUID: StoredCaption] = [:]
     private var nextOrder = 0
+    private var runOrder: [UUID: Int] = [:]
     let storageURL: URL?
 
     init(inMemory: Bool = false, directory: URL? = nil) throws {
@@ -37,13 +39,22 @@ final class TranscriptRepository {
     func create(title: String) throws -> ConferenceSession {
         let session = ConferenceSession(title: title)
         context.insert(session)
-        do { try context.save() } catch { context.rollback(); throw error }
+        do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
         currentCaptions = [:]
         nextOrder = 0
+        runOrder = [:]
+        cacheSessionID = session.id
         return session
     }
 
     func apply(_ change: FinalizedChange, to session: ConferenceSession) throws {
+        if cacheSessionID != session.id {
+            currentCaptions = Dictionary(uniqueKeysWithValues: session.captions.map { ($0.id, $0) })
+            runOrder = [:]
+            for caption in session.captions { runOrder[caption.runID] = caption.order }
+            nextOrder = (session.captions.map { $0.order }.max() ?? -1) + 1
+            cacheSessionID = session.id
+        }
         for id in change.removedIDs {
             if let caption = currentCaptions.removeValue(forKey: id) {
                 session.captions.removeAll { $0.id == id }
@@ -56,8 +67,15 @@ final class TranscriptRepository {
                 existing.start = segment.start
                 existing.end = segment.end
             } else {
-                let caption = StoredCaption(segment: segment, order: nextOrder)
-                nextOrder += 1
+                let rank: Int
+                if let existingRank = runOrder[segment.runID] {
+                    rank = existingRank
+                } else {
+                    rank = nextOrder
+                    nextOrder += 1
+                    runOrder[segment.runID] = rank
+                }
+                let caption = StoredCaption(segment: segment, order: rank)
                 context.insert(caption)
                 session.captions.append(caption)
                 currentCaptions[caption.id] = caption
@@ -79,12 +97,12 @@ final class TranscriptRepository {
         let clean = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !clean.isEmpty else { return }
         session.title = clean
-        do { try context.save() } catch { context.rollback(); throw error }
+        do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
     }
 
     func delete(_ session: ConferenceSession) throws {
         context.delete(session)
-        do { try context.save() } catch { context.rollback(); throw error }
+        do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
     }
 
     func save() throws { try context.save() }

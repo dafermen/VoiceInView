@@ -45,7 +45,9 @@ struct AppRootView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .background {
                 UIApplication.shared.isIdleTimerDisabled = false
-                Task { await coordinator?.caption.background() }
+                if let coordinator, let identifier = coordinator.caption.prepareForBackground() {
+                    Task { await coordinator.caption.cleanupBackground(identifier) }
+                }
             } else if phase == .active {
                 coordinator?.caption.foregrounded()
             }

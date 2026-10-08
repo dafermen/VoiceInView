@@ -24,7 +24,12 @@ final class ConferenceSession {
         transcript = ""
     }
 
-    var orderedCaptions: [StoredCaption] { captions.sorted { $0.order < $1.order } }
+    var orderedCaptions: [StoredCaption] {
+        captions.sorted {
+            if $0.order != $1.order { return $0.order < $1.order }
+            return $0.start < $1.start
+        }
+    }
     var fullTranscript: String { orderedCaptions.map(\.text).joined(separator: "\n") }
 }
 

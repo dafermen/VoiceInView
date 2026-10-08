@@ -60,7 +60,12 @@ final class AudioCaptureService: SpeechAudioCapturing {
             // installTap is supported by the selected iOS 26 SDK; its successor requires iOS 27.
             let deliver = stream.continuation
             let sink = audioSink
-            let copyFailure = onFailure
+            let copyFailure: @Sendable () -> Void = { [weak self] in
+                Task { @MainActor [weak self] in
+                    guard let self, self.generation == identifier else { return }
+                    self.onFailure?(.engineFailure)
+                }
+            }
             let tap: @Sendable (AVAudioPCMBuffer, AVAudioTime) -> Void = { buffer, _ in
                 guard let channels = buffer.floatChannelData, buffer.frameLength > 0 else { return }
                 let frames = Int(buffer.frameLength)
@@ -76,7 +81,7 @@ final class AudioCaptureService: SpeechAudioCapturing {
                 if let sink {
                     guard let copy = AVAudioPCMBuffer(pcmFormat: buffer.format, frameCapacity: buffer.frameLength),
                           let destination = copy.floatChannelData else {
-                        Task { @MainActor in copyFailure?(.engineFailure) }
+                        copyFailure()
                         return
                     }
                     copy.frameLength = buffer.frameLength
@@ -136,6 +141,16 @@ final class AudioCaptureService: SpeechAudioCapturing {
             let raw = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
             if raw == AVAudioSession.InterruptionType.began.rawValue { report(.interruption) }
         })
+        let expectedInputs = session.currentRoute.inputs.map { $0.uid }
+        let routeChanged: @Sendable () -> Void = { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self, self.generation == identifier else { return }
+                let actualInputs = self.session.currentRoute.inputs.map { $0.uid }
+                if actualInputs != expectedInputs || !self.session.isInputAvailable {
+                    self.onFailure?(.routeChanged)
+                }
+            }
+        }
         observers.append(center.addObserver(
             forName: AVAudioSession.routeChangeNotification, object: session, queue: nil
         ) { notification in
@@ -146,13 +161,18 @@ final class AudioCaptureService: SpeechAudioCapturing {
                  AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue,
                  AVAudioSession.RouteChangeReason.noSuitableRouteForCategory.rawValue,
                  AVAudioSession.RouteChangeReason.routeConfigurationChange.rawValue:
-                report(.routeChanged)
+                routeChanged()
             default: break
             }
         })
         observers.append(center.addObserver(
             forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil
-        ) { _ in report(.configurationChanged) })
+        ) { _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.generation == identifier, self.engine?.isRunning == false else { return }
+                self.onFailure?(.configurationChanged)
+            }
+        })
         for name in [AVAudioSession.mediaServicesWereLostNotification, AVAudioSession.mediaServicesWereResetNotification] {
             observers.append(center.addObserver(forName: name, object: nil, queue: nil) { _ in
                 report(.mediaServicesChanged)

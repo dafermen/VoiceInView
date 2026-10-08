@@ -29,7 +29,7 @@ final class CaptionViewModel {
     @ObservationIgnored private var generation = UUID()
     @ObservationIgnored private var consumer: Task<Void, Never>?
     @ObservationIgnored private var foreground = true
-    @ObservationIgnored private var activeSince: Date?
+    @ObservationIgnored private var activeSince: ContinuousClock.Instant?
 
     init(microphone: any AudioCapturing, speech: any SpeechTranscribing) {
         self.microphone = microphone
@@ -78,7 +78,7 @@ final class CaptionViewModel {
             let updates = try await speech.start()
             guard generation == identifier, foreground else { await speech.cancel(); return }
             if startedAt == nil { startedAt = Date() }
-            activeSince = Date()
+            activeSince = .now
             state = .listening
             onRunStarted?()
             consumer = Task { @MainActor [weak self] in
@@ -95,6 +95,10 @@ final class CaptionViewModel {
                     await self.abort(message: "Speech recognition ended unexpectedly. Tap Resume to continue.")
                 } catch {
                     guard let self, self.generation == identifier else { return }
+                    if self.state == .stopping {
+                        self.notice = error.localizedDescription
+                        return
+                    }
                     await self.abort(message: error.localizedDescription)
                 }
             }
@@ -113,6 +117,7 @@ final class CaptionViewModel {
             catch { notice = error.localizedDescription }
             await consumer?.value
         } else {
+            state = .stopping
             generation = UUID()
             await speech.cancel()
         }
@@ -139,18 +144,34 @@ final class CaptionViewModel {
         }
     }
 
-    func background() async {
+    /// Called synchronously by scene changes so a queued cleanup cannot restart or prolong capture.
+    func prepareForBackground() -> UUID? {
         foreground = false
-        if state.active {
-            // Capture stops immediately; retain already finalized captions and checkpoint time.
-            await abort(message: "Listening stopped in the background. Tap Resume to continue. The unfinished sentence may be incomplete.")
-        }
+        guard state.active else { return nil }
+        generation = UUID()
+        do { try microphone.stop() } catch { notice = CaptureFailure.sessionFailure.message }
+        settleDuration()
+        consumer?.cancel()
+        consumer = nil
+        transcript.discardPartial()
+        state = .problem("Listening stopped in the background. Tap Resume to continue. The unfinished sentence may be incomplete.")
+        return generation
+    }
+
+    func cleanupBackground(_ identifier: UUID) async {
+        guard generation == identifier else { return }
+        await speech.cancel()
+    }
+
+    func background() async {
+        if let identifier = prepareForBackground() { await cleanupBackground(identifier) }
     }
 
     func foregrounded() { foreground = true }
 
     func reset() async {
         generation = UUID()
+        state = .stopping
         consumer?.cancel()
         consumer = nil
         await speech.cancel()
@@ -163,13 +184,13 @@ final class CaptionViewModel {
     }
 
     func currentDuration(at now: Date) -> TimeInterval {
-        elapsed + (activeSince.map { max(0, now.timeIntervalSince($0)) } ?? 0)
+        elapsed + (activeSince.map { SessionClock.seconds($0.duration(to: .now)) } ?? 0)
     }
 
     private var isProblem: Bool { if case .problem = state { true } else { false } }
 
     private func settleDuration() {
-        if let activeSince { elapsed += max(0, Date().timeIntervalSince(activeSince)) }
+        if let activeSince { elapsed += SessionClock.seconds(activeSince.duration(to: .now)) }
         activeSince = nil
         onCheckpoint?(elapsed)
     }

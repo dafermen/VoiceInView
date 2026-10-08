@@ -29,7 +29,7 @@ struct MicrophoneCheckView: View {
                     ProgressView(value: Double(model.level), total: 1)
                         .accessibilityLabel("Microphone input level")
                         .accessibilityValue("\(Int(model.level * 100)) percent")
-                    Text("The meter shows input volume. Live captions are not implemented yet.")
+                    Text("This check monitors volume only. Use Captions for live transcription.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                     VStack(spacing: 12) {
@@ -62,7 +62,7 @@ struct MicrophoneCheckView: View {
                 .frame(maxWidth: 640, alignment: .leading)
                 .frame(maxWidth: .infinity)
             }
-            .navigationTitle("vReader")
+            .navigationTitle("Microphone Check")
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {

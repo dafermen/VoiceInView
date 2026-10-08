@@ -82,7 +82,7 @@ struct CaptionScreen: View {
                 }
                 Button("Stop") { Task { await model.stop() } }
                     .buttonStyle(.bordered)
-                    .disabled(model.state.busy || (!model.state.active && model.state != .paused && !isProblem))
+                    .disabled(model.state == .stopping || (!model.state.active && model.state != .paused && !isProblem))
             }
             .frame(minHeight: 44)
             if model.permissionDenied {
@@ -109,7 +109,7 @@ struct CaptionScreen: View {
         .navigationTitle("vReader")
         .toolbar {
             Button("New Session") { confirmNewSession = true }
-                .disabled(model.state.active || model.state.busy)
+                .disabled(model.state.active || model.state.busy || model.preparationPending)
         }
         .confirmationDialog("Start a new session? Any captions that have not been saved will be cleared.",
                             isPresented: $confirmNewSession, titleVisibility: .visible) {
@@ -118,6 +118,7 @@ struct CaptionScreen: View {
         .task { await model.checkReadiness() }
         .onChange(of: model.state) { _, _ in applyWakePreference() }
         .onChange(of: settings.keepAwake) { _, _ in applyWakePreference() }
+        .onAppear { applyWakePreference() }
         .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
     }
 

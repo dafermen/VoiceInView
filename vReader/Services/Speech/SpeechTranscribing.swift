@@ -17,7 +17,7 @@ enum SpeechReadiness: Equatable, Sendable {
     }
 }
 
-enum TranscriptionFailure: LocalizedError {
+enum TranscriptionFailure: LocalizedError, Sendable {
     case notReady, format, overflow, failed, interrupted(String), finalizationTimeout
     var errorDescription: String? {
         switch self {

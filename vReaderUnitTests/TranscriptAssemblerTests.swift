@@ -2,6 +2,26 @@ import XCTest
 @testable import vReader
 
 final class TranscriptAssemblerTests: XCTestCase {
+    func testLateFinalFromEarlierRunRetainsRunOrder() {
+        let first = UUID()
+        let second = UUID()
+        var assembler = TranscriptAssembler()
+        _ = assembler.apply(.init(runID: first, start: 0, end: 1, text: "One", isFinal: true))
+        _ = assembler.apply(.init(runID: second, start: 0, end: 1, text: "Three", isFinal: true))
+        _ = assembler.apply(.init(runID: first, start: 1, end: 2, text: "Two", isFinal: true))
+        XCTAssertEqual(assembler.text, "One\nTwo\nThree")
+    }
+
+    func testMergedFinalRangeRemovesObsoleteStoredIdentifiers() {
+        let run = UUID()
+        var assembler = TranscriptAssembler()
+        let first = assembler.apply(.init(runID: run, start: 0, end: 1, text: "One", isFinal: true))
+        let second = assembler.apply(.init(runID: run, start: 1, end: 2, text: "Two", isFinal: true))
+        let merged = assembler.apply(.init(runID: run, start: 0, end: 2, text: "One two.", isFinal: true))
+        XCTAssertEqual(assembler.finalized.count, 1)
+        XCTAssertEqual(merged.upserted.first?.id, first.upserted.first?.id)
+        XCTAssertEqual(merged.removedIDs, second.upserted.map(\.id))
+    }
     func testLongTranscriptRetainsEveryFinalSegment() {
         let run = UUID()
         var assembler = TranscriptAssembler()
