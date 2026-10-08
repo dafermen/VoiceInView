@@ -10,6 +10,7 @@ final class HomeScreenTests: XCTestCase {
         XCTAssertTrue(app.buttons["Start Listening"].exists)
         XCTAssertFalse(app.buttons["Stop"].isEnabled)
         XCTAssertFalse(app.alerts.firstMatch.exists)
+        XCTAssertFalse(XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch.exists)
     }
 
     @MainActor

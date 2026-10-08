@@ -2,20 +2,21 @@
 This is a gate, not a claim that release is approved.
 
 ## Prepared in source
-- [x] iOS 26 deployment and native SwiftUI project.
+- [x] iOS 17 deployment and native SwiftUI project.
 - [x] On-device Apple speech boundary and explicit English model setup.
 - [x] Partial/final captions, reading controls, pause/resume and session history.
 - [x] Local-only storage and explicit text export/share.
-- [x] Microphone usage description in Debug/Release.
+- [x] Microphone and Speech Recognition usage descriptions in Debug/Release.
 - [x] Privacy manifest and policy/metadata drafts.
 - [x] AppIcon asset and Mac validation/archive scripts.
 - [x] Unit/UI tests and physical validation procedures.
 
 ## Must pass on Apple tooling
-- [ ] Debug simulator build.
-- [ ] All unit and UI tests.
-- [ ] Release simulator build and bundle/plist/privacy/asset checks.
-- [ ] Real compatible iPhone English model installation.
+- [x] Debug simulator build (Xcode 15.2, iOS 17.2 SDK).
+- [x] Compatibility unit and UI suite (40 unit + 3 UI, iOS 17.2 simulator).
+- [ ] Retained modern-engine build and AudioConversion test on Xcode 26+/iOS 26+.
+- [x] Release simulator build and bundle/plist/privacy/asset checks (Xcode 15.2).
+- [ ] Real compatible iPhone English Dictation/model setup and offline recognition, including 50-second request transitions.
 - [ ] Airplane Mode/Wi-Fi-off transcription proof and latency recording.
 - [ ] Missing model/unsupported hardware/permission-denied recovery.
 - [ ] Start/Stop and Pause/Resume without duplicates or unwanted restart.

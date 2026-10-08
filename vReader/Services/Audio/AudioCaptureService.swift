@@ -57,7 +57,7 @@ final class AudioCaptureService: SpeechAudioCapturing {
             let stream = AsyncStream<Float>.makeStream(bufferingPolicy: .bufferingNewest(1))
             continuation = stream.continuation
             // Explicit Sendable closure avoids inheriting MainActor on the audio thread.
-            // installTap is supported by the selected iOS 26 SDK; its successor requires iOS 27.
+            // installTap is available at the iOS 17 baseline; newer SDK replacements stay outside this compatibility path.
             let deliver = stream.continuation
             let sink = audioSink
             let copyFailure: @Sendable () -> Void = { [weak self] in

@@ -25,7 +25,7 @@ struct FinalizedChange {
 struct TranscriptAssembler {
     private(set) var finalized: [CaptionSegment] = []
     private(set) var partial: [CaptionSegment] = []
-    private var knownRuns: Set<UUID> = []
+    private var runOrder: [UUID: Int] = [:]
 
     mutating func apply(_ update: TranscriptionUpdate) -> FinalizedChange {
         guard update.start.isFinite, update.end.isFinite,
@@ -42,9 +42,9 @@ struct TranscriptAssembler {
         guard !text.isEmpty else { return FinalizedChange(removedIDs: [], upserted: []) }
         var segment = CaptionSegment(runID: update.runID, start: update.start, end: update.end, text: text)
         if update.isFinal {
-            if !knownRuns.contains(update.runID) {
+            if runOrder[update.runID] == nil {
+                runOrder[update.runID] = runOrder.count
                 finalized.append(segment)
-                knownRuns.insert(update.runID)
                 return FinalizedChange(removedIDs: [], upserted: [segment])
             }
             if let last = finalized.last,
@@ -59,6 +59,8 @@ struct TranscriptAssembler {
             // Insert in time order within this run; keep earlier runs before later ones.
             let insertion = finalized.firstIndex { $0.runID == update.runID && $0.start > segment.start }
                 ?? finalized.lastIndex(where: { $0.runID == update.runID }).map { $0 + 1 }
+                // Replacing every segment of an earlier run must retain its position.
+                ?? finalized.firstIndex { runOrder[$0.runID, default: 0] > runOrder[update.runID, default: 0] }
                 ?? finalized.endIndex
             finalized.insert(segment, at: insertion)
             return FinalizedChange(removedIDs: replaced.filter { $0.id != segment.id }.map(\.id),

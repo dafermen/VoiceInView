@@ -2,6 +2,7 @@ import SwiftUI
 import AVFoundation
 import UIKit
 
+@MainActor
 struct SettingsView: View {
     @Bindable var settings: AppSettings
     let coordinator: SessionCoordinator
@@ -42,6 +43,7 @@ struct SettingsView: View {
     }
 }
 
+@MainActor
 struct OfflineReadinessView: View {
     let coordinator: SessionCoordinator
     @Environment(\.scenePhase) private var phase
@@ -57,7 +59,7 @@ struct OfflineReadinessView: View {
         Form {
             Section("Required checks") {
                 LabeledContent("Microphone", value: permission == .granted ? "Ready" : "Permission needed")
-                LabeledContent("English model", value: coordinator.caption.readiness.description)
+                LabeledContent("Speech recognition", value: coordinator.caption.readiness.description)
                 LabeledContent("Local storage", value: storage.description)
                 LabeledContent("Offline transcription", value: ready ? "Ready for offline test" : "Not ready")
                 if permission == .undetermined {
@@ -72,7 +74,17 @@ struct OfflineReadinessView: View {
                         if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
                     }
                 }
-                if coordinator.caption.readiness == .missingAssets || modelProblem {
+                if coordinator.caption.readiness == .authorizationRequired {
+                    Button("Allow Speech Recognition") {
+                        Task { await coordinator.caption.requestSpeechPermission() }
+                    }
+                    .disabled(coordinator.caption.state.active || coordinator.caption.state.busy)
+                } else if coordinator.caption.readiness == .authorizationDenied {
+                    Button("Open Speech Settings") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                    }
+                }
+                if coordinator.caption.readiness == .missingAssets {
                     Button("Install English Model") {
                         Task { await coordinator.caption.installAssets() }
                     }
@@ -83,7 +95,7 @@ struct OfflineReadinessView: View {
             }
             Section {
                 Button("Test Offline Mode") { instructions = true }
-                Text("Installed assets are required, but only a real offline test verifies your device. This screen does not detect Airplane Mode.")
+                Text("Only a real offline test verifies your device. This screen does not detect Airplane Mode.")
                     .font(.caption)
             }
         }
@@ -95,7 +107,7 @@ struct OfflineReadinessView: View {
         .sheet(isPresented: $instructions) {
             NavigationStack {
                 List {
-                    Text("1. Install the English model and allow microphone access while online.")
+                    Text("1. While online, allow microphone and speech access as requested. Resolve the readiness checks. If on-device English is unavailable, enable English (US) Dictation in iPhone Settings. Install a model here only if that option is offered.")
                     Text("2. Enable Airplane Mode in Control Center or Settings, and turn Wi-Fi off.")
                     Text("3. Return to Captions, tap Start Listening, and speak a full English sentence.")
                     Text("4. Verify live and final captions appear; tap Stop and check the saved session.")
@@ -105,11 +117,6 @@ struct OfflineReadinessView: View {
                 .toolbar { Button("Done") { instructions = false } }
             }
         }
-    }
-
-    private var modelProblem: Bool {
-        if case .problem = coordinator.caption.readiness { return true }
-        return false
     }
 
     private func refreshPermission() {

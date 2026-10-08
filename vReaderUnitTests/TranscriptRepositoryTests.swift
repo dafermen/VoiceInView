@@ -20,7 +20,8 @@ final class TranscriptRepositoryTests: XCTestCase {
     func testFinalCaptionsSurviveStoreReopen() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("vReaderTests-\(UUID().uuidString)", isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: directory) }
+        // SwiftData can retain SQLite handles beyond an autoreleasepool on iOS 17.
+        // Leave this unique temporary store for OS cleanup instead of unlinking an open database.
         let identifier: UUID = try autoreleasepool {
             let repository = try TranscriptRepository(directory: directory)
             let session = try repository.create(title: "Persisted")
@@ -29,11 +30,13 @@ final class TranscriptRepositoryTests: XCTestCase {
             ]), to: session)
             return session.id
         }
-        let reopened = try TranscriptRepository(directory: directory)
-        let sessions = try reopened.container.mainContext.fetch(FetchDescriptor<ConferenceSession>())
-        let session = try XCTUnwrap(sessions.first { $0.id == identifier })
-        XCTAssertEqual(session.fullTranscript, "Recovered")
-        XCTAssertNil(session.endedAt)
+        try autoreleasepool {
+            let reopened = try TranscriptRepository(directory: directory)
+            let sessions = try reopened.container.mainContext.fetch(FetchDescriptor<ConferenceSession>())
+            let session = try XCTUnwrap(sessions.first { $0.id == identifier })
+            XCTAssertEqual(session.fullTranscript, "Recovered")
+            XCTAssertNil(session.endedAt)
+        }
     }
     func testIdempotentUpsertRenameAndCascadeDelete() throws {
         let repository = try TranscriptRepository(inMemory: true)

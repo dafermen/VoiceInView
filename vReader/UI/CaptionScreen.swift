@@ -1,9 +1,10 @@
 import SwiftUI
 import UIKit
 
+@MainActor
 struct CaptionScreen: View {
     @Bindable var model: CaptionViewModel
-    @Bindable var settings: AppSettings = AppSettings()
+    @Bindable var settings: AppSettings
     var newSession: (() async -> Void)? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo: .title) private var scaledSize: CGFloat = 28
@@ -29,7 +30,11 @@ struct CaptionScreen: View {
             if let notice = model.notice { Text(notice).font(.callout) }
             if model.readiness != .ready {
                 Text(model.readiness.description).font(.callout)
-                if model.readiness == .missingAssets || readinessProblem {
+                if model.readiness == .authorizationRequired {
+                    Button("Allow Speech Recognition") { Task { await model.requestSpeechPermission() } }
+                        .disabled(model.state.active || model.state.busy)
+                }
+                if model.readiness == .missingAssets {
                     Button("Install English Model (Internet required)") {
                         Task { await model.installAssets() }
                     }
@@ -85,7 +90,7 @@ struct CaptionScreen: View {
                     .disabled(model.state == .stopping || (!model.state.active && model.state != .paused && !isProblem))
             }
             .frame(minHeight: 44)
-            if model.permissionDenied {
+            if model.permissionDenied || model.readiness == .authorizationDenied {
                 Button("Open Settings") {
                     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
                 }
@@ -123,7 +128,6 @@ struct CaptionScreen: View {
     }
 
     private var isProblem: Bool { if case .problem = model.state { true } else { false } }
-    private var readinessProblem: Bool { if case .problem = model.readiness { true } else { false } }
 
     private func applyWakePreference() {
         UIApplication.shared.isIdleTimerDisabled = settings.keepAwake && model.state == .listening

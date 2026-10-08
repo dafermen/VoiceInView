@@ -6,7 +6,7 @@ struct StorageReadiness {
 
     var ready: Bool { availableBytes.map { $0 >= Self.minimumBytes } ?? false }
     var description: String {
-        guard let availableBytes else { return "Storage capacity could not be checked." }
+        guard availableBytes != nil else { return "Storage capacity could not be checked." }
         return ready ? "Storage available" : "Less than 64 MB free. Free space before starting a session."
     }
 

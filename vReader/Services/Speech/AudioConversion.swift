@@ -1,7 +1,9 @@
+#if compiler(>=6.2)
 import AVFoundation
 import Speech
 
 /// Converter state and buffers stay on this actor, away from presentation.
+@available(iOS 26.0, *)
 actor AudioConversion {
     private var converter: AVAudioConverter?
     private let target: AVAudioFormat
@@ -53,3 +55,4 @@ actor AudioConversion {
         throw TranscriptionFailure.format
     }
 }
+#endif

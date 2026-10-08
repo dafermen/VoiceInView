@@ -1,15 +1,16 @@
 # vReader
 
-Native iPhone app designed to caption English speech on device during conferences, classes, meetings and presentations, even without Internet after compatible English assets are installed.
+Native iPhone app designed to caption English speech on device during conferences, classes, meetings and presentations, without sending recognition audio to a server, when on-device English support is available.
 
 ## Current status
 Implementation and release-preparation source through Phase 9 are present. This is a DEVELOPMENT BUILD, not a certified release candidate.
-No Xcode build, XCTest execution or physical iPhone validation has been run: the development host is Windows. Static checks passed; they do not prove Swift compilation, transcription accuracy or offline/runtime behavior.
+The project now targets iOS 17 and builds with Xcode 15.2 on macOS Ventura. A compatibility speech engine uses SFSpeechRecognizer with on-device recognition required. The modern iOS 26 engine is retained behind compiler/OS availability checks. See [validation results](docs/validation-report.md) for executed checks; real-device accuracy and offline behavior remain unverified.
 The user explicitly authorized continuous progression through Phase 9 despite pending Apple validation. Phase 10 online AI is not implemented.
 
 ## Implemented source
 - Foreground built-in microphone capture, contextual permission and diagnostics.
-- SpeechTranscribing boundary with Apple SpeechAnalyzer/SpeechTranscriber, en-US readiness and explicit model installation.
+- SpeechTranscribing boundary with offline-only SFSpeechRecognizer on older toolchains/OS versions, plus SpeechAnalyzer/SpeechTranscriber when built with Xcode 26+ and run on iOS 26+.
+- Compatibility requests rotate after 50 seconds of audio; incoming audio waits in a bounded queue during finalization. Overflow/timeouts stop visibly. Speech permission and system model availability are explicit.
 - Partial/final caption assembly with independent analyzer-run identities.
 - Scaled/adjustable caption text, light/dark/system appearance, live-follow, pause/resume, active-listening duration and optional screen wake.
 - SwiftData local sessions, incremental final-caption saves, history, rename, confirmed deletion and title/finished-transcript search.
@@ -19,29 +20,29 @@ The user explicitly authorized continuous progression through Phase 9 despite pe
 - Privacy manifest, in-app policy, publication draft, icon, App Store metadata drafts and release checklist.
 
 ## Requirements
-Development: Mac with Xcode 26+ and iOS 26+ SDK/runtime.
-Use: iPhone with iOS 26.0+, SpeechTranscriber hardware support, supported en-US assets and microphone consent. OS version alone does not guarantee engine compatibility.
-Final device matrix is pending. Initial English model installation needs Internet and additional disk space.
+Development: Mac with Xcode 15.2+ and a compatible iOS 17+ SDK/runtime. The modern speech engine requires Xcode 26+ (Swift compiler 6.2+) and iOS 26+.
+Use: iPhone with iOS 17+, on-device en-US recognition support and microphone consent. The compatibility engine also requires Speech Recognition permission. OS version alone does not guarantee engine/model compatibility.
+Final device matrix is pending. System language/model setup may need Internet and disk space. Xcode 15.2 builds use the compatibility engine even on newer iPhones; debugging also requires Xcode support for the phone’s OS.
 No account, cloud recognition, OpenAI key or third-party package is required.
 
 ## Build and test on Mac
-Open vReader.xcodeproj, select shared scheme vReader and an iOS 26+ iPhone simulator.
+Open vReader.xcodeproj, select shared scheme vReader and an iOS 17+ iPhone simulator.
 From the project root:
 ~~~sh
 bash scripts/validate-macos.sh
 ~~~
 The script builds Debug, runs unit/UI tests, builds Release and checks the simulator bundle. Physical iPhone checks remain manual.
-For device installation, replace com.example.vReader and select your signing team in Xcode.
+Signing is configured for team `7799N4RYUG` and app identifier `com.dafermen.vReader`. Register this identifier with the same Apple team when configuring distribution.
 See [development](docs/development.md), [testing](docs/testing.md) and [release checklist](docs/release-checklist.md).
 
 ## How to use after validation
-1. Settings > Offline Readiness: allow microphone and explicitly install the English model while online.
+1. Settings > Offline Readiness: allow microphone and Speech Recognition when requested. Resolve any readiness warnings while online. With the compatibility engine, enable English (US) Dictation in iPhone Settings if on-device support is unavailable, then refresh; the app cannot download that engine’s model. Use Install English Model only if the modern engine offers it.
 2. Test Offline Mode: enable Airplane Mode and turn Wi-Fi off, then return to Captions.
 3. Start Listening; read live captions. Pause/Resume retains earlier final text. Stop finalizes the session.
 4. Auto-save is on by default. When off, use Save Session before clearing or closing the app.
 5. Sessions: open/rename/search/delete or export/copy/share.
 
-Leaving/locking the app stops microphone capture; restart requires user action. Unfinished sentences can be lost on cancellation. Saved sessions are excluded from device backup; export anything you need to retain.
+Leaving/locking the app stops microphone capture; restart requires user action. Unfinished captions can be lost on cancellation. With the compatibility engine, a provisional request can contain about 50 seconds of speech; use Pause/Stop to finalize before leaving. Saved sessions are excluded from device backup; export anything you need to retain.
 Audio is never stored or uploaded by the app. Explicit sharing may transmit text through the chosen destination.
 
 ## Architecture / folders
@@ -51,14 +52,14 @@ Audio is never stored or uploaded by the app. Explicit sharing may transmit text
 - vReader/Services/Audio and Speech — native capture and isolated speech engine.
 - vReader/Models and Persistence — transcript assembly, schema, local storage and settings.
 - vReader/Utilities — time formatting and text export.
-- vReaderUnitTests / vReaderTests — 32 unit tests and 3 UI tests (not executed).
+- vReaderUnitTests / vReaderTests — compatibility/lifecycle, transcript, storage, settings and UI tests; see the validation report for executed counts. Modern audio conversion tests require Xcode 26/iOS 26.
 - scripts — Windows static checks and Mac build/archive validation.
 - docs — architecture, ADRs, phase reports, privacy and release material.
 
 ## Limitations / release gates
 Real offline transcription, latency, 30/60/120-minute reliability, accessibility, database recovery, protection/backup behavior and release archiving are unverified.
 Built-in microphone only; Bluetooth input, background capture, PDF and online AI are not implemented.
-Current installTap API is supported at the iOS 26 baseline and deprecated beginning iOS 27; migration to its iOS 27 replacement requires that SDK and new validation.
-Publisher/license, final bundle ID/team, contact/support/privacy URLs, questionnaire answers and genuine screenshots are pending.
+Current installTap API is supported at the iOS 17 baseline and deprecated beginning iOS 27; migration to its iOS 27 replacement requires that SDK and new validation.
+Publisher/license, registration of the bundle ID in App Store Connect, contact/support/privacy URLs, questionnaire answers and genuine screenshots are pending.
 
 [Delivery report](docs/implementation-report.md) · [Validation results](docs/validation-report.md) · [Architecture](docs/architecture.md) · [Roadmap](docs/roadmap.md) · [Privacy](docs/privacy.md)

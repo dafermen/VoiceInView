@@ -3,6 +3,7 @@ import SwiftData
 import UniformTypeIdentifiers
 import UIKit
 
+@MainActor
 struct SessionHistoryView: View {
     let coordinator: SessionCoordinator
     @Query(sort: \ConferenceSession.createdAt, order: .reverse) private var sessions: [ConferenceSession]
@@ -60,6 +61,7 @@ struct SessionHistoryView: View {
     }
 }
 
+@MainActor
 struct SessionDetailView: View {
     @Bindable var session: ConferenceSession
     let repository: TranscriptRepository

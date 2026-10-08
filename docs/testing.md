@@ -1,15 +1,16 @@
 # Testing through Phase 9
-Execution status on Windows: 32 unit tests and 3 UI tests WRITTEN, NOT EXECUTED. Debug/Release compilation, actual captions and physical-device tests NOT RUN.
-Static validation passed separately; see validation-report.md.
+The project now builds with Xcode 15.2/iOS 17. On the iOS 17.2 simulator, 40 unit tests and 3 UI tests passed. The modern AudioConversion test is excluded by the older compiler. See validation-report.md for logs and remaining gates. Simulator tests do not verify actual speech, offline model availability or a physical iPhone.
+
 
 ## Automated suite
 - ListeningViewModelTests: 12 permission/start/stop/error/lifecycle tests.
-- TranscriptAssemblerTests: 7 partial/final/duplicate/repeated-text/run-order/merge/10,000-segment regressions.
+- TranscriptAssemblerTests: 8 partial/final/duplicate/repeated-text/run-order/late-revision/merge/10,000-segment regressions.
 - CaptionViewModelTests: 4 readiness/finalization/pause-resume/background-start tests.
 - TranscriptRepositoryTests: 3 upsert/rename/delete/order/reopen tests.
 - TranscriptExportTests: 2 Unicode/metadata/filename tests.
 - AppSettingsTests: 2 preference/readiness tests.
-- AudioConversionTests: 1 sample-rate conversion test.
+- LegacySpeechTranscriberTests: offline request flags, authorization/support refusal, request rotation, queued audio, cancellation, timeout and overflow.
+- AudioConversionTests: 1 sample-rate conversion test, only compiled with Swift 6.2+ and requiring iOS 26.
 - SessionClockTests: 1 invalid/long-duration test.
 - HomeScreenTests: 3 launch, settings/readiness/privacy and retained microphone-diagnostic tests.
 Run bash scripts/validate-macos.sh. Do not infer device speech support from passing mocked/simulator tests.
@@ -21,11 +22,11 @@ Volume monitoring is not speech recognition and cannot prove offline captions.
 
 ## Phase 2 actual offline speech
 1. Record device model, iOS, Xcode/SDK/build and English asset status.
-2. While online, Settings > Offline Readiness, allow mic and Install English Model explicitly.
+2. While online, Settings > Offline Readiness, allow microphone and Speech Recognition if requested. With the compatibility engine, prepare English (US) Dictation in iPhone Settings if support is unavailable and refresh; no in-app model downloader exists for this engine. With the modern engine, Install English Model explicitly.
 3. Enable Airplane Mode and turn Wi-Fi off; reopen/refresh readiness.
 4. Captions > Start Listening, speak a known English passage. Observe provisional revisions and final text without duplicate ranges.
 5. Record measured/observed start latency, live-caption delay, accuracy and failures; no numbers are provided before observation.
-6. Stop and inspect finalization. Test unsupported hardware/locale and missing assets without silent download or cloud fallback.
+6. For the compatibility engine, speak continuously across several 50-second request boundaries; check for missing/repeated words and ensure preceding final chunks remain saved. Stop and inspect finalization. Test unsupported hardware/locale and missing assets without silent download or cloud fallback.
 
 ## Phase 3 reading/accessibility
 Pause/Resume retains earlier final captions and excludes paused time. Stop ends the session; New Session confirms clearing unsaved content.

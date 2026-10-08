@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 
+@MainActor
 struct AppRootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var coordinator: SessionCoordinator?

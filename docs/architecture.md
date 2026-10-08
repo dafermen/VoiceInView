@@ -1,10 +1,11 @@
 # Architecture through Phase 9
 App -> AppRootView -> SessionCoordinator -> CaptionViewModel -> SpeechTranscribing.
-AppleSpeechTranscriber uses the shared AudioCaptureService and an AudioConversion actor, never a cloud fallback.
+CaptionViewModel selects LegacySpeechTranscriber for Xcode 15.2 builds and older iOS versions. Swift 6.2+ builds select AppleSpeechTranscriber on iOS 26+. Both use AudioCaptureService and never fall back to server recognition. Modern conversion stays in its AudioConversion actor.
 MainActor owns observable UI state, capture/session control and SwiftData context. Conversion runs on its own actor.
 
 ## Audio and recognition
-Start checks supported hardware/locale/installed assets, asks microphone permission only when needed, prepares analyzer and starts a built-in mic engine.
+Start checks speech readiness, asks microphone permission only when needed, and starts the built-in mic. Compatibility readiness requires explicit speech authorization, en-US support, supportsOnDeviceRecognition and availability. Each system request independently rechecks those conditions and sets requiresOnDeviceRecognition=true.
+Compatibility requests use cumulative full-request text ranges and a new run UUID for each request. After 50 seconds of submitted audio, endAudio waits for the final result (10-second timeout), then queued buffers feed the next request. The 128-frame raw queue fails on overflow; cancellation stops audio and unblocks finalization. Unexpected errors stop the session, preserving earlier final chunks. Hardware tests must verify continuity at request boundaries.
 Tap buffers are copied into immutable-owned CapturedAudio values before crossing executor boundaries. @unchecked Sendable expresses that ownership contract; consumers never mutate a shared buffer.
 AVAudioConverter produces AnalyzerInput at the analyzer-selected format. Asset download is an explicit separate action. Installed English assets are reserved for reuse.
 Raw/input/result queues are bounded, overflow stops the session and missing audio/finalization timeouts surface errors.
@@ -33,7 +34,7 @@ CloudKit is disabled; the store directory is backup-excluded with complete-until
 Future schema changes require an explicit migration plan.
 
 ## Privacy and distribution
-Only model installation uses system download services. Explicit file export/Copy/Share can send text to user-selected destinations.
+System language/model preparation can use system download services. The compatibility engine cannot explicitly download models; its readiness screen directs users to English Dictation settings. Speech authorization is requested explicitly for that engine. The modern engine retains explicit AssetInventory installation. Explicit file export/Copy/Share can send text to user-selected destinations.
 No raw audio storage, developer network client, tracking, ads, analytics, account or embedded secret.
 Manifest includes app-owned preferences and disk-space reasons. Source review is not a binary privacy/security audit.
 Phase 9 prepares metadata/icon/scripts/checklist; actual Mac/device/Organizer validation and owner publication inputs are pending.

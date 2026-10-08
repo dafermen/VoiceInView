@@ -2,6 +2,19 @@ import XCTest
 @testable import vReader
 
 final class TranscriptAssemblerTests: XCTestCase {
+    func testRevisedFinalFromEarlierRunRetainsRunOrderAndIdentifier() {
+        let first = UUID()
+        let second = UUID()
+        var assembler = TranscriptAssembler()
+        let original = assembler.apply(.init(runID: first, start: 0, end: 1, text: "One", isFinal: true))
+        _ = assembler.apply(.init(runID: second, start: 0, end: 1, text: "Two", isFinal: true))
+        let revision = assembler.apply(.init(runID: first, start: 0, end: 1, text: "One revised.", isFinal: true))
+
+        XCTAssertEqual(assembler.text, "One revised.\nTwo")
+        XCTAssertEqual(revision.upserted.first?.id, original.upserted.first?.id)
+        XCTAssertTrue(revision.removedIDs.isEmpty)
+    }
+
     func testLateFinalFromEarlierRunRetainsRunOrder() {
         let first = UUID()
         let second = UUID()

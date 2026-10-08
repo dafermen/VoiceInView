@@ -38,7 +38,21 @@ final class CaptionViewModel {
 
     convenience init() {
         let audio = AudioCaptureService()
-        self.init(microphone: audio, speech: AppleSpeechTranscriber(audio: audio))
+        #if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            self.init(microphone: audio, speech: AppleSpeechTranscriber(audio: audio))
+            return
+        }
+#endif
+        self.init(microphone: audio, speech: LegacySpeechTranscriber(audio: audio))
+    }
+
+    func requestSpeechPermission() async {
+        guard !state.active, !state.busy, !preparationPending else { return }
+        preparationPending = true
+        defer { preparationPending = false }
+        await speech.requestAuthorization()
+        await checkReadiness()
     }
 
     func checkReadiness() async { readiness = await speech.readiness() }
@@ -154,7 +168,7 @@ final class CaptionViewModel {
         consumer?.cancel()
         consumer = nil
         transcript.discardPartial()
-        state = .problem("Listening stopped in the background. Tap Resume to continue. The unfinished sentence may be incomplete.")
+        state = .problem("Listening stopped in the background. Tap Resume to continue. Unfinished captions may be lost.")
         return generation
     }
 

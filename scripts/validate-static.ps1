@@ -60,8 +60,8 @@ public sealed class VReaderProjectParser {
 Add-Type -TypeDefinition $parserCode
 $parsedProject = ([VReaderProjectParser]::new($projectSource)).Parse()
 $projectObjects = $parsedProject['objects']
-if ($projectObjects.Count -ne 37) { throw 'Unexpected object count' }
-foreach ($reference in [regex]::Matches($projectSource, '[AB][0-9A-F]{23}')) {
+if ($projectObjects.Count -lt 37) { throw 'Incomplete project object graph' }
+foreach ($reference in [regex]::Matches($projectSource, '[0-9A-F]{24}')) {
  if (-not $projectObjects.ContainsKey($reference.Value)) { throw "Unresolved object: $reference" }
 }
 $projectObject = $projectObjects[$parsedProject['rootObject']]
@@ -72,9 +72,23 @@ foreach ($targetId in $projectObject['targets']) {
  foreach ($configurationId in $configurations) {
   $settings = $projectObjects[$configurationId]['buildSettings']
   if ($target['name'] -eq 'vReader' -and -not $settings.ContainsKey('INFOPLIST_KEY_NSMicrophoneUsageDescription')) { throw 'Missing microphone purpose' }
+  if ($target['name'] -eq 'vReader' -and -not $settings.ContainsKey('INFOPLIST_KEY_NSSpeechRecognitionUsageDescription')) { throw 'Missing speech recognition purpose' }
  }
- foreach ($groupId in $target['fileSystemSynchronizedGroups']) {
-  if (-not (Test-Path -LiteralPath (Join-Path $projectRoot $projectObjects[$groupId]['path']))) { throw 'Missing source group' }
+ foreach ($phaseId in $target['buildPhases']) {
+  foreach ($buildId in $projectObjects[$phaseId]['files']) {
+   if (-not $projectObjects.ContainsKey($buildId)) { throw 'Missing build file' }
+   if (-not $projectObjects.ContainsKey($projectObjects[$buildId]['fileRef'])) { throw 'Missing file reference' }
+  }
+ }
+}
+foreach ($group in $projectObjects.Values) {
+ if ($group['isa'] -eq 'PBXGroup' -and $group.ContainsKey('path')) {
+  $groupPath = Join-Path $projectRoot $group['path'].Trim('"')
+  if (-not (Test-Path -LiteralPath $groupPath)) { throw 'Missing source group' }
+  foreach ($child in $group['children']) {
+   $childPath = Join-Path $groupPath $projectObjects[$child]['path'].Trim('"')
+   if (-not (Test-Path -LiteralPath $childPath)) { throw "Missing source file: $childPath" }
+  }
  }
 }
 [xml]$scheme = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'vReader.xcodeproj\xcshareddata\xcschemes\vReader.xcscheme')
@@ -91,7 +105,7 @@ foreach ($unitFile in Get-ChildItem -LiteralPath (Join-Path $projectRoot 'vReade
 }
 $uiSource = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'vReaderTests\HomeScreenTests.swift')
 if ([regex]::Matches($uiSource, 'func test\w+\(').Count -ne 3) { throw 'Expected three UI tests' }
-$authoredFiles = Get-ChildItem -LiteralPath $projectRoot -Recurse -File | Where-Object { $_.FullName -notlike '*\.git\*' -and $_.Name -ne 'project-brief.txt' -and $_.Extension -ne '.png' }
+$authoredFiles = Get-ChildItem -LiteralPath $projectRoot -Recurse -File | Where-Object { $_.FullName -notmatch '[\\/](\.git|build|DerivedData)[\\/]' -and $_.Name -ne 'project-brief.txt' -and $_.Extension -ne '.png' }
 foreach ($file in $authoredFiles) {
  $source = Get-Content -Raw -LiteralPath $file.FullName
  if ($source -match '(?m)[ \t]+$') { throw "Trailing whitespace: $($file.Name)" }
@@ -104,6 +118,8 @@ foreach ($file in $authoredFiles) {
  }
 }
 
+$legacySource = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'vReader/Services/Speech/LegacySpeechBackend.swift')
+if (-not $legacySource.Contains('request.requiresOnDeviceRecognition = true') -or -not $legacySource.Contains('recognizer.supportsOnDeviceRecognition')) { throw 'Missing offline-only legacy speech policy' }
 [xml]$privacy = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'vReader\PrivacyInfo.xcprivacy')
 $privacySource = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'vReader\PrivacyInfo.xcprivacy')
 foreach ($reason in @('CA92.1','E174.1')) { if (-not $privacySource.Contains($reason)) { throw 'Missing privacy reason' } }
@@ -118,7 +134,7 @@ if ($icon.Width -ne 1024 -or $icon.Height -ne 1024) { $icon.Dispose(); throw 'In
 $icon.Dispose()
 foreach ($swiftFile in Get-ChildItem -LiteralPath (Join-Path $projectRoot 'vReader') -Recurse -Filter '*.swift') {
  $swiftText = Get-Content -Raw -LiteralPath $swiftFile.FullName
- if ($swiftText -match '\b(URLSession|SFSpeechRecognizer|AVAudioRecorder|AVAudioFile|Firebase)\b' -or $swiftText -match 'sk-[A-Za-z0-9]{20,}') { throw "Unexpected network/recording/secret surface: $($swiftFile.Name)" }
+ if ($swiftText -match '\b(URLSession|AVAudioRecorder|AVAudioFile|Firebase)\b' -or $swiftText -match 'sk-[A-Za-z0-9]{20,}') { throw "Unexpected network/recording/secret surface: $($swiftFile.Name)" }
  $masked = [regex]::Replace($swiftText, '(?s)""".*?"""|"(?:\\.|[^"\\])*"|/\*.*?\*/|//[^\r\n]*', '')
  $stack = [System.Collections.Generic.Stack[char]]::new()
  foreach ($character in $masked.ToCharArray()) {
@@ -144,9 +160,9 @@ if ($gitCommand) {
 }
 Write-Output "PASS: Manifest XML/reasons, metadata field limits, asset JSON, opaque 1024 px icon and Swift delimiter/source surface checks; $allUnitCount unit tests and 3 UI tests are present (not executed)."
 
-Write-Output 'PASS: OpenStep project syntax parsed; 37 project objects resolved; 3 targets; 2 scheme test targets; microphone purpose in both app configurations; source groups exist; local documentation links valid; authored files have no trailing whitespace.'
+Write-Output 'PASS: OpenStep project syntax parsed; project object references resolved; 3 targets; 2 scheme test targets; microphone purpose in both app configurations; source groups exist; local documentation links valid; authored files have no trailing whitespace.'
 if (Get-Command xcodebuild -ErrorAction SilentlyContinue) {
- throw 'Xcode is unexpectedly available; execute build before closing validation'
+ Write-Output 'Run bash scripts/validate-macos.sh for full Apple build and test validation.'
 } else {
  Write-Output 'BLOCKED: xcodebuild is unavailable on Windows. Build, XCTest and iPhone runtime validation not executed.'
 }

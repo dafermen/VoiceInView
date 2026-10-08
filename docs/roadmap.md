@@ -1,5 +1,5 @@
 # Roadmap and acceptance status
-The user authorized continuous implementation through Phase 9. Each stage has a local commit/report, but no stage is certified by an Apple build or device run yet.
+The user authorized continuous implementation through Phase 9. Each stage has a local commit/report, with validation evidence tracked in validation-report.md. The iOS 17 compatibility migration now permits native Xcode 15.2 simulator builds; real-device speech/release gates remain open.
 
 | Phase | Source / preparation | Required external validation |
 | --- | --- | --- |

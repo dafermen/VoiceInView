@@ -1,7 +1,9 @@
+#if compiler(>=6.2)
 import AVFoundation
 import CoreMedia
 import Speech
 
+@available(iOS 26.0, *)
 @MainActor
 final class AppleSpeechTranscriber: SpeechTranscribing {
     private let audio: any SpeechAudioCapturing
@@ -215,3 +217,4 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
         output = nil
     }
 }
+#endif

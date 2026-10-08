@@ -101,8 +101,18 @@ final class TranscriptRepository {
     }
 
     func delete(_ session: ConferenceSession) throws {
+        let identifier = session.id
+        // Explicit deletion also covers iOS 17 stores where cascade propagation
+        // can leave registered caption objects behind in the context.
+        for caption in session.captions { context.delete(caption) }
         context.delete(session)
         do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
+        if cacheSessionID == identifier {
+            cacheSessionID = nil
+            currentCaptions = [:]
+            runOrder = [:]
+            nextOrder = 0
+        }
     }
 
     func save() throws { try context.save() }

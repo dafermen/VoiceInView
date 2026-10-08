@@ -1,4 +1,5 @@
 # ADR-002: Apple Speech engine and minimum platform
+Current baseline updated by [ADR-006](ADR-006-xcode-15-compatibility.md). The original decision below describes the retained modern engine.
 Status: Accepted for implementation in Phase 2; hardware validation pending.
 ## Context
 Apple introduced SpeechAnalyzer and SpeechTranscriber with iOS 26 for on-device transcription. API availability does not guarantee model/device support.

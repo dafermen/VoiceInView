@@ -1,4 +1,5 @@
 # ADR-004: Offline speech pipeline
+Current baseline updated by [ADR-006](ADR-006-xcode-15-compatibility.md). The original decision below describes the retained modern engine.
 Status: Implemented; Apple build/device validation pending.
 ## Context
 SpeechAnalyzer/SpeechTranscriber require iOS 26 and installed compatible assets. Some current helper APIs in Apple's docs require iOS 27.
