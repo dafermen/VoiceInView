@@ -29,7 +29,7 @@ struct SettingsView: View {
                 Toggle("Auto-save final captions", isOn: $settings.autoSave)
                     .disabled(coordinator.caption.state.active || coordinator.caption.state.busy ||
                               (coordinator.caption.startedAt != nil && coordinator.caption.state != .ended))
-                Text("When off, captions remain in memory until you tap Save Session. Leaving or closing the app may lose unsaved text.")
+                Text("When off, captions remain in memory until you tap Save Session or save a bookmark. Leaving or closing the app may lose unsaved text.")
                     .font(.caption)
                 Text("Saved sessions are excluded from device backup. Export anything you need to keep.")
                     .font(.caption)

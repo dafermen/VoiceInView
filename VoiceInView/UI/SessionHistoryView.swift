@@ -65,6 +65,7 @@ struct SessionHistoryView: View {
 struct SessionDetailView: View {
     @Bindable var session: ConferenceSession
     let repository: TranscriptRepository
+    @State private var showingBookmarks = false
     @State private var exporting = false
     @State private var renaming = false
     @State private var title = ""
@@ -83,7 +84,11 @@ struct SessionDetailView: View {
             .frame(maxWidth: .infinity, alignment: .leading).padding()
         }
         .navigationTitle(session.title)
+        .sheet(isPresented: $showingBookmarks) {
+            BookmarkListView(sessionID: session.id, repository: repository)
+        }
         .toolbar {
+            Button("Bookmarks", systemImage: "bookmark") { showingBookmarks = true }
             Button("Rename") { title = session.title; renaming = true }
             Menu("Export") {
                 Button("Export Text File") { exporting = true }
@@ -113,5 +118,43 @@ struct SessionDetailView: View {
         TranscriptExport.render(title: session.title, date: session.startedAt, duration: session.duration,
                                 language: session.language, transcript: session.fullTranscript,
                                 unfinished: session.endedAt == nil)
+    }
+}
+
+@MainActor
+struct BookmarkListView: View {
+    let repository: TranscriptRepository
+    @Query private var bookmarks: [CaptionBookmark]
+    @Environment(\.dismiss) private var dismiss
+    @State private var failure = false
+
+    init(sessionID: UUID?, repository: TranscriptRepository) {
+        self.repository = repository
+        let identifier = sessionID ?? UUID()
+        _bookmarks = Query(filter: #Predicate<CaptionBookmark> { $0.sessionID == identifier },
+                           sort: \.createdAt)
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                if bookmarks.isEmpty {
+                    ContentUnavailableView("No bookmarks yet", systemImage: "bookmark",
+                        description: Text("Touch and hold a finished paragraph in Captions to save a phrase for later."))
+                }
+                ForEach(bookmarks) { bookmark in
+                    Text(bookmark.text).font(.title3).textSelection(.enabled)
+                        .swipeActions {
+                            Button("Remove", role: .destructive) {
+                                do { try repository.removeBookmark(bookmark) }
+                                catch { failure = true }
+                            }
+                        }
+                }
+            }
+            .navigationTitle("Bookmarks").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .alert("Could not remove bookmark", isPresented: $failure) { Button("OK") {} }
+        }
     }
 }

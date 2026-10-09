@@ -117,4 +117,99 @@ final class HomeScreenTests: XCTestCase {
         XCTAssertTrue(reader.waitForExistence(timeout: 5))
     }
 
+    @MainActor
+    func testFullScreenKeepsListeningAndRestoresTabsAfterRotation() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-reader"]
+        XCUIDevice.shared.orientation = .portrait
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+        let reader = app.scrollViews["captionScrollView"]
+        XCTAssertTrue(reader.waitForExistence(timeout: 15))
+        app.buttons["primaryCaptionAction"].tap()
+        XCTAssertTrue(app.buttons["primaryCaptionAction"].waitForExistence(timeout: 5))
+        let originalHeight = reader.frame.height
+        app.buttons["fullScreenButton"].tap()
+        XCTAssertEqual(app.buttons["primaryCaptionAction"].label, "Pause")
+        XCTAssertFalse(app.tabBars.buttons["Settings"].isHittable)
+        XCTAssertGreaterThan(reader.frame.height, originalHeight + 40)
+        for orientation: UIDeviceOrientation in [.portrait, .landscapeLeft, .landscapeRight] {
+            XCUIDevice.shared.orientation = orientation
+            let landscape = orientation != .portrait
+            expectation(for: NSPredicate { _, _ in
+                let frame = app.windows.firstMatch.frame
+                let rotated = landscape ? frame.width > frame.height : frame.height > frame.width
+                return rotated && app.buttons["fullScreenButton"].isHittable
+            }, evaluatedWith: app)
+            waitForExpectations(timeout: 8)
+            XCTAssertTrue(app.buttons["fullScreenButton"].isHittable)
+            XCTAssertTrue(app.buttons["primaryCaptionAction"].isHittable)
+            expectation(for: NSPredicate { _, _ in
+                let count = (reader.value as? String ?? "").components(separatedBy: " ").first ?? ""
+                let latest = reader.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Paragraph \(count).")).firstMatch
+                return latest.exists && latest.isHittable
+            }, evaluatedWith: reader)
+            waitForExpectations(timeout: 8)
+            let capture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            capture.name = "Reader-Fullscreen-\(orientation.rawValue)"
+            capture.lifetime = .keepAlways
+            add(capture)
+        }
+        app.buttons["primaryCaptionAction"].tap()
+        expectation(for: NSPredicate(format: "label == 'Resume'"), evaluatedWith: app.buttons["primaryCaptionAction"])
+        waitForExpectations(timeout: 5)
+        app.buttons["fullScreenButton"].tap()
+        XCTAssertTrue(app.tabBars.buttons["Sessions"].isHittable)
+        app.tabBars.buttons["Sessions"].tap()
+        app.tabBars.buttons["Captions"].tap()
+        XCTAssertEqual(app.buttons["primaryCaptionAction"].label, "Resume")
+    }
+
+    @MainActor
+    func testRereadingStaysInPlaceAsNewCaptionsArriveAndReturnsToLive() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-reader"]
+        XCUIDevice.shared.orientation = .portrait
+        app.launch()
+        let reader = app.scrollViews["captionScrollView"]
+        XCTAssertTrue(reader.waitForExistence(timeout: 15))
+        app.buttons["primaryCaptionAction"].tap()
+        // Wait for rendered live text, rather than a transient accessibility
+        // scroll value while SwiftUI is laying out the initial 320 paragraphs.
+        let incoming = reader.staticTexts.matching(NSPredicate(
+            format: "label CONTAINS %@", "New captions keep arriving while you read.")).firstMatch
+        XCTAssertTrue(incoming.waitForExistence(timeout: 10))
+        reader.swipeDown()
+        XCTAssertTrue(app.buttons["backToLiveButton"].waitForExistence(timeout: 5))
+        let visible = reader.staticTexts.allElementsBoundByIndex.first {
+            $0.label.hasPrefix("Paragraph ") && reader.frame.contains($0.frame)
+        }
+        let paragraph = try XCTUnwrap(visible)
+        let label = paragraph.label
+        let oldY = paragraph.frame.minY
+        let oldValue = reader.value as? String
+        expectation(for: NSPredicate { _, _ in (reader.value as? String) != oldValue }, evaluatedWith: reader)
+        waitForExpectations(timeout: 8)
+        XCTAssertTrue(paragraph.isHittable)
+        XCTAssertEqual(paragraph.frame.minY, oldY, accuracy: 3)
+        XCTAssertEqual(app.buttons["primaryCaptionAction"].label, "Pause")
+        paragraph.press(forDuration: 1.2)
+        XCTAssertTrue(app.buttons["Save bookmark"].waitForExistence(timeout: 5))
+        app.buttons["Save bookmark"].tap()
+        app.buttons["sessionActionsButton"].tap()
+        app.buttons["Bookmarks"].tap()
+        XCTAssertTrue(app.staticTexts[label].waitForExistence(timeout: 5))
+        app.buttons["Done"].tap()
+        app.buttons["backToLiveButton"].tap()
+        XCTAssertFalse(app.buttons["backToLiveButton"].exists)
+        XCTAssertTrue((reader.value as? String)?.contains("Following live captions") == true)
+        app.buttons["primaryCaptionAction"].tap()
+        expectation(for: NSPredicate(format: "label == 'Resume'"), evaluatedWith: app.buttons["primaryCaptionAction"])
+        waitForExpectations(timeout: 5)
+        let count = (reader.value as? String ?? "").components(separatedBy: " ").first ?? ""
+        let latest = reader.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Paragraph \(count).")).firstMatch
+        XCTAssertTrue(latest.isHittable)
+        XCTAssertLessThanOrEqual(latest.frame.maxY, reader.frame.maxY + 2)
+    }
+
 }

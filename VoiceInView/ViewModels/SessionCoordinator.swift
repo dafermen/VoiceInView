@@ -4,18 +4,20 @@ import Observation
 @MainActor
 @Observable
 final class SessionCoordinator {
-    let caption = CaptionViewModel()
+    let caption: CaptionViewModel
     let repository: TranscriptRepository
     private(set) var currentSession: ConferenceSession?
     var storageMessage: String?
-    let settings = AppSettings()
+    let settings: AppSettings
     var autoSave: Bool { settings.autoSave }
     var sessionTitle = "Conference"
     @ObservationIgnored private var monitorTask: Task<Void, Never>?
 
-    init(repository: TranscriptRepository) {
+    init(repository: TranscriptRepository, caption: CaptionViewModel? = nil, settings: AppSettings? = nil) {
         self.repository = repository
-        caption.onWillStart = { [weak self] in
+        self.caption = caption ?? CaptionViewModel()
+        self.settings = settings ?? AppSettings()
+        self.caption.onWillStart = { [weak self] in
             guard let self, self.currentSession == nil, self.autoSave else { return }
             let capacity = StorageReadiness.check(at: self.repository.storageURL)
             if let bytes = capacity.availableBytes, bytes < StorageReadiness.minimumBytes {
@@ -23,7 +25,7 @@ final class SessionCoordinator {
             }
             self.currentSession = try self.repository.create(title: self.sessionTitle)
         }
-        caption.onFinalized = { [weak self] change in
+        self.caption.onFinalized = { [weak self] change in
             guard let self, self.autoSave, let session = self.currentSession else { return }
             do { try self.repository.apply(change, to: session) }
             catch {
@@ -31,13 +33,13 @@ final class SessionCoordinator {
                 Task { await self.caption.pause() }
             }
         }
-        caption.onCheckpoint = { [weak self] duration in
+        self.caption.onCheckpoint = { [weak self] duration in
             guard let self, self.autoSave, let session = self.currentSession else { return }
             do { try self.repository.checkpoint(session, duration: duration, ended: false) }
             catch { self.storageMessage = "Could not save session time. Retry Save Session." }
         }
-        caption.onRunStarted = { [weak self] in self?.monitorSession() }
-        caption.onEnded = { [weak self] in
+        self.caption.onRunStarted = { [weak self] in self?.monitorSession() }
+        self.caption.onEnded = { [weak self] in
             guard let self, self.autoSave else { return }
             self.monitorTask?.cancel()
             self.saveCurrent(ended: true)
@@ -58,6 +60,13 @@ final class SessionCoordinator {
         } catch {
             storageMessage = "Session could not be saved. Keep the app open, free storage, and try Save Session again."
         }
+    }
+
+    func toggleBookmark(_ segment: CaptionSegment) {
+        saveCurrent(ended: caption.state == .ended)
+        guard storageMessage == nil, let currentSession else { return }
+        do { try repository.toggleBookmark(segment, in: currentSession) }
+        catch { storageMessage = "Could not save the bookmark. Please try again." }
     }
 
     func newSession() async {

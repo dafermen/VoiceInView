@@ -57,3 +57,35 @@ enum SessionSchemaV1: VersionedSchema {
     static var versionIdentifier: Schema.Version { Schema.Version(1, 0, 0) }
     static var models: [any PersistentModel.Type] { [ConferenceSession.self, StoredCaption.self] }
 }
+
+/// Snapshots are independent of speech revisions, so a selected quote stays intact.
+@Model
+final class CaptionBookmark {
+    @Attribute(.unique) var id: UUID
+    var sessionID: UUID
+    var segmentID: UUID
+    var text: String
+    var createdAt: Date
+
+    init(sessionID: UUID, segment: CaptionSegment) {
+        id = UUID()
+        self.sessionID = sessionID
+        segmentID = segment.id
+        text = segment.text
+        createdAt = Date()
+    }
+}
+
+enum SessionSchemaV2: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(2, 0, 0) }
+    static var models: [any PersistentModel.Type] {
+        [ConferenceSession.self, StoredCaption.self, CaptionBookmark.self]
+    }
+}
+
+enum SessionMigrationPlan: SchemaMigrationPlan {
+    static var schemas: [any VersionedSchema.Type] { [SessionSchemaV1.self, SessionSchemaV2.self] }
+    static var stages: [MigrationStage] {
+        [.lightweight(fromVersion: SessionSchemaV1.self, toVersion: SessionSchemaV2.self)]
+    }
+}

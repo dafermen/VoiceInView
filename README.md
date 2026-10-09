@@ -7,7 +7,7 @@ Native iPhone app designed to caption English speech on device during conference
 ## Current status
 Implementation and release-preparation source through Phase 9 are present. This is a DEVELOPMENT BUILD, not a certified release candidate.
 The project now targets iOS 17 and builds with Xcode 15.2 on macOS Ventura. A compatibility speech engine uses SFSpeechRecognizer with on-device recognition required. The modern iOS 26 engine is retained behind compiler/OS availability checks. See [validation results](docs/validation-report.md) for executed checks; real-device accuracy and offline behavior remain unverified.
-On 2026-10-09, the user confirmed successful installation and basic operation of TestFlight build 0.1.0 (5) on their iPhone. This does not establish offline accuracy or extended reliability.
+On 2026-10-09, the user confirmed successful installation and basic operation of TestFlight builds 0.1.0 (5) and (6) on their iPhone. This does not establish offline accuracy or extended reliability.
 The user explicitly authorized continuous progression through Phase 9 despite pending Apple validation. Phase 10 online AI is not implemented.
 
 ## Implemented source
@@ -15,7 +15,9 @@ The user explicitly authorized continuous progression through Phase 9 despite pe
 - SpeechTranscribing boundary with offline-only SFSpeechRecognizer on older toolchains/OS versions, plus SpeechAnalyzer/SpeechTranscriber when built with Xcode 26+ and run on iOS 26+.
 - Compatibility requests rotate after 50 seconds of audio; incoming audio waits in a bounded queue during finalization. Overflow/timeouts stop visibly. Speech permission and system model availability are explicit.
 - Partial/final caption assembly with independent analyzer-run identities.
-- Scaled/adjustable caption text, light/dark/system appearance, live-follow, pause/resume, active-listening duration and optional screen wake.
+- Fullscreen reading with pause/stop/exit controls, automatic suspension of live following when rereading, and Back to live.
+- Adjustable caption size, line spacing, bold text, high contrast, light/dark/system appearance and optional screen wake.
+- Saved phrase bookmarks, accessible from the live session menu and saved session details.
 - SwiftData local sessions, incremental final-caption saves, history, rename, confirmed deletion and title/finished-transcript search.
 - Text file export, Copy and native Share.
 - Persistent settings and guided Offline Readiness / Test Offline Mode.
@@ -43,9 +45,11 @@ See [development](docs/development.md), [testing](docs/testing.md) and [release 
 1. Settings > Offline Readiness: allow microphone and Speech Recognition when requested. Resolve any readiness warnings while online. With the compatibility engine, enable English (US) Dictation in iPhone Settings if on-device support is unavailable, then refresh; the app cannot download that engine’s model. Use Install English Model only if the modern engine offers it.
 2. Test Offline Mode: enable Airplane Mode and turn Wi-Fi off, then return to Captions.
 3. Start Listening; read live captions. Pause/Resume retains earlier final text. Stop finalizes the session.
-4. Tap Aa for caption size, live following and screen wake. Rotate the iPhone to use the compact landscape controls.
-5. Auto-save is on by default. When off, use the (…) Session actions menu > Save Session before clearing or closing the app. New Session and session information are in the same menu.
-6. Sessions: open/rename/search/delete or export/copy/share.
+4. Tap the expand arrows for fullscreen reading; the inward arrows restore the tabs. Rotate the iPhone in either mode. Scroll back to reread while listening continues; tap Back to live to follow again.
+5. Tap Aa for caption size, line spacing, bold text, high contrast, live following and screen wake.
+6. Auto-save is on by default. When off, use the (…) Session actions menu > Save Session before clearing or closing the app. New Session and session information are in the same menu.
+7. Touch and hold a finished paragraph to Save bookmark. This also saves the current session, including when auto-save is off. Read saved quotes in (…) > Bookmarks or Sessions > open a session > Bookmarks. Removing a bookmark leaves the transcript intact.
+8. Sessions: open/rename/search/delete or export/copy/share.
 
 Leaving/locking the app stops microphone capture; restart requires user action. Unfinished captions can be lost on cancellation. With the compatibility engine, a provisional request can contain about 50 seconds of speech; use Pause/Stop to finalize before leaving. Saved sessions are excluded from device backup; export anything you need to retain.
 Audio is never stored or uploaded by the app. Explicit sharing may transmit text through the chosen destination.

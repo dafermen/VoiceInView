@@ -1,18 +1,18 @@
 # Testing through Phase 9
-The project now builds with Xcode 15.2/iOS 17. On the iOS 17.2 simulator, 40 unit tests and 5 UI scenarios passed across the full and focused validation runs. The modern AudioConversion test is excluded by the older compiler. See validation-report.md for logs and remaining gates. Simulator tests do not verify actual speech, offline model availability or a physical iPhone.
+The project now builds with Xcode 15.2/iOS 17. On the iOS 17.2 simulator, 42 unit tests and 7 UI scenarios passed across the full and focused validation runs. The modern AudioConversion test is excluded by the older compiler. See validation-report.md for logs and remaining gates. Simulator tests do not verify actual speech, offline model availability or a physical iPhone.
 
 
 ## Automated suite
 - ListeningViewModelTests: 12 permission/start/stop/error/lifecycle tests.
-- TranscriptAssemblerTests: 8 partial/final/duplicate/repeated-text/run-order/late-revision/merge/10,000-segment regressions.
+- TranscriptAssemblerTests: 9 partial/final/duplicate/repeated-text/run-order/late-revision/merge/10,000-segment regressions.
 - CaptionViewModelTests: 4 readiness/finalization/pause-resume/background-start tests.
-- TranscriptRepositoryTests: 3 upsert/rename/delete/order/reopen tests.
+- TranscriptRepositoryTests: 4 upsert/rename/delete/order/reopen and V1-to-V2 migration/bookmark snapshot tests.
 - TranscriptExportTests: 2 Unicode/metadata/filename tests.
 - AppSettingsTests: 2 preference/readiness tests.
 - LegacySpeechTranscriberTests: offline request flags, authorization/support refusal, request rotation, queued audio, cancellation, timeout and overflow.
 - AudioConversionTests: 1 sample-rate conversion test, only compiled with Swift 6.2+ and requiring iOS 26.
 - SessionClockTests: 1 invalid/long-duration test.
-- HomeScreenTests: 5 tests covering launch without permission prompts, settings/readiness/privacy, microphone diagnostics, reading options and both landscape orientations.
+- HomeScreenTests: 7 tests covering launch without permission prompts, settings/readiness/privacy, microphone diagnostics, reading options, both landscape orientations, fullscreen during listening and rereading/bookmarking during incoming captions. The last two use deterministic DEBUG-only speech input and an isolated in-memory store.
 Run bash scripts/validate-macos.sh. Do not infer device speech support from passing mocked/simulator tests.
 
 ## Phase 1 microphone diagnostics
@@ -32,6 +32,10 @@ Volume monitoring is not speech recognition and cannot prove offline captions.
 Pause/Resume retains earlier final captions and excludes paused time. Stop ends the session; New Session confirms clearing unsaved content.
 Use Aa to adjust caption size and following; use (…) Session actions for manual saving, New Session and full status information. Check largest Dynamic Type, light/dark/system appearance, contrast, VoiceOver and Reduce Motion. Rotate while listening, paused and stopped in both directions; verify captions, elapsed time and chosen text size remain intact and controls remain reachable.
 Disable live following, load earlier captions and re-enable follow. Confirm screen wake only while listening/viewing captions and normal sleep on Stop/background.
+Enter/exit fullscreen while listening, paused and rereading; check Pause/Stop/Exit remain accessible and tabs return on exit. Test notched iPhones as well as small screens.
+Scroll back during incoming speech and confirm the same paragraph stays visible, then use Back to live. Load earlier captions in a transcript longer than 300 paragraphs. Check provisional text revisions do not flash or animate repeatedly.
+Change line spacing, bold text and high contrast, then relaunch. Test these with largest Dynamic Type and both color schemes.
+Long-press a finished paragraph > Save bookmark; view it through (…) > Bookmarks and Sessions > session > Bookmarks. With auto-save off, bookmarking explicitly saves the current session. Remove a bookmark and confirm the transcript remains; delete its session and confirm its bookmarks disappear. Update from a V1 store and verify earlier sessions survive.
 Perform a 30-minute read-along.
 
 ## Phase 4 storage and recovery
@@ -61,4 +65,4 @@ Verify no automatic uploads, no stored audio, deletion and explicit sharing beha
 Run Release simulator validation and signed device archive; check icon/dark/tinted variants, genuine screenshots and all release-checklist.md items.
 
 ## Evidence record
-For each run record date, source commit, device/OS/SDK, scenario, result, latency/metrics, failure and retest. The user confirmed basic operation of TestFlight 0.1.0 (5) on their iPhone on 2026-10-09. The detailed physical scenarios above, including the revised reader during live speech, still require individual verification.
+For each run record date, source commit, device/OS/SDK, scenario, result, latency/metrics, failure and retest. The user confirmed basic operation of TestFlight 0.1.0 (5) and (6) on their iPhone on 2026-10-09. The detailed physical scenarios above, including the revised reader during live speech, still require individual verification.

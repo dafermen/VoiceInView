@@ -37,10 +37,12 @@ struct TranscriptAssembler {
             (($0.start == update.start && $0.end == update.end) ||
              ($0.start < update.end && update.start < $0.end))
         }
+        let previousPartial = partial.first(where: overlaps)
         partial.removeAll(where: overlaps)
         let text = update.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return FinalizedChange(removedIDs: [], upserted: []) }
         var segment = CaptionSegment(runID: update.runID, start: update.start, end: update.end, text: text)
+        if let previousPartial { segment.id = previousPartial.id }
         if update.isFinal {
             if runOrder[update.runID] == nil {
                 runOrder[update.runID] = runOrder.count

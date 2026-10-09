@@ -12,9 +12,15 @@ final class AppSettingsTests: XCTestCase {
         let settings = AppSettings(defaults: defaults)
         XCTAssertEqual(settings.captionSize, 44)
         XCTAssertEqual(settings.appearance, .system)
+        settings.lineSpacing = 12
+        settings.boldCaptions = true
+        settings.highContrast = true
         settings.autoSave = false
         settings.keepAwake = false
         let reloaded = AppSettings(defaults: defaults)
+        XCTAssertEqual(reloaded.lineSpacing, 12)
+        XCTAssertTrue(reloaded.boldCaptions)
+        XCTAssertTrue(reloaded.highContrast)
         XCTAssertFalse(reloaded.autoSave)
         XCTAssertFalse(reloaded.keepAwake)
     }

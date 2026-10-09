@@ -104,7 +104,7 @@ foreach ($unitFile in Get-ChildItem -LiteralPath (Join-Path $projectRoot 'VoiceI
  $allUnitCount += [regex]::Matches((Get-Content -Raw -LiteralPath $unitFile.FullName), 'func test\w+\(').Count
 }
 $uiSource = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'VoiceInViewTests\HomeScreenTests.swift')
-if ([regex]::Matches($uiSource, 'func test\w+\(').Count -ne 5) { throw 'Expected five UI tests' }
+if ([regex]::Matches($uiSource, 'func test\w+\(').Count -ne 7) { throw 'Expected seven UI tests' }
 $authoredFiles = Get-ChildItem -LiteralPath $projectRoot -Recurse -File | Where-Object { $_.FullName -notmatch '[\\/](\.git|build|DerivedData)[\\/]' -and $_.Name -ne 'project-brief.txt' -and $_.Extension -ne '.png' }
 foreach ($file in $authoredFiles) {
  $source = Get-Content -Raw -LiteralPath $file.FullName
@@ -158,7 +158,7 @@ if ($gitCommand) {
   Write-Output 'PASS: Mac shell-script syntax checked with bash -n.'
  }
 }
-Write-Output "PASS: Manifest XML/reasons, metadata field limits, asset JSON, opaque 1024 px icon and Swift delimiter/source surface checks; $allUnitCount unit tests and 5 UI tests are present (not executed)."
+Write-Output "PASS: Manifest XML/reasons, metadata field limits, asset JSON, opaque 1024 px icon and Swift delimiter/source surface checks; $allUnitCount unit tests and 7 UI tests are present (not executed)."
 
 Write-Output 'PASS: OpenStep project syntax parsed; project object references resolved; 3 targets; 2 scheme test targets; microphone purpose in both app configurations; source groups exist; local documentation links valid; authored files have no trailing whitespace.'
 if (Get-Command xcodebuild -ErrorAction SilentlyContinue) {

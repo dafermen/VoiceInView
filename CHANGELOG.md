@@ -1,7 +1,7 @@
 # Changelog
 
 ## Unreleased — 0.1.0 development, through Phase 9
-iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation of TestFlight build 5 on their iPhone; detailed offline and release verification remain pending. This is not a release-certified binary.
+iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation of TestFlight builds 5 and 6 on their iPhone; detailed offline and release verification remain pending. This is not a release-certified binary.
 
 ### Changed
 - Expanded the caption reader with a compact status strip and an adaptive landscape control bar. Reading options now open from Aa; save/new-session actions and full status information live in the session menu.
@@ -11,6 +11,10 @@ iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation 
 - Kept `com.dafermen.vReader` and the original internal session-storage directory for continuity. Validation/archive scripts also accept their previous environment-variable names.
 
 ### Added
+- Fullscreen reader with visible listening status and accessible pause, stop and exit controls in portrait and landscape.
+- Automatic pause of live following when scrolling back, a Back to live control and a pinned transcript window while rereading.
+- Persistent line spacing, bold text and high-contrast reading options.
+- Phrase bookmarks stored as snapshots, with an additive V1-to-V2 migration that preserves existing sessions.
 - iOS 17/Xcode 15.2 compatibility engine with required on-device recognition, explicit speech authorization, bounded buffering and 50-second request rotation. Modern iOS 26 engine retained for newer toolchains.
 - Native simulator coverage for compatibility recognition lifecycle and offline policy.
 - Native on-device English SpeechAnalyzer/SpeechTranscriber pipeline and explicit model installation.
@@ -21,9 +25,10 @@ iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation 
 - Bounded queues, stale-session/cancellation guards, missing-audio/finalization timeouts and storage monitoring.
 - Privacy manifest, policy/source audit, App Store drafts, icon and release checklist.
 - Windows static validation and Mac Debug/test/Release/archive scripts.
-- 40 compatibility unit tests and 5 UI scenarios passed across full and focused runs on iOS 17.2; one additional modern conversion test requires Xcode 26/iOS 26. Independent macOS assembler validation is also available.
+- 42 compatibility unit tests and 7 UI scenarios passed across full and focused runs on iOS 17.2; one additional modern conversion test requires Xcode 26/iOS 26. Independent macOS assembler validation is also available.
 
 ### Fixed
+- Provisional caption revisions retain their identity; the live text container stays stable and no longer animates every word update.
 - Explicitly delete a session’s captions before saving its deletion, covering the orphan observed with iOS 17 SwiftData.
 - A late final revision replacing all captions from an earlier analyzer run now preserves that run's position instead of moving it after newer speech. Added an XCTest regression that reproduces the original failure.
 

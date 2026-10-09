@@ -1,5 +1,20 @@
 # Validation report — 2026-10-09
 
+## Fullscreen, live following and reading tools — 2026-10-09
+
+The user confirmed TestFlight build 6 works well on their iPhone and authorized all five follow-up improvements. This change adds fullscreen reading, automatic suspension of following when scrolling back, stable provisional caption rendering, persistent line spacing/bold/high-contrast preferences, and saved phrase bookmarks.
+
+Fullscreen retains listening status and pause/stop/exit controls. The reader stays anchored to the latest text across size changes while following; scrolling back pins the start of the rendered transcript window until Back to live. Bookmarks preserve the selected text as a snapshot independent of later recognition revisions. Saving a bookmark explicitly saves the current session even when auto-save is off. The additive SwiftData V1-to-V2 migration preserves the original session/caption models, app identifier and storage directory.
+
+Validation with Xcode 15.2 and the iPhone SE (3rd generation), iOS 17.2 simulator:
+
+- All 42 compatible unit tests passed. The repository regressions also passed after the final deletion adjustment. Coverage includes opening a V1 database, preserving its session/captions, saving a bookmark, revising the original text, reopening the database and deleting the session with its bookmarks. The modern audio conversion test remains excluded by this compiler.
+- All seven UI scenarios passed across the final full and focused runs. Fullscreen tests use over 300 deterministic paragraphs, verify the latest text remains visible through portrait and both landscape orientations, pause listening, exit and restore tab navigation. The rereading test checks a paragraph's position while the transcript grows, saves/reopens a bookmark, returns to the newest paragraph and pauses.
+- Early UI test assertions read transient state during rotation/initial layout. The final tests wait for completed orientation/hittability and rendered incoming text. Screenshot inspection also revealed that long lazy stacks could lose the live bottom anchor during resize; the reader now uses a conditional bottom anchor and tests verify the latest paragraph after each rotation. Final portrait/landscape screenshots were inspected.
+- Release compiled successfully for both simulator architectures. Bundle checks verified identity, iOS 17 minimum, all three orientations, purpose strings, assets and privacy manifest. DEBUG speech fixtures are absent from the Release binary. Shell syntax and git diff checks passed. The PowerShell validator's UI count was updated; PowerShell was not run on this Mac.
+
+Evidence is in ignored local folder `build/focus-ux-20261009/`: initial full test results, repository/fullscreen focused results, final UI run, passing focused rereading run, Release log and screenshots. Actual microphone recognition, VoiceOver, largest accessibility text sizes and notched-device layout still need a check on the user's iPhone with this new build. The simulator inputs do not measure real-speech accuracy or battery use.
+
 ## TestFlight and reading experience — 2026-10-09
 
 This update supersedes the historical installation-blocked status below. User screenshots show Xcode Cloud Archive build 5 completed and TestFlight 0.1.0 (5) was assigned to the internal Dev group. The user then confirmed successful installation and basic operation on their iPhone. Offline behavior, transcription accuracy and extended reliability were not separately measured.

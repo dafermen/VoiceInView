@@ -58,6 +58,18 @@ final class TranscriptAssemblerTests: XCTestCase {
         XCTAssertEqual(assembler.text, "Hello world.")
     }
 
+    func testPartialIdentitySurvivesRevisionAndFinalization() {
+        let run = UUID()
+        var assembler = TranscriptAssembler()
+        _ = assembler.apply(.init(runID: run, start: 0, end: 1, text: "Hello", isFinal: false))
+        let identifier = assembler.partial.first?.id
+        _ = assembler.apply(.init(runID: run, start: 0, end: 2, text: "Hello world", isFinal: false))
+        XCTAssertEqual(assembler.partial.first?.id, identifier)
+        _ = assembler.apply(.init(runID: run, start: 0, end: 2, text: "Hello world.", isFinal: true))
+        XCTAssertEqual(assembler.finalized.first?.id, identifier)
+        XCTAssertTrue(assembler.partial.isEmpty)
+    }
+
     func testRepeatedWordsInDistinctRangesAreRetained() {
         let run = UUID()
         var assembler = TranscriptAssembler()
