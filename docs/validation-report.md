@@ -1,5 +1,22 @@
 # Validation report — 2026-10-09
 
+## Transcript review, export and compact New Session — 2026-10-09
+
+Added correction drafts with save/discard, undo/redo and original restoration; literal one/all find-and-replace with previews; one review screen for corrected full text or bookmarks, optional metadata, Copy, TXT/PDF saving and native sharing; saved reading positions and bookmark jumps. New Session is a 44-point blue circular +. Completed portrait sessions remove the footer to increase the reading area; fullscreen and landscape retain the control.
+
+Corrections live in a new SessionReview model in schema V3, independent of the recognition captions and bookmark snapshots. The app identifier and storage location remain unchanged. Editing current listening/paused sessions requires Stop first. No speech engine or audio capture code changed.
+
+Validation on Xcode 15.2 / iPhone SE (3rd generation), iOS 17.2:
+
+- All 48 compatible unit tests passed. Coverage includes V1 and V2 store migration to V3, correction/save/reopen/restore, unchanged originals and bookmark snapshots, reading position, deletion, stale paragraph rejection, literal Unicode replacements and undo/redo. The modern audio conversion test remains excluded by this compiler.
+- The actual PDF renderer generated an 18-page Unicode transcript. Tests verified every section and the final marker through PDF text extraction; all 18 PDFKit-rendered page images were inspected for clipping, margins and page numbers.
+- UI verification includes dirty draft cancellation, original restoration, find/replace, corrected preview/bookmarks, metadata removal, clipboard action, PDF preview/native share presentation, bookmark navigation, reading restoration, the compact + and active-session edit protection. All 11 UI scenarios passed across the full run and focused reruns. The compact-button test checks a 44-point target, increased reader height and new-session confirmation in fullscreen landscape.
+- Initial UI assertions targeted the wrong accessibility types for native confirmation/share controls and tapped the label instead of the switch. The long reader fixture also required waiting for its initial 320 paragraphs before Stop. Tests now target the actual controls and rendered live input. Screenshot review exposed lost horizontal margins after reading-position restoration; margins now belong to the scroll content. The replacement preview was simplified to show the changed word and resulting context, with a keyboard toolbar action to reveal the matches. The final editor flow passed again and its revised screenshots were inspected.
+
+The six export/replacement tests passed again after adding a combining-accent word-boundary regression. Final Release compiled for arm64 and x86_64 simulator architectures. Bundle checks passed for app identity, iOS 17 minimum, all three orientations, purpose strings, assets and privacy manifest; DEBUG fixtures are absent. Plist lint, shell syntax and Git whitespace checks passed. The PowerShell validator was updated but not run on this Mac.
+
+Evidence is stored in ignored local folder `build/review-ux-20261009/`. No external sharing destination was selected by automation. Actual Files round-trips, recipient delivery, VoiceOver/largest Dynamic Type and on-device upgrade testing remain manual checks for the new TestFlight build.
+
 ## Fullscreen, live following and reading tools — 2026-10-09
 
 The user confirmed TestFlight build 6 works well on their iPhone and authorized all five follow-up improvements. This change adds fullscreen reading, automatic suspension of following when scrolling back, stable provisional caption rendering, persistent line spacing/bold/high-contrast preferences, and saved phrase bookmarks.

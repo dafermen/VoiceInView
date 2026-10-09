@@ -212,4 +212,175 @@ final class HomeScreenTests: XCTestCase {
         XCTAssertLessThanOrEqual(latest.frame.maxY, reader.frame.maxY + 2)
     }
 
+    @MainActor
+    private func openReviewSample(_ app: XCUIApplication) {
+        XCTAssertTrue(app.tabBars.buttons["Sessions"].waitForExistence(timeout: 15))
+        app.tabBars.buttons["Sessions"].tap()
+        app.staticTexts["Review sample"].tap()
+        XCTAssertTrue(app.buttons["editTranscriptButton"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testEditingReplacementAndPreviewShareTheCorrectedText() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-review"]
+        XCUIDevice.shared.orientation = .portrait
+        app.launch()
+        openReviewSample(app)
+        app.buttons["editTranscriptButton"].tap()
+        app.buttons["editParagraph-1"].tap()
+        let editor = app.textViews["paragraphEditor"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 5))
+        editor.tap()
+        editor.typeText(" Reviewed note.")
+        app.buttons["Apply"].tap()
+        XCTAssertTrue(app.buttons["editParagraph-1"].label.contains("Reviewed note."))
+        app.buttons["undoTranscriptEdit"].tap()
+        XCTAssertFalse(app.buttons["editParagraph-1"].label.contains("Reviewed note."))
+        app.buttons["Redo"].tap()
+        XCTAssertTrue(app.buttons["editParagraph-1"].label.contains("Reviewed note."))
+        let editCapture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        editCapture.name = "Review-Editor"
+        editCapture.lifetime = .keepAlways
+        add(editCapture)
+        app.buttons["findReplaceButton"].tap()
+        app.textFields["findText"].tap()
+        app.textFields["findText"].typeText("Acmee")
+        app.textFields["replacementText"].tap()
+        app.textFields["replacementText"].typeText("Acme")
+        app.buttons["Preview matches"].tap()
+        expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.keyboards.firstMatch)
+        waitForExpectations(timeout: 5)
+        let findCapture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        findCapture.name = "Review-Find-replace"
+        findCapture.lifetime = .keepAlways
+        add(findCapture)
+        app.buttons["Replace all"].tap()
+        app.buttons["Replace 2 matches"].tap()
+        app.buttons["Done"].tap()
+        app.buttons["saveTranscriptEdits"].tap()
+        XCTAssertTrue(app.staticTexts["reviewParagraph-0"].label.contains("Acme makes"))
+        XCTAssertTrue(app.staticTexts["reviewParagraph-0"].label.contains("Acmees stays unchanged"))
+        app.buttons["reviewShareButton"].tap()
+        let preview = app.staticTexts["exportPreviewText"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 10))
+        XCTAssertTrue(preview.label.contains("Reviewed note."))
+        app.segmentedControls["exportContentPicker"].buttons["Bookmarks"].tap()
+        XCTAssertTrue(preview.label.contains("Acme makes"))
+        XCTAssertFalse(preview.label.contains("Paragraph 2."))
+        let details = app.switches["Session details"]
+        details.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        expectation(for: NSPredicate(format: "value == '0'"), evaluatedWith: details)
+        waitForExpectations(timeout: 5)
+        expectation(for: NSPredicate(format: "NOT label CONTAINS %@", "Language:"), evaluatedWith: preview)
+        waitForExpectations(timeout: 5)
+        app.buttons["Copy"].tap()
+        XCTAssertTrue(app.buttons["Copied"].exists)
+        app.segmentedControls.buttons["PDF"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["pdfPreview"].waitForExistence(timeout: 15))
+        let capture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        capture.name = "Review-PDF-preview"
+        capture.lifetime = .keepAlways
+        add(capture)
+        app.buttons["Share"].tap()
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Save to Files")).firstMatch.waitForExistence(timeout: 8))
+        let shareCapture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shareCapture.name = "Review-Native-share"
+        shareCapture.lifetime = .keepAlways
+        add(shareCapture)
+    }
+
+    @MainActor
+    func testDiscardRestoreOriginalAndResumeReadingFromBookmark() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-review", "--ui-test-reviewed"]
+        XCUIDevice.shared.orientation = .portrait
+        app.launch()
+        openReviewSample(app)
+        app.buttons["editTranscriptButton"].tap()
+        app.buttons["restoreOriginalDraft"].tap()
+        app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != %@", "Restore original", "restoreOriginalDraft")).firstMatch.tap()
+        app.buttons["Cancel"].tap()
+        app.buttons["Discard changes"].tap()
+        XCTAssertEqual(app.staticTexts["reviewParagraph-0"].label, "Acme corrected draft.")
+        app.buttons["editTranscriptButton"].tap()
+        app.buttons["restoreOriginalDraft"].tap()
+        app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != %@", "Restore original", "restoreOriginalDraft")).firstMatch.tap()
+        app.buttons["saveTranscriptEdits"].tap()
+        XCTAssertTrue(app.staticTexts["reviewParagraph-0"].label.contains("Acmee makes"))
+        app.buttons["Bookmarks"].tap()
+        app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Paragraph 80.")).firstMatch.tap()
+        let last = app.staticTexts["reviewParagraph-79"]
+        expectation(for: NSPredicate(format: "hittable == true"), evaluatedWith: last)
+        waitForExpectations(timeout: 10)
+        app.navigationBars.buttons["Sessions"].tap()
+        app.staticTexts["Review sample"].tap()
+        expectation(for: NSPredicate(format: "hittable == true"), evaluatedWith: last)
+        waitForExpectations(timeout: 10)
+        let capture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        capture.name = "Review-Restored-position"
+        capture.lifetime = .keepAlways
+        add(capture)
+    }
+
+    @MainActor
+    func testNewSessionIsACircleAndReclaimsReaderSpace() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-reader"]
+        XCUIDevice.shared.orientation = .portrait
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+        let reader = app.scrollViews["captionScrollView"]
+        XCTAssertTrue(reader.waitForExistence(timeout: 15))
+        app.buttons["primaryCaptionAction"].tap()
+        expectation(for: NSPredicate(format: "label == 'Pause'"), evaluatedWith: app.buttons["primaryCaptionAction"])
+        waitForExpectations(timeout: 10)
+        let incoming = reader.staticTexts.matching(NSPredicate(
+            format: "label CONTAINS %@", "New captions keep arriving while you read.")).firstMatch
+        XCTAssertTrue(incoming.waitForExistence(timeout: 20))
+        let listeningHeight = reader.frame.height
+        app.buttons["Stop"].tap()
+        let action = app.buttons["primaryCaptionAction"]
+        expectation(for: NSPredicate(format: "label == 'New Session'"), evaluatedWith: action)
+        waitForExpectations(timeout: 10)
+        XCTAssertEqual(action.frame.width, 44, accuracy: 1)
+        XCTAssertEqual(action.frame.height, 44, accuracy: 1)
+        XCTAssertGreaterThan(reader.frame.height, listeningHeight + 40)
+        expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.buttons["Stop"])
+        waitForExpectations(timeout: 5)
+        let capture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        capture.name = "Review-New-session-circle"
+        capture.lifetime = .keepAlways
+        add(capture)
+        app.buttons["fullScreenButton"].tap()
+        XCUIDevice.shared.orientation = .landscapeLeft
+        expectation(for: NSPredicate(format: "hittable == true"), evaluatedWith: action)
+        waitForExpectations(timeout: 8)
+        action.tap()
+        app.buttons["Cancel"].tap()
+        XCTAssertEqual(action.label, "New Session")
+        action.tap()
+        app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != %@", "New Session", "primaryCaptionAction")).firstMatch.tap()
+        XCTAssertTrue(app.staticTexts["captionPlaceholder"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testOngoingSessionRequiresStoppingBeforeEditing() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-reader"]
+        app.launch()
+        XCTAssertTrue(app.buttons["primaryCaptionAction"].waitForExistence(timeout: 15))
+        app.buttons["primaryCaptionAction"].tap()
+        app.buttons["sessionActionsButton"].tap()
+        app.buttons["Save Session"].tap()
+        app.tabBars.buttons["Sessions"].tap()
+        app.staticTexts["Conference"].tap()
+        XCTAssertFalse(app.buttons["editTranscriptButton"].isEnabled)
+        app.buttons["reviewShareButton"].tap()
+        XCTAssertFalse(app.buttons["editFromPreview"].isEnabled)
+        app.buttons["Done"].tap()
+        app.tabBars.buttons["Captions"].tap()
+        app.buttons["Stop"].tap()
+    }
+
 }

@@ -7,6 +7,7 @@ Reviewed source and current Apple documentation on 2026-10-08. Archive/device va
 | Speech analysis | SFSpeechRecognizer en-US with on-device support checked and required; modern SpeechAnalyzer where available; no remote fallback | Device; installed Apple models |
 | Model setup | System English Dictation setup for compatibility engine; explicit Install English Model only for modern engine | Apple's system asset service |
 | Final captions | Auto-save by default; can disable before a session | Local SwiftData store |
+| Transcript corrections and reading position | Original recognition is retained; corrections and last read paragraph are stored separately | Local SwiftData store |
 | Partial captions | Provisional, displayed in memory; not saved | Device memory |
 | Session metadata | UUID, title, dates, active-listening duration, language and ended status | Local SwiftData store |
 | Preferences | Caption size, wake, appearance and auto-save | App's UserDefaults domain |
@@ -21,7 +22,7 @@ Microphone and Speech Recognition purpose strings are declared. The compatibilit
 ## Persistence and deletion
 SwiftData uses an explicit application-support store with CloudKit disabled. The transcript directory is excluded from backup and created with complete-until-first-user-authentication protection.
 A finalized segment save commits incrementally; unfinished sessions can be reopened after interruption. Unsaved/partial text can be lost on cancellation or termination. Compatibility results remain provisional until request finalization (normally around 50 seconds); backgrounding can lose that current chunk.
-Session deletion cascades to related captions, but this is logical deletion and not a forensic secure-erase guarantee. Exported copies and clipboard content are controlled separately by the destination/user.
+Session deletion removes related captions, bookmarks and saved corrections/reading position, but this is logical deletion and not a forensic secure-erase guarantee. Exported copies and clipboard content are controlled separately by the destination/user.
 Deleting the app removes its local data; backup exclusion means users should export transcripts they wish to retain.
 Verify SQLite/WAL sidecar protection and backup exclusion on device before release.
 

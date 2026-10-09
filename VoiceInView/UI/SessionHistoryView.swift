@@ -7,15 +7,19 @@ import UIKit
 struct SessionHistoryView: View {
     let coordinator: SessionCoordinator
     @Query(sort: \ConferenceSession.createdAt, order: .reverse) private var sessions: [ConferenceSession]
+    @Query private var reviews: [SessionReview]
     @State private var query = ""
     @State private var deleting: ConferenceSession?
     @State private var failure: String?
 
     private var filtered: [ConferenceSession] {
         guard !query.isEmpty else { return sessions }
-        return sessions.filter {
-            $0.title.localizedCaseInsensitiveContains(query) ||
-            $0.transcript.localizedCaseInsensitiveContains(query)
+        return sessions.filter { session in
+            if session.title.localizedCaseInsensitiveContains(query) { return true }
+            let changes = (try? reviews.first(where: { $0.sessionID == session.id })?.decodedCorrections()) ?? [:]
+            let originals = session.orderedCaptions.map { ReviewParagraph(id: $0.id, text: $0.text) }
+            return TranscriptReview.text(TranscriptReview.paragraphs(originals: originals, corrections: changes))
+                .localizedCaseInsensitiveContains(query)
         }
     }
 
@@ -27,7 +31,8 @@ struct SessionHistoryView: View {
             }
             ForEach(filtered) { session in
                 NavigationLink {
-                    SessionDetailView(session: session, repository: coordinator.repository)
+                    SessionDetailView(session: session, repository: coordinator.repository,
+                        canEdit: coordinator.currentSession?.id != session.id || coordinator.caption.state == .ended)
                 } label: {
                     VStack(alignment: .leading) {
                         Text(session.title).font(.headline)
@@ -65,40 +70,92 @@ struct SessionHistoryView: View {
 struct SessionDetailView: View {
     @Bindable var session: ConferenceSession
     let repository: TranscriptRepository
+    let canEdit: Bool
+    @Query private var reviews: [SessionReview]
+    @Query private var bookmarks: [CaptionBookmark]
     @State private var showingBookmarks = false
-    @State private var exporting = false
+    @State private var showingEditor = false
+    @State private var showingShare = false
     @State private var renaming = false
     @State private var title = ""
     @State private var failure: String?
+    @State private var position: UUID?
+    @State private var restored = false
+    @State private var savePositionTask: Task<Void, Never>?
+
+    init(session: ConferenceSession, repository: TranscriptRepository, canEdit: Bool) {
+        self.session = session
+        self.repository = repository
+        self.canEdit = canEdit
+        let identifier = session.id
+        _reviews = Query(filter: #Predicate<SessionReview> { $0.sessionID == identifier })
+        _bookmarks = Query(filter: #Predicate<CaptionBookmark> { $0.sessionID == identifier }, sort: \.createdAt)
+    }
+
+    private var originals: [ReviewParagraph] { session.orderedCaptions.map { ReviewParagraph(id: $0.id, text: $0.text) } }
+    private var corrections: [String: String]? {
+        do { return try reviews.first?.decodedCorrections() ?? [:] } catch { return nil }
+    }
+    private var paragraphs: [ReviewParagraph] {
+        TranscriptReview.paragraphs(originals: originals, corrections: corrections ?? [:])
+    }
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20) {
-                Text(session.createdAt, style: .date)
-                Text("\(SessionClock.format(session.duration)) · \(session.language)")
-                if session.endedAt == nil { Text("Recovered final captions; the session did not finish normally.") }
-                ForEach(session.orderedCaptions) { caption in
-                    Text(caption.text).font(.title2).textSelection(.enabled)
+            VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(session.createdAt, style: .date)
+                    Text("\(SessionClock.format(session.duration)) · \(session.language)")
+                    if !canEdit { Text("Stop this session in Captions before editing.") }
+                    else if session.endedAt == nil { Text("Saved final captions from an unfinished session.") }
+                    if !(corrections ?? [:]).isEmpty { Label("Edited transcript", systemImage: "pencil").font(.caption) }
+                }.font(.subheadline).foregroundStyle(.secondary)
+                if corrections == nil {
+                    ContentUnavailableView("Corrections unavailable", systemImage: "exclamationmark.triangle",
+                        description: Text("Reopen this session. Your original captions have not been changed."))
+                } else {
+                    LazyVStack(alignment: .leading, spacing: 20) {
+                        ForEach(Array(paragraphs.enumerated()), id: \.element.id) { index, paragraph in
+                            Text(paragraph.text.isEmpty ? "Empty paragraph" : paragraph.text)
+                                .font(.title2).textSelection(.enabled)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .id(paragraph.id).accessibilityIdentifier("reviewParagraph-\(index)")
+                        }
+                    }.scrollTargetLayout()
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading).padding()
+            .frame(maxWidth: .infinity, alignment: .leading).padding(.vertical)
         }
-        .navigationTitle(session.title)
-        .sheet(isPresented: $showingBookmarks) {
-            BookmarkListView(sessionID: session.id, repository: repository)
-        }
+        .contentMargins(.horizontal, 16, for: .scrollContent)
+        .scrollPosition(id: $position, anchor: .top)
+        .accessibilityIdentifier("sessionReader")
+        .navigationTitle(session.title).navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            Button("Bookmarks", systemImage: "bookmark") { showingBookmarks = true }
-            Button("Rename") { title = session.title; renaming = true }
-            Menu("Export") {
-                Button("Export Text File") { exporting = true }
-                Button("Copy Transcript") { UIPasteboard.general.string = exportText }
-                ShareLink(item: exportText) { Label("Share Transcript", systemImage: "square.and.arrow.up") }
+            ToolbarItem(placement: .principal) {
+                Button(session.title) { title = session.title; renaming = true }
+                    .font(.headline).lineLimit(1).accessibilityLabel("Rename session")
+            }
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button("Edit transcript", systemImage: "pencil") { showingEditor = true }
+                    .disabled(!canEdit || corrections == nil || originals.isEmpty)
+                    .accessibilityIdentifier("editTranscriptButton")
+                Button("Bookmarks", systemImage: "bookmark") { showingBookmarks = true }
+                Button("Review & share", systemImage: "square.and.arrow.up") { showingShare = true }
+                    .disabled(corrections == nil).accessibilityIdentifier("reviewShareButton")
             }
         }
-        .fileExporter(isPresented: $exporting, document: TextTranscriptDocument(text: exportText),
-                      contentType: .plainText, defaultFilename: TranscriptExport.filename(title: session.title)) { result in
-            if case .failure = result { failure = "The text file could not be exported." }
+        .sheet(isPresented: $showingEditor) {
+            TranscriptEditorView(originals: originals, reviewed: paragraphs) { edited in
+                guard canEdit else { throw ReviewFailure.sessionChanged }
+                try repository.saveCorrections(edited, for: session)
+            }
+        }
+        .sheet(isPresented: $showingShare) {
+            TranscriptShareView(session: session, repository: repository, canEdit: canEdit, bookmarks: bookmarks)
+        }
+        .sheet(isPresented: $showingBookmarks) {
+            BookmarkListView(sessionID: session.id, repository: repository,
+                jumpableIDs: Set(originals.map(\.id)), onSelect: { position = $0 })
         }
         .alert("Rename session", isPresented: $renaming) {
             TextField("Title", text: $title)
@@ -112,44 +169,93 @@ struct SessionDetailView: View {
             get: { failure != nil }, set: { if !$0 { failure = nil } })) {
                 Button("OK") { failure = nil }
             } message: { Text(failure ?? "") }
+        .task {
+            guard !restored else { return }
+            do { position = try repository.review(for: session.id)?.lastReadCaptionID }
+            catch { failure = "Could not restore your reading position." }
+            restored = true
+        }
+        .onChange(of: position) { _, _ in
+            guard restored else { return }
+            savePositionTask?.cancel()
+            savePositionTask = Task { @MainActor in
+                do { try await Task.sleep(for: .milliseconds(700)) } catch { return }
+                persistPosition()
+            }
+        }
+        .onDisappear {
+            savePositionTask?.cancel()
+            persistPosition()
+        }
     }
 
-    private var exportText: String {
-        TranscriptExport.render(title: session.title, date: session.startedAt, duration: session.duration,
-                                language: session.language, transcript: session.fullTranscript,
-                                unfinished: session.endedAt == nil)
+    private func persistPosition() {
+        guard restored, let position else { return }
+        do { try repository.saveReadingPosition(position, for: session) }
+        catch { failure = "Could not save your reading position. Your transcript is unchanged." }
     }
 }
 
 @MainActor
 struct BookmarkListView: View {
     let repository: TranscriptRepository
+    let jumpableIDs: Set<UUID>
+    let onSelect: ((UUID) -> Void)?
     @Query private var bookmarks: [CaptionBookmark]
+    @Query private var reviews: [SessionReview]
     @Environment(\.dismiss) private var dismiss
     @State private var failure = false
 
-    init(sessionID: UUID?, repository: TranscriptRepository) {
+    init(sessionID: UUID?, repository: TranscriptRepository, jumpableIDs: Set<UUID> = [], onSelect: ((UUID) -> Void)? = nil) {
         self.repository = repository
+        self.jumpableIDs = jumpableIDs
+        self.onSelect = onSelect
         let identifier = sessionID ?? UUID()
-        _bookmarks = Query(filter: #Predicate<CaptionBookmark> { $0.sessionID == identifier },
-                           sort: \.createdAt)
+        _bookmarks = Query(filter: #Predicate<CaptionBookmark> { $0.sessionID == identifier }, sort: \.createdAt)
+        _reviews = Query(filter: #Predicate<SessionReview> { $0.sessionID == identifier })
+    }
+
+    private var corrections: [String: String]? {
+        do { return try reviews.first?.decodedCorrections() ?? [:] } catch { return nil }
     }
 
     var body: some View {
         NavigationStack {
             List {
-                if bookmarks.isEmpty {
+                if corrections == nil {
+                    Text("Saved corrections could not be loaded. Reopen this session.")
+                } else if bookmarks.isEmpty {
                     ContentUnavailableView("No bookmarks yet", systemImage: "bookmark",
                         description: Text("Touch and hold a finished paragraph in Captions to save a phrase for later."))
                 }
-                ForEach(bookmarks) { bookmark in
-                    Text(bookmark.text).font(.title3).textSelection(.enabled)
+                if let corrections {
+                    ForEach(bookmarks) { bookmark in
+                        Group {
+                            if let onSelect, jumpableIDs.contains(bookmark.segmentID) {
+                                Button {
+                                    dismiss()
+                                    onSelect(bookmark.segmentID)
+                                } label: {
+                                    HStack {
+                                        Text(corrections[bookmark.segmentID.uuidString] ?? bookmark.text)
+                                            .foregroundStyle(.primary)
+                                        Spacer()
+                                        Image(systemName: "arrow.right")
+                                    }
+                                }
+                                .accessibilityHint("Go to this paragraph")
+                            } else {
+                                Text(corrections[bookmark.segmentID.uuidString] ?? bookmark.text).textSelection(.enabled)
+                            }
+                        }
+                        .font(.title3)
                         .swipeActions {
                             Button("Remove", role: .destructive) {
                                 do { try repository.removeBookmark(bookmark) }
                                 catch { failure = true }
                             }
                         }
+                    }
                 }
             }
             .navigationTitle("Bookmarks").navigationBarTitleDisplayMode(.inline)

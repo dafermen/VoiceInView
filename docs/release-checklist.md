@@ -5,7 +5,7 @@ This is a gate, not a claim that release is approved.
 - [x] iOS 17 deployment and native SwiftUI project.
 - [x] On-device Apple speech boundary and explicit English model setup.
 - [x] Partial/final captions, reading controls, pause/resume and session history.
-- [x] Local-only storage and explicit text export/share.
+- [x] Local-only storage, reversible transcript corrections and explicit TXT/PDF export/share.
 - [x] Microphone and Speech Recognition usage descriptions in Debug/Release.
 - [x] Privacy manifest and policy/metadata drafts.
 - [x] AppIcon asset and Mac validation/archive scripts.
@@ -13,7 +13,7 @@ This is a gate, not a claim that release is approved.
 
 ## Must pass on Apple tooling
 - [x] Debug simulator build (Xcode 15.2, iOS 17.2 SDK).
-- [x] Compatibility unit and UI suite (42 unit + 7 UI, iOS 17.2 simulator).
+- [x] Compatibility unit and UI suite (48 unit + 11 UI, iOS 17.2 simulator).
 - [ ] Retained modern-engine build and AudioConversion test on Xcode 26+/iOS 26+.
 - [x] Release simulator build and bundle/plist/privacy/asset checks (Xcode 15.2).
 - [ ] Real compatible iPhone English Dictation/model setup and offline recognition, including 50-second request transitions.

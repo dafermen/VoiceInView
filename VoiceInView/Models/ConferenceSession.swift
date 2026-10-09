@@ -84,8 +84,34 @@ enum SessionSchemaV2: VersionedSchema {
 }
 
 enum SessionMigrationPlan: SchemaMigrationPlan {
-    static var schemas: [any VersionedSchema.Type] { [SessionSchemaV1.self, SessionSchemaV2.self] }
+    static var schemas: [any VersionedSchema.Type] { [SessionSchemaV1.self, SessionSchemaV2.self, SessionSchemaV3.self] }
     static var stages: [MigrationStage] {
-        [.lightweight(fromVersion: SessionSchemaV1.self, toVersion: SessionSchemaV2.self)]
+        [.lightweight(fromVersion: SessionSchemaV1.self, toVersion: SessionSchemaV2.self),
+         .lightweight(fromVersion: SessionSchemaV2.self, toVersion: SessionSchemaV3.self)]
+    }
+}
+
+/// Corrections and reading position do not change the original recognition data.
+@Model
+final class SessionReview {
+    @Attribute(.unique) var sessionID: UUID
+    var corrections: Data
+    var lastReadCaptionID: UUID?
+    var updatedAt: Date?
+
+    init(sessionID: UUID) {
+        self.sessionID = sessionID
+        corrections = Data("{}".utf8)
+    }
+
+    func decodedCorrections() throws -> [String: String] {
+        try JSONDecoder().decode([String: String].self, from: corrections)
+    }
+}
+
+enum SessionSchemaV3: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(3, 0, 0) }
+    static var models: [any PersistentModel.Type] {
+        [ConferenceSession.self, StoredCaption.self, CaptionBookmark.self, SessionReview.self]
     }
 }

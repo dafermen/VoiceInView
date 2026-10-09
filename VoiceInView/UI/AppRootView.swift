@@ -56,6 +56,30 @@ struct AppRootView: View {
     private func openStorage() {
         do {
             #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("--ui-test-review") {
+                let repository = try TranscriptRepository(inMemory: true)
+                let sample = try repository.create(title: "Review sample")
+                let run = UUID()
+                var segments: [CaptionSegment] = []
+                for index in 1...80 {
+                    let text: String = index == 1
+                        ? "Acmee makes captions useful. Acmee keeps words clear. Acmees stays unchanged."
+                        : "Paragraph \(index). Reading, reviewing and sharing should be simple. Keep the original words safe while correcting a transcript."
+                    segments.append(CaptionSegment(runID: run, start: Double(index), end: Double(index + 1), text: text))
+                }
+                try repository.apply(.init(removedIDs: [], upserted: segments), to: sample)
+                try repository.checkpoint(sample, duration: 600, ended: true)
+                try repository.toggleBookmark(segments[0], in: sample)
+                try repository.toggleBookmark(segments[79], in: sample)
+                if ProcessInfo.processInfo.arguments.contains("--ui-test-reviewed") {
+                    var paragraphs = segments.map { ReviewParagraph(id: $0.id, text: $0.text) }
+                    paragraphs[0].text = "Acme corrected draft."
+                    try repository.saveCorrections(paragraphs, for: sample)
+                }
+                coordinator = SessionCoordinator(repository: repository)
+                storageFailure = false
+                return
+            }
             if ProcessInfo.processInfo.arguments.contains("--ui-test-reader") {
                 let defaults = UserDefaults(suiteName: "VoiceInView.ReaderUITests")!
                 defaults.removePersistentDomain(forName: "VoiceInView.ReaderUITests")

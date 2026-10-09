@@ -41,3 +41,10 @@ Phase 9 prepares metadata/icon/scripts/checklist; actual Mac/device/Organizer va
 Phase 10 is not implemented.
 
 ADRs: 001 offline-first, 002 Apple speech/minimum OS, 003 foreground microphone, 004 speech pipeline, 005 local session persistence.
+
+## Transcript review and export
+V3 adds one SessionReview record per session containing a JSON correction map keyed by caption UUID and the last read caption UUID. Recognition captions and bookmark snapshots remain unchanged. V1-to-V2-to-V3 lightweight migration adds the new model without changing the earlier models. Session deletion explicitly removes captions, bookmarks and review metadata together.
+
+The editor works on local paragraph drafts, with up to 100 undo snapshots, explicit save/discard and restoration of the original. Editing an ongoing or paused session is blocked until Stop. Literal find/replace uses UTF-16 ranges, Unicode word boundaries and descending replacements to retain offsets. Repository writes reject stale paragraph identities.
+
+Session reading, bookmark display, search and export resolve the same correction map. Export previews freeze saved paragraphs on entry. TXT/PDF, Copy and native sharing use the preview text; title/date/duration/language metadata is optional. Core Text paginates PDFs in a cancellable background task; PDFKit previews them. Native sharing uses a protected temporary file removed on dismissal. File export uses the native document picker. No audio recording or network service was added.

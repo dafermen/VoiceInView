@@ -1,18 +1,18 @@
 # Testing through Phase 9
-The project now builds with Xcode 15.2/iOS 17. On the iOS 17.2 simulator, 42 unit tests and 7 UI scenarios passed across the full and focused validation runs. The modern AudioConversion test is excluded by the older compiler. See validation-report.md for logs and remaining gates. Simulator tests do not verify actual speech, offline model availability or a physical iPhone.
+The project now builds with Xcode 15.2/iOS 17. On the iOS 17.2 simulator, 48 unit tests and 11 UI scenarios passed across the full and focused validation runs. The modern AudioConversion test is excluded by the older compiler. See validation-report.md for logs and remaining gates. Simulator tests do not verify actual speech, offline model availability or a physical iPhone.
 
 
 ## Automated suite
 - ListeningViewModelTests: 12 permission/start/stop/error/lifecycle tests.
 - TranscriptAssemblerTests: 9 partial/final/duplicate/repeated-text/run-order/late-revision/merge/10,000-segment regressions.
 - CaptionViewModelTests: 4 readiness/finalization/pause-resume/background-start tests.
-- TranscriptRepositoryTests: 4 upsert/rename/delete/order/reopen and V1-to-V2 migration/bookmark snapshot tests.
-- TranscriptExportTests: 2 Unicode/metadata/filename tests.
+- TranscriptRepositoryTests: 6 upsert/rename/delete/order/reopen, V1/V2-to-V3 migration, bookmark snapshot, correction/original preservation and reading-position tests.
+- TranscriptExportTests: 6 Unicode/metadata/filename, literal one/all replacement, undo/redo, corrected bookmark export and multipage PDF tests.
 - AppSettingsTests: 2 preference/readiness tests.
 - LegacySpeechTranscriberTests: offline request flags, authorization/support refusal, request rotation, queued audio, cancellation, timeout and overflow.
 - AudioConversionTests: 1 sample-rate conversion test, only compiled with Swift 6.2+ and requiring iOS 26.
 - SessionClockTests: 1 invalid/long-duration test.
-- HomeScreenTests: 7 tests covering launch without permission prompts, settings/readiness/privacy, microphone diagnostics, reading options, both landscape orientations, fullscreen during listening and rereading/bookmarking during incoming captions. The last two use deterministic DEBUG-only speech input and an isolated in-memory store.
+- HomeScreenTests: 11 tests covering launch without permission prompts, settings/readiness/privacy, microphone diagnostics, reading options, both landscape orientations, fullscreen during listening and rereading/bookmarking during incoming captions. The last two use deterministic DEBUG-only speech input and an isolated in-memory store.
 Run bash scripts/validate-macos.sh. Do not infer device speech support from passing mocked/simulator tests.
 
 ## Phase 1 microphone diagnostics
@@ -47,6 +47,17 @@ Current session deletion is disabled until New Session.
 ## Phase 5 export
 Open saved session > Export Text File to On My iPhone; inspect UTF-8 text and metadata. Copy to Notes and use Share Transcript.
 Cancel native dialogs and confirm the session remains. Test unusual/long titles and large transcripts. Explicit destination sharing may transmit text.
+
+## Transcript editing and review
+In Sessions, stop any current session before editing it. Correct a paragraph, apply it to the draft, undo/redo, save, close and reopen. Verify both the corrected wording and the original restoration. Cancel a dirty paragraph and a dirty transcript; confirm each explicit discard leaves saved text intact. Try multiline, accented and emoji text.
+
+Find a repeated misspelling. Preview the matches, replace one, then replace all. Check whole-word/case options, literal punctuation, deletion via an empty replacement and Undo. Search the session history for the corrected wording.
+
+Review & share must show the same corrections in full text, bookmarks, clipboard, TXT and PDF. Toggle session details; inspect a long PDF's first, middle and last pages. Save both formats in Files, reopen them and share a test file to a chosen destination. Cancel each native picker and ensure the session remains unchanged. No external destination is exercised automatically by UI tests.
+
+Scroll a long saved session, leave and reopen it. Jump to a bookmark, reopen again and verify the last read paragraph is visible. Existing bookmark snapshots without a current paragraph remain readable. Migrate an existing installation containing sessions/bookmarks without deleting the app.
+
+After Stop, verify New Session is a blue circular + with a comfortable touch target and the portrait footer disappears. Confirm the + works in portrait and both landscape orientations, including fullscreen, and retains confirmation before clearing.
 
 ## Phase 6 readiness/settings
 Change preferences and relaunch. Check auto-save off requires Save Session; changing auto-save is disabled during a started unfinished session.

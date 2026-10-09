@@ -4,6 +4,7 @@
 iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation of TestFlight builds 5 and 6 on their iPhone; detailed offline and release verification remain pending. This is not a release-certified binary.
 
 ### Changed
+- New Session is a 44-point blue circular +. Completed portrait sessions omit the old footer to expand the reader; fullscreen and landscape retain accessible controls.
 - Expanded the caption reader with a compact status strip and an adaptive landscape control bar. Reading options now open from Aa; save/new-session actions and full status information live in the session menu.
 - A single primary action changes between Start Listening, Pause, Resume and New Session. Stop remains directly accessible.
 - Renamed the app, Xcode project and scheme, source/test targets, exported filename fallback, permission text, documentation and repository to VoiceInView.
@@ -11,6 +12,11 @@ iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation 
 - Kept `com.dafermen.vReader` and the original internal session-storage directory for continuity. Validation/archive scripts also accept their previous environment-variable names.
 
 ### Added
+- Transcript editing with paragraph drafts, undo/redo, save/discard and restoration of the original recognition.
+- Literal find/replace with whole-word/case options, previews and one/all replacement.
+- Shared review preview for corrected text and bookmarks, optional metadata, TXT/PDF export, Copy and native sharing.
+- Reading-position restoration and jumps from saved bookmarks.
+- Additive V3 storage for corrections and reading positions, preserving old sessions, captions and bookmark snapshots.
 - Fullscreen reader with visible listening status and accessible pause, stop and exit controls in portrait and landscape.
 - Automatic pause of live following when scrolling back, a Back to live control and a pinned transcript window while rereading.
 - Persistent line spacing, bold text and high-contrast reading options.
@@ -25,7 +31,7 @@ iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation 
 - Bounded queues, stale-session/cancellation guards, missing-audio/finalization timeouts and storage monitoring.
 - Privacy manifest, policy/source audit, App Store drafts, icon and release checklist.
 - Windows static validation and Mac Debug/test/Release/archive scripts.
-- 42 compatibility unit tests and 7 UI scenarios passed across full and focused runs on iOS 17.2; one additional modern conversion test requires Xcode 26/iOS 26. Independent macOS assembler validation is also available.
+- 48 compatibility unit tests and 11 UI scenarios passed across full and focused runs on iOS 17.2; one additional modern conversion test requires Xcode 26/iOS 26. Independent macOS assembler validation is also available.
 
 ### Fixed
 - Provisional caption revisions retain their identity; the live text container stays stable and no longer animates every word update.

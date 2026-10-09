@@ -48,22 +48,24 @@ struct CaptionScreen: View {
                 }
                 transcript
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                Divider()
-                HStack(spacing: 8) {
-                    if isFullScreen {
-                        status
-                        Spacer(minLength: 0)
-                        primaryButton(iconOnly: true)
-                        stopButton(iconOnly: true)
-                        fullScreenButton
-                    } else {
-                        if compact { status; Spacer(minLength: 0) }
-                        captureControls
-                        if compact { utilities }
+                if isFullScreen || compact || model.state != .ended {
+                    Divider()
+                    HStack(spacing: 8) {
+                        if isFullScreen {
+                            status
+                            Spacer(minLength: 0)
+                            primaryButton(iconOnly: true)
+                            if model.state != .ended { stopButton(iconOnly: true) }
+                            fullScreenButton
+                        } else {
+                            if compact { status; Spacer(minLength: 0) }
+                            if model.state != .ended { captureControls }
+                            if compact { utilities }
+                        }
                     }
+                    .padding(.horizontal, 16).padding(.vertical, 6)
+                    .background(.bar)
                 }
-                .padding(.horizontal, 16).padding(.vertical, 6)
-                .background(.bar)
             }
         }
         .navigationTitle("VoiceInView")
@@ -117,6 +119,7 @@ struct CaptionScreen: View {
 
     private var utilities: some View {
         HStack(spacing: 0) {
+            if model.state == .ended { newSessionButton }
             fullScreenButton
             Button { showingOptions = true } label: {
                 Image(systemName: "textformat.size").frame(width: 44, height: 44)
@@ -254,21 +257,34 @@ struct CaptionScreen: View {
         .font(.body.weight(.semibold))
     }
 
-    private func primaryButton(iconOnly: Bool) -> some View {
-        Button {
-            if model.state == .ended { confirmNewSession = true }
-            else { Task { if model.state == .listening { await model.pause() } else { await model.start() } } }
-        } label: {
-            Group {
-                if iconOnly { Image(systemName: primaryIcon).frame(width: 44, height: 44) }
-                else { Label(primaryTitle, systemImage: primaryIcon).frame(maxWidth: .infinity, minHeight: 44) }
-            }
-            .contentShape(Rectangle())
+    private var newSessionButton: some View {
+        Button { confirmNewSession = true } label: {
+            Image(systemName: "plus").font(.title3.weight(.semibold))
+                .frame(width: 44, height: 44).foregroundStyle(.white)
+                .background(Color.accentColor, in: Circle())
         }
-        .buttonStyle(.borderedProminent)
-        .accessibilityLabel(primaryTitle)
-        .accessibilityIdentifier("primaryCaptionAction")
-        .disabled(model.state.busy || model.preparationPending)
+        .buttonStyle(.plain)
+        .accessibilityLabel("New Session").accessibilityIdentifier("primaryCaptionAction")
+    }
+
+    @ViewBuilder private func primaryButton(iconOnly: Bool) -> some View {
+        if model.state == .ended {
+            newSessionButton
+        } else {
+            Button {
+                Task { if model.state == .listening { await model.pause() } else { await model.start() } }
+            } label: {
+                Group {
+                    if iconOnly { Image(systemName: primaryIcon).frame(width: 44, height: 44) }
+                    else { Label(primaryTitle, systemImage: primaryIcon).frame(maxWidth: .infinity, minHeight: 44) }
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderedProminent)
+            .accessibilityLabel(primaryTitle)
+            .accessibilityIdentifier("primaryCaptionAction")
+            .disabled(model.state.busy || model.preparationPending)
+        }
     }
 
     private func stopButton(iconOnly: Bool) -> some View {

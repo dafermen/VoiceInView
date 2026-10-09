@@ -4,8 +4,9 @@ import UniformTypeIdentifiers
 
 enum TranscriptExport {
     static func render(title: String, date: Date, duration: TimeInterval, language: String,
-                       transcript: String, unfinished: Bool) -> String {
-        """
+                       transcript: String, unfinished: Bool, includeDetails: Bool = true) -> String {
+        guard includeDetails else { return transcript }
+        return """
         \(title)
         Date: \(date.ISO8601Format())
         Listening duration: \(SessionClock.format(duration))
@@ -40,5 +41,18 @@ struct TextTranscriptDocument: FileDocument {
 
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
         FileWrapper(regularFileWithContents: Data(text.utf8))
+    }
+}
+
+struct TranscriptFileDocument: FileDocument {
+    static var readableContentTypes: [UTType] { [.plainText, .pdf] }
+    let data: Data
+    init(data: Data) { self.data = data }
+    init(configuration: ReadConfiguration) throws {
+        guard let data = configuration.file.regularFileContents else { throw CocoaError(.fileReadCorruptFile) }
+        self.data = data
+    }
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        FileWrapper(regularFileWithContents: data)
     }
 }

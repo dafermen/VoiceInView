@@ -12,7 +12,7 @@ final class TranscriptRepository {
     let storageURL: URL?
 
     init(inMemory: Bool = false, directory: URL? = nil) throws {
-        let schema = Schema(versionedSchema: SessionSchemaV2.self)
+        let schema = Schema(versionedSchema: SessionSchemaV3.self)
         let configuration: ModelConfiguration
         if inMemory {
             storageURL = nil
@@ -104,10 +104,12 @@ final class TranscriptRepository {
     func delete(_ session: ConferenceSession) throws {
         let identifier = session.id
         let savedBookmarks = try bookmarks(for: identifier)
+        let savedReview = try review(for: identifier)
         // Explicit deletion also covers iOS 17 stores where cascade propagation
         // can leave registered caption objects behind in the context.
         for caption in session.captions { context.delete(caption) }
         for bookmark in savedBookmarks { context.delete(bookmark) }
+        if let savedReview { context.delete(savedReview) }
         context.delete(session)
         do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
         if cacheSessionID == identifier {
@@ -135,6 +137,35 @@ final class TranscriptRepository {
 
     func removeBookmark(_ bookmark: CaptionBookmark) throws {
         context.delete(bookmark)
+        do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
+    }
+
+    func review(for sessionID: UUID) throws -> SessionReview? {
+        var request = FetchDescriptor<SessionReview>(predicate: #Predicate { $0.sessionID == sessionID })
+        request.fetchLimit = 1
+        return try context.fetch(request).first
+    }
+
+    func saveCorrections(_ paragraphs: [ReviewParagraph], for session: ConferenceSession) throws {
+        let originals = session.orderedCaptions.map { ReviewParagraph(id: $0.id, text: $0.text) }
+        guard paragraphs.map(\.id) == originals.map(\.id) else { throw ReviewFailure.sessionChanged }
+        let changes = Dictionary(uniqueKeysWithValues: zip(originals, paragraphs).compactMap { original, edited in
+            original.text == edited.text ? nil : (original.id.uuidString, edited.text)
+        })
+        let encoded = try JSONEncoder().encode(changes)
+        let record = try review(for: session.id) ?? SessionReview(sessionID: session.id)
+        context.insert(record)
+        record.corrections = encoded
+        record.updatedAt = changes.isEmpty ? nil : Date()
+        do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
+    }
+
+    func saveReadingPosition(_ captionID: UUID, for session: ConferenceSession) throws {
+        guard session.captions.contains(where: { $0.id == captionID }) else { return }
+        let record = try review(for: session.id) ?? SessionReview(sessionID: session.id)
+        guard record.lastReadCaptionID != captionID else { return }
+        context.insert(record)
+        record.lastReadCaptionID = captionID
         do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
     }
 

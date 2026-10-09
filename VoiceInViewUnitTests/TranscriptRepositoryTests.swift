@@ -92,4 +92,59 @@ final class TranscriptRepositoryTests: XCTestCase {
         try repository.delete(session)
         XCTAssertEqual(try repository.container.mainContext.fetchCount(FetchDescriptor<StoredCaption>()), 0)
     }
+    func testV2MigrationPreservesOriginalsBookmarksCorrectionsAndReadingPosition() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("ReviewMigration-\(UUID())")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let identifiers = try autoreleasepool { () throws -> (UUID, UUID) in
+            let schema = Schema(versionedSchema: SessionSchemaV2.self)
+            let configuration = ModelConfiguration("Sessions", schema: schema,
+                url: directory.appendingPathComponent("Sessions.store"), cloudKitDatabase: .none)
+            let container = try ModelContainer(for: schema, configurations: [configuration])
+            let session = ConferenceSession(title: "Existing session")
+            let segment = CaptionSegment(runID: UUID(), start: 0, end: 1, text: "Acmee original")
+            let caption = StoredCaption(segment: segment, order: 0)
+            container.mainContext.insert(session)
+            container.mainContext.insert(caption)
+            session.captions.append(caption)
+            container.mainContext.insert(CaptionBookmark(sessionID: session.id, segment: segment))
+            try container.mainContext.save()
+            return (session.id, caption.id)
+        }
+        try autoreleasepool {
+            let repository = try TranscriptRepository(directory: directory)
+            let session = try XCTUnwrap(repository.container.mainContext.fetch(FetchDescriptor<ConferenceSession>()).first)
+            XCTAssertEqual(session.id, identifiers.0)
+            XCTAssertEqual(session.fullTranscript, "Acmee original")
+            XCTAssertEqual(try repository.bookmarks(for: session.id).count, 1)
+            try repository.saveCorrections([ReviewParagraph(id: identifiers.1, text: "Acme corrected\nSecond line")], for: session)
+            try repository.saveReadingPosition(identifiers.1, for: session)
+        }
+        try autoreleasepool {
+            let repository = try TranscriptRepository(directory: directory)
+            let session = try XCTUnwrap(repository.container.mainContext.fetch(FetchDescriptor<ConferenceSession>()).first)
+            let review = try XCTUnwrap(repository.review(for: session.id))
+            XCTAssertEqual(try review.decodedCorrections()[identifiers.1.uuidString], "Acme corrected\nSecond line")
+            XCTAssertEqual(review.lastReadCaptionID, identifiers.1)
+            XCTAssertEqual(session.fullTranscript, "Acmee original")
+            XCTAssertEqual(try repository.bookmarks(for: session.id).first?.text, "Acmee original")
+            try repository.saveCorrections([ReviewParagraph(id: identifiers.1, text: "Acmee original")], for: session)
+            XCTAssertTrue(try review.decodedCorrections().isEmpty)
+            XCTAssertEqual(review.lastReadCaptionID, identifiers.1)
+            try repository.delete(session)
+            XCTAssertNil(try repository.review(for: identifiers.0))
+            XCTAssertTrue(try repository.bookmarks(for: identifiers.0).isEmpty)
+        }
+    }
+
+    func testStaleEditorCannotReplaceADifferentTranscript() throws {
+        let repository = try TranscriptRepository(inMemory: true)
+        let session = try repository.create(title: "Safe edits")
+        let segment = CaptionSegment(runID: UUID(), start: 0, end: 1, text: "Original")
+        try repository.apply(.init(removedIDs: [], upserted: [segment]), to: session)
+        try repository.saveCorrections([ReviewParagraph(id: segment.id, text: "Corrected")], for: session)
+        XCTAssertThrowsError(try repository.saveCorrections([ReviewParagraph(id: UUID(), text: "Wrong session")], for: session))
+        XCTAssertEqual(try repository.review(for: session.id)?.decodedCorrections()[segment.id.uuidString], "Corrected")
+        XCTAssertEqual(session.fullTranscript, "Original")
+    }
+
 }
