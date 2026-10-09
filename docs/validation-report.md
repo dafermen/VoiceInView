@@ -1,4 +1,23 @@
-# Validation report — 2026-10-08
+# Validation report — 2026-10-09
+
+## TestFlight and reading experience — 2026-10-09
+
+This update supersedes the historical installation-blocked status below. User screenshots show Xcode Cloud Archive build 5 completed and TestFlight 0.1.0 (5) was assigned to the internal Dev group. The user then confirmed successful installation and basic operation on their iPhone. Offline behavior, transcription accuracy and extended reliability were not separately measured.
+
+The reader now uses a compact status header, an Aa settings sheet, a session actions menu and a primary Start/Pause/Resume control. In landscape, status and controls share a bottom row. Portrait and both landscape orientations remain enabled; app identity and stored-session format are unchanged. Full permission/error explanations remain accessible from the compact banner or session information.
+
+Verification on Xcode 15.2 / iPhone SE (3rd generation), iOS 17.2:
+
+- Debug compilation and all 40 unit tests passed. Neither speech engine was changed by this UI work.
+- All five UI scenarios passed across the final full run and focused rerun: launch without permission prompts, microphone diagnostics, portrait/landscape-left/landscape-right rotation, readiness/privacy navigation, and reading options/session actions. The focused rerun corrected a test assumption: iOS may omit a disabled Save Session action when there are no final captions.
+- The initial UI runs exposed a duplicate, untappable accessibility element in SwiftUI Menu. The final implementation uses a standard button and native confirmation dialog; rotation tests now verify the action button remains hittable, and the options test opens its session information screen.
+- Release compilation passed for both simulator architectures. Bundle checks passed, including all three supported orientations, app identity, purpose strings, assets and privacy manifest. Shell syntax and git diff checks passed. The PowerShell validator was updated but not run on this Mac.
+- Portrait and both landscape screenshots were inspected. On the small SE screen, the reader occupies approximately 66% of screen height in portrait and 61% in landscape even with the permission banner visible. The banner disappears once recognition is ready.
+- A stalled macOS power service delayed validation; the user restarted it and the final checks completed afterward.
+
+Local evidence (ignored by Git): `build/reading-ux-20261009/initial-tests.log` and `Initial-tests.xcresult` contain the 40 passing unit tests and initial UI findings; `ui-tests.log` and `UI-tests.xcresult` contain the final rotation/navigation run; `options-test.log` and `Options-test.xcresult` contain the passing focused options/actions rerun. `release-build.log` contains the final Release build. The `screenshots` subfolder contains portrait and both landscape captures.
+
+The revised interface still needs a TestFlight check during real speech on the user's iPhone, including rotation while listening/paused, manual saving with final captions, VoiceOver and the largest accessibility text sizes. Prior build 5 success does not verify this new interface on a physical device.
 
 ## iOS 17 / Xcode 15.2 compatibility migration
 

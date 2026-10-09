@@ -12,10 +12,9 @@ struct AppRootView: View {
             if let coordinator {
                 TabView {
                     NavigationStack {
-                        CaptionScreen(model: coordinator.caption, settings: coordinator.settings, newSession: { await coordinator.newSession() })
-                            .toolbar {
-                                Button("Save Session") { coordinator.saveCurrent(ended: coordinator.caption.state == .ended) }
-                            }
+                        CaptionScreen(model: coordinator.caption, settings: coordinator.settings,
+                                      newSession: { await coordinator.newSession() },
+                                      saveSession: { coordinator.saveCurrent(ended: coordinator.caption.state == .ended) })
                     }
                     .tabItem { Label("Captions", systemImage: "captions.bubble") }
                     NavigationStack { SessionHistoryView(coordinator: coordinator) }

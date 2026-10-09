@@ -7,6 +7,7 @@ Native iPhone app designed to caption English speech on device during conference
 ## Current status
 Implementation and release-preparation source through Phase 9 are present. This is a DEVELOPMENT BUILD, not a certified release candidate.
 The project now targets iOS 17 and builds with Xcode 15.2 on macOS Ventura. A compatibility speech engine uses SFSpeechRecognizer with on-device recognition required. The modern iOS 26 engine is retained behind compiler/OS availability checks. See [validation results](docs/validation-report.md) for executed checks; real-device accuracy and offline behavior remain unverified.
+On 2026-10-09, the user confirmed successful installation and basic operation of TestFlight build 0.1.0 (5) on their iPhone. This does not establish offline accuracy or extended reliability.
 The user explicitly authorized continuous progression through Phase 9 despite pending Apple validation. Phase 10 online AI is not implemented.
 
 ## Implemented source
@@ -42,8 +43,9 @@ See [development](docs/development.md), [testing](docs/testing.md) and [release 
 1. Settings > Offline Readiness: allow microphone and Speech Recognition when requested. Resolve any readiness warnings while online. With the compatibility engine, enable English (US) Dictation in iPhone Settings if on-device support is unavailable, then refresh; the app cannot download that engine’s model. Use Install English Model only if the modern engine offers it.
 2. Test Offline Mode: enable Airplane Mode and turn Wi-Fi off, then return to Captions.
 3. Start Listening; read live captions. Pause/Resume retains earlier final text. Stop finalizes the session.
-4. Auto-save is on by default. When off, use Save Session before clearing or closing the app.
-5. Sessions: open/rename/search/delete or export/copy/share.
+4. Tap Aa for caption size, live following and screen wake. Rotate the iPhone to use the compact landscape controls.
+5. Auto-save is on by default. When off, use the (…) Session actions menu > Save Session before clearing or closing the app. New Session and session information are in the same menu.
+6. Sessions: open/rename/search/delete or export/copy/share.
 
 Leaving/locking the app stops microphone capture; restart requires user action. Unfinished captions can be lost on cancellation. With the compatibility engine, a provisional request can contain about 50 seconds of speech; use Pause/Stop to finalize before leaving. Saved sessions are excluded from device backup; export anything you need to retain.
 Audio is never stored or uploaded by the app. Explicit sharing may transmit text through the chosen destination.
@@ -60,9 +62,9 @@ Audio is never stored or uploaded by the app. Explicit sharing may transmit text
 - docs — architecture, ADRs, phase reports, privacy and release material.
 
 ## Limitations / release gates
-Real offline transcription, latency, 30/60/120-minute reliability, accessibility, database recovery, protection/backup behavior and release archiving are unverified.
+Real offline transcription, latency, 30/60/120-minute reliability, accessibility, database recovery and protection/backup behavior remain unverified. Xcode Cloud produced the archive distributed through TestFlight.
 Built-in microphone only; Bluetooth input, background capture, PDF and online AI are not implemented.
 Current installTap API is supported at the iOS 17 baseline and deprecated beginning iOS 27; migration to its iOS 27 replacement requires that SDK and new validation.
-Publisher/license, registration of the bundle ID in App Store Connect, contact/support/privacy URLs, questionnaire answers and genuine screenshots are pending.
+Public-release metadata, contact/support/privacy URLs, remaining questionnaire answers and genuine screenshots are pending.
 
 [Delivery report](docs/implementation-report.md) · [Validation results](docs/validation-report.md) · [Architecture](docs/architecture.md) · [Roadmap](docs/roadmap.md) · [Privacy](docs/privacy.md)

@@ -1,9 +1,11 @@
 # Changelog
 
 ## Unreleased — 0.1.0 development, through Phase 9
-iOS 17 compatibility builds with Xcode 15.2; physical speech and release verification remain pending. This is not a release-certified binary.
+iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation of TestFlight build 5 on their iPhone; detailed offline and release verification remain pending. This is not a release-certified binary.
 
 ### Changed
+- Expanded the caption reader with a compact status strip and an adaptive landscape control bar. Reading options now open from Aa; save/new-session actions and full status information live in the session menu.
+- A single primary action changes between Start Listening, Pause, Resume and New Session. Stop remains directly accessible.
 - Renamed the app, Xcode project and scheme, source/test targets, exported filename fallback, permission text, documentation and repository to VoiceInView.
 - Adopted the subtitle "Live English Captions" and tagline "See what's being said."
 - Kept `com.dafermen.vReader` and the original internal session-storage directory for continuity. Validation/archive scripts also accept their previous environment-variable names.
@@ -19,7 +21,7 @@ iOS 17 compatibility builds with Xcode 15.2; physical speech and release verific
 - Bounded queues, stale-session/cancellation guards, missing-audio/finalization timeouts and storage monitoring.
 - Privacy manifest, policy/source audit, App Store drafts, icon and release checklist.
 - Windows static validation and Mac Debug/test/Release/archive scripts.
-- 40 compatibility unit tests and 3 UI tests passed on iOS 17.2; one additional modern conversion test requires Xcode 26/iOS 26. Independent macOS assembler validation is also available.
+- 40 compatibility unit tests and 5 UI scenarios passed across full and focused runs on iOS 17.2; one additional modern conversion test requires Xcode 26/iOS 26. Independent macOS assembler validation is also available.
 
 ### Fixed
 - Explicitly delete a session’s captions before saving its deletion, covering the orphan observed with iOS 17 SwiftData.

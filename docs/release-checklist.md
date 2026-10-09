@@ -13,7 +13,7 @@ This is a gate, not a claim that release is approved.
 
 ## Must pass on Apple tooling
 - [x] Debug simulator build (Xcode 15.2, iOS 17.2 SDK).
-- [x] Compatibility unit and UI suite (40 unit + 3 UI, iOS 17.2 simulator).
+- [x] Compatibility unit and UI suite (40 unit + 5 UI, iOS 17.2 simulator).
 - [ ] Retained modern-engine build and AudioConversion test on Xcode 26+/iOS 26+.
 - [x] Release simulator build and bundle/plist/privacy/asset checks (Xcode 15.2).
 - [ ] Real compatible iPhone English Dictation/model setup and offline recognition, including 50-second request transitions.

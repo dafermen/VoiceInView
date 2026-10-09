@@ -1,5 +1,5 @@
 # Testing through Phase 9
-The project now builds with Xcode 15.2/iOS 17. On the iOS 17.2 simulator, 40 unit tests and 3 UI tests passed. The modern AudioConversion test is excluded by the older compiler. See validation-report.md for logs and remaining gates. Simulator tests do not verify actual speech, offline model availability or a physical iPhone.
+The project now builds with Xcode 15.2/iOS 17. On the iOS 17.2 simulator, 40 unit tests and 5 UI scenarios passed across the full and focused validation runs. The modern AudioConversion test is excluded by the older compiler. See validation-report.md for logs and remaining gates. Simulator tests do not verify actual speech, offline model availability or a physical iPhone.
 
 
 ## Automated suite
@@ -12,7 +12,7 @@ The project now builds with Xcode 15.2/iOS 17. On the iOS 17.2 simulator, 40 uni
 - LegacySpeechTranscriberTests: offline request flags, authorization/support refusal, request rotation, queued audio, cancellation, timeout and overflow.
 - AudioConversionTests: 1 sample-rate conversion test, only compiled with Swift 6.2+ and requiring iOS 26.
 - SessionClockTests: 1 invalid/long-duration test.
-- HomeScreenTests: 3 launch, settings/readiness/privacy and retained microphone-diagnostic tests.
+- HomeScreenTests: 5 tests covering launch without permission prompts, settings/readiness/privacy, microphone diagnostics, reading options and both landscape orientations.
 Run bash scripts/validate-macos.sh. Do not infer device speech support from passing mocked/simulator tests.
 
 ## Phase 1 microphone diagnostics
@@ -30,7 +30,7 @@ Volume monitoring is not speech recognition and cannot prove offline captions.
 
 ## Phase 3 reading/accessibility
 Pause/Resume retains earlier final captions and excludes paused time. Stop ends the session; New Session confirms clearing unsaved content.
-Check largest Dynamic Type, adjustable caption size, light/dark/system appearance, contrast, VoiceOver, Reduce Motion and rotation.
+Use Aa to adjust caption size and following; use (…) Session actions for manual saving, New Session and full status information. Check largest Dynamic Type, light/dark/system appearance, contrast, VoiceOver and Reduce Motion. Rotate while listening, paused and stopped in both directions; verify captions, elapsed time and chosen text size remain intact and controls remain reachable.
 Disable live following, load earlier captions and re-enable follow. Confirm screen wake only while listening/viewing captions and normal sleep on Stop/background.
 Perform a 30-minute read-along.
 
@@ -61,4 +61,4 @@ Verify no automatic uploads, no stored audio, deletion and explicit sharing beha
 Run Release simulator validation and signed device archive; check icon/dark/tinted variants, genuine screenshots and all release-checklist.md items.
 
 ## Evidence record
-For each run record date, source commit, device/OS/SDK, scenario, result, latency/metrics, failure and retest. Every physical scenario above is currently pending.
+For each run record date, source commit, device/OS/SDK, scenario, result, latency/metrics, failure and retest. The user confirmed basic operation of TestFlight 0.1.0 (5) on their iPhone on 2026-10-09. The detailed physical scenarios above, including the revised reader during live speech, still require individual verification.
