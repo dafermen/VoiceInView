@@ -7,6 +7,7 @@
 - Evidencias: `/private/tmp/VoiceInView-17-build.log`, `VoiceInView-17-tests.log`, `VoiceInView-17-ui-final.log`, `VoiceInView-17-release.log`; resultados UI finales en `/private/tmp/VoiceInView-17-UI-Final.xcresult`.
 - 118 enlaces locales comprobados; proyecto plist y `git diff --check` correctos.
 - Verificación final: **TEST SUCCEEDED**, recorrido de edición/audio/pausa/preview/SRT en 51,509 s (`VoiceInView-17-UI-Verified.xcresult`). Release final **BUILD SUCCEEDED** (`VoiceInView-17-release-final.log`). Las otras dos pruebas UI pasaron en la ejecución inicial.
+- Código publicado como `a135f0e`. Cloud pendiente: las primeras consultas no mostraron check y la siguiente falló por conexión a api.github.com. No se afirma compilación moderna ni disponibilidad TestFlight para build 17.
 - La ejecución real de Translation, las sugerencias del motor moderno, calidad, descarga de idiomas, latencia/batería y entrega TestFlight necesitan validación aparte. La vista en directo es temporal y experimental, no una traducción guardada automáticamente.
 
 # Validation report — updated 2026-10-10

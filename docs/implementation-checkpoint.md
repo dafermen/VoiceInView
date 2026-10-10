@@ -12,7 +12,8 @@ Base estable: e1b56c1 (build 16). Identidad com.dafermen.vReader y esquema V6 se
 - [x] Vista previa de idioma/formato/vigencia antes de compartir.
 - [x] Traducción opcional durante captura sobre texto final, sin bloquear micrófono.
 - [x] Pruebas locales y documentación de usuario/junior.
-- [ ] Commit/push y comprobación moderna en Cloud.
+- [x] Código y documentación publicados en `main`: commit `a135f0e`.
+- [ ] Comprobación moderna en Xcode Cloud y entrega TestFlight.
 
 ## Reanudar
 Consultar git status y git diff antes de editar. No asumir que una compilación local con Xcode 15.2 valida Translation (requiere SDK moderno y iOS 18). Revisar check-runs del commit en GitHub para Cloud; éxito Cloud no confirma instalación TestFlight. Conservar traducciones completas anteriores ante fallos/cancelaciones. No cambiar certificados ni identidad.
@@ -24,5 +25,12 @@ Consultar git status y git diff antes de editar. No asumir que una compilación 
 - Evidencia UI final: `/private/tmp/VoiceInView-17-ui-verified.log` y `/private/tmp/VoiceInView-17-UI-Verified.xcresult`.
 - Debug y Release finales compilados; `/private/tmp/VoiceInView-17-release-final.log`. Identidad/build 17 verificados; 118 enlaces locales, plist y diff revisados.
 - Los conjuntos anteriores `VoiceInView-17-Tests.xcresult` y `VoiceInView-17-UI-Final.xcresult` incluyen los fallos ya corregidos. No presentarlos como ejecuciones completas exitosas.
-- Próximo: push/check-runs del commit. Xcode 15.2 no verifica las APIs modernas de Translation/SpeechAnalyzer.
+- Próximo: consultar check-runs de `a135f0e` (o el commit documental posterior) en GitHub. Al terminar esta sesión no había check registrado y la última consulta falló con «error connecting to api.github.com». El push del código sí terminó correctamente. Xcode 15.2 no verifica las APIs modernas de Translation/SpeechAnalyzer.
 - Pendiente iPhone/TestFlight: descargar modelos, calidad, latencia, batería, interrupciones. La vista en directo es temporal y experimental; para exportar español se traduce la sesión guardada.
+
+## Continuación mínima
+1. `git status --short` y `git log -3 --oneline`: conservar cualquier cambio nuevo del usuario.
+2. `gh api repos/dafermen/VoiceInView/commits/a135f0e/check-runs` (también consultar HEAD si hay un commit documental posterior).
+3. Si Cloud falla, leer su error específico antes de modificar código/certificados; no confundir un fallo de exportación con compilación Swift.
+4. Si Cloud pasa, revisar TestFlight y asignación al grupo Dev. No afirmar instalación del iPhone sin confirmación.
+5. Probar vista española en directo/modelos/diccionario en un iPhone compatible. Todo el código y las pruebas locales de las seis mejoras están terminados; no volver a implementarlos desde cero.
