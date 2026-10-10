@@ -131,6 +131,7 @@ private struct LiveCaptionView: View {
                       },
                       discardSession: { await coordinator.discardCurrent() },
                       needsSessionDecision: coordinator.needsSessionDecision,
+                      sessionTitle: Binding(get: { coordinator.sessionTitle }, set: { coordinator.sessionTitle = $0 }),
                       bookmarkSegment: { coordinator.toggleBookmark($0) },
                       showBookmarks: { showingBookmarks = true },
                       bookmarkedIDs: Set(bookmarks.filter { $0.sessionID == coordinator.currentSession?.id }.map(\.segmentID)))

@@ -3,6 +3,14 @@
 ## Unreleased — 0.1.0 development, through Phase 9
 iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation of TestFlight builds 5 and 6 on their iPhone; detailed offline and release verification remain pending. This is not a release-certified binary.
 
+### Capture and audio review — 2026-10-10, source build 15
+- Tap a saved timed paragraph or playback phrase to seek and listen; keep Play/Pause directly accessible.
+- Show live microphone level and distinguish transcribing from recording, paused and interrupted states.
+- Offer explicit Resume after interruption; keep the same recovery draft and finalized text.
+- Suggest a local date/time title with an optional inline name field at Save.
+- Pinch live captions to resize; preserve Aa and accessibility adjustment actions.
+- Keep schema V5, existing identity, sample clock and recording opt-in unchanged.
+
 ### Session workflow — 2026-10-10, source build 14
 - Persist Audio/Background preferences and expose quick controls before Start.
 - Circular microphone/pause/resume and square Stop controls with accessibility labels.

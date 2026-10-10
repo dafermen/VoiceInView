@@ -184,3 +184,17 @@ Save Session elimina solo la marca: el texto, audio, UUID y tiempos siguen siend
 La migración es aditiva: una sesión antigua sin marca se considera guardada. Nunca debemos clasificar todas las sesiones antiguas como borradores solo porque añadimos una función. Las pruebas abren una base V4, migran a V5, cierran/reabren un borrador y verifican su texto y su archivo de audio.
 
 Las preferencias pertenecen a AppSettings/UserDefaults; el estado de captura pertenece al ViewModel. Recordar “guardar audio” no significa activar el micrófono al abrir la app. Start sigue siendo una acción explícita. Cambiar esa preferencia a mitad de una sesión afecta a la siguiente: no podemos reconstruir audio pasado ni mover el origen de los subtítulos sin una implementación específica.
+
+## 16. Del párrafo al audio, y del micrófono al indicador
+
+Un párrafo tiene un UUID. SessionMedia guarda tiempos usando ese UUID. SubtitleExport transforma texto revisado y tiempos en cues: pequeños fragmentos con inicio y fin. Al tocar un párrafo, SessionDetailView abre SessionMediaView con su UUID; el reproductor busca el primer cue correspondiente y llama a play(from:). No calcula segundos a partir del número de letras ni usa el orden visual como si fuera tiempo.
+
+play(from:) primero valida la posición y hace seek. Si el reproductor estaba pausado, inicia; si ya estaba reproduciendo, sigue. Reutilizar toggle() sin comprobar el estado sería un error: tocar la segunda frase pausaría el audio.
+
+El tap del micrófono ya calcula RMS y entrega un nivel normalizado. El motor de Speech consume esa señal para detectar falta de audio y ahora comunica el nivel mediante onLevel. CaptionViewModel limita las actualizaciones visuales a unas diez por segundo y solo las acepta mientras escucha. El indicador no escribe muestras ni sustituye la grabación. Estado listening y recordingPrepared permiten distinguir transcribir de guardar audio.
+
+Pausa finaliza el turno de Speech y conserva el borrador. Reanudar inicia otro turno dentro de la misma sesión. Una interrupción no autoriza reanudar por sí sola. Las pruebas provocan un error, comprueban que el UUID y texto final sobreviven, y exigen una llamada explícita a start().
+
+Un gesto de ampliación usa estado temporal durante el movimiento. Solo al finalizar persiste el tamaño en AppSettings: esto evita escribir preferencias en cada actualización del gesto. Se limita al mismo intervalo que el control Aa. SessionTitle usa DateFormatter local y limpia el nombre al guardar; no necesita IA ni red.
+
+SwiftUI describe vistas mediante tipos genéricos. Una cadena muy larga de modificadores puede resultar cara de comprobar para el compilador aunque sea rápida en ejecución. En esta entrega se midieron unos 176 segundos en el getter del lector; separar contenido, estilo, interacción y seguimiento redujo cada comprobación a menos de un segundo en la ejecución medida. Esto no es una medición de velocidad de transcripción. Los componentes conservan los mismos IDs de párrafo y acciones.

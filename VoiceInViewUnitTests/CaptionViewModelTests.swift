@@ -4,6 +4,40 @@ import SwiftData
 
 @MainActor
 final class CaptionViewModelTests: XCTestCase {
+    func testInterruptionKeepsDraftAndResumesOnlyOnRequest() async throws {
+        let speech = MockSpeech()
+        let microphone = CaptionMicrophone()
+        let model = CaptionViewModel(microphone: microphone, speech: speech)
+        let repository = try TranscriptRepository(inMemory: true)
+        let defaults = UserDefaults(suiteName: UUID().uuidString)!
+        let coordinator = SessionCoordinator(repository: repository, caption: model, settings: AppSettings(defaults: defaults))
+        await model.start()
+        let id = try XCTUnwrap(coordinator.currentSession?.id)
+        microphone.onLevel?(0.7)
+        XCTAssertEqual(model.inputLevel, 0.7, accuracy: 0.01)
+        speech.interrupt()
+        for _ in 0..<1000 { if model.canResume { break }; await Task.yield() }
+        XCTAssertTrue(model.canResume)
+        XCTAssertEqual(model.inputLevel, 0)
+        XCTAssertEqual(speech.starts, 1)
+        XCTAssertEqual(model.transcript.text, "Before interruption.")
+        XCTAssertEqual(coordinator.currentSession?.id, id)
+        XCTAssertNotNil(try repository.draft(for: id))
+        await model.start()
+        XCTAssertEqual(speech.starts, 2)
+        await model.pause()
+        XCTAssertEqual(model.state, .paused)
+        XCTAssertTrue(model.canResume)
+        XCTAssertEqual(model.inputLevel, 0)
+        await model.start()
+        await model.stop()
+        coordinator.sessionTitle = "  Weekly planning  "
+        XCTAssertTrue(coordinator.saveCurrent(ended: true))
+        XCTAssertEqual(coordinator.currentSession?.title, "Weekly planning")
+        XCTAssertEqual(coordinator.currentSession?.id, id)
+        XCTAssertTrue(coordinator.currentSession?.fullTranscript.contains("Before interruption.") == true)
+    }
+
     func testDraftRequiresExplicitSaveAndPreferencesSurviveNewSession() async throws {
         let name = "FlowTests." + UUID().uuidString
         let defaults = UserDefaults(suiteName: name)!
@@ -18,6 +52,8 @@ final class CaptionViewModelTests: XCTestCase {
         XCTAssertNotNil(try repository.draft(for: session.id))
         await model.stop()
         XCTAssertTrue(coordinator.needsSessionDecision)
+        try repository.rename(session, title: "Renamed from history")
+        XCTAssertEqual(coordinator.sessionTitle, "Renamed from history")
         await coordinator.newSession()
         XCTAssertEqual(model.state, .ended, "A pending draft cannot be silently replaced")
         XCTAssertEqual(session.fullTranscript, "Final sentence.")
@@ -25,6 +61,7 @@ final class CaptionViewModelTests: XCTestCase {
         XCTAssertFalse(model.saveAudio)
         XCTAssertTrue(coordinator.saveCurrent(ended: true))
         XCTAssertNil(try repository.draft(for: session.id))
+        XCTAssertEqual(session.title, "Renamed from history")
         await coordinator.newSession()
         XCTAssertEqual(model.state, .idle)
         XCTAssertTrue(model.saveAudio)
@@ -120,6 +157,7 @@ final class CaptionViewModelTests: XCTestCase {
 
 @MainActor
 private final class CaptionMicrophone: AudioCapturing {
+    var onLevel: (@MainActor @Sendable (Float) -> Void)?
     var permission: MicrophonePermission = .granted
     var onFailure: (@MainActor @Sendable (CaptureFailure) -> Void)?
     func requestPermission() async -> Bool { true }
@@ -147,6 +185,10 @@ private final class MockSpeech: SpeechTranscribing {
         let stream = AsyncThrowingStream<TranscriptionUpdate, Error>.makeStream()
         output = stream.continuation
         return stream.stream
+    }
+    func interrupt() {
+        output?.yield(.init(runID: runID, start: 0, end: 1, text: "Before interruption.", isFinal: true))
+        output?.finish(throwing: TranscriptionFailure.interrupted("Microphone interrupted."))
     }
     func resolveStart() { pendingStart?.resume(); pendingStart = nil }
     func finish() async throws {

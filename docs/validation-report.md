@@ -1,5 +1,17 @@
 # Validation report — updated 2026-10-10
 
+## Capture feedback and phrase review — 2026-10-10, source build 15
+
+Implemented paragraph-to-audio playback and a collapsible timed-phrase list; explicit capture/playback pause and resume; metering and recording/transcribing distinction; interruption recovery without automatic restart; local suggested names and inline editing; pinch resizing with accessibility alternatives. No schema, app identity or storage-path change.
+
+- Xcode 15.2 / iOS 17.2 simulator: all 61 compatible unit tests passed. New coverage includes interruption→explicit resume preserving the draft UUID and final text, metering cleanup, local title fallback/limits, history rename preservation, and playback seeking without accidental pause. Audio recording/export and existing migration tests also passed. Modern AudioConversion tests remain unavailable with this compiler.
+- The initial completed UI run passed pinch, pause/resume, paragraph-triggered playback and initial playback pause, but failed later on keyboard visibility and locating the phrase-list control. These were addressed with explicit title focus handling and an accessible button for the phrase list. The final focused UI reruns both passed; the full pre-existing UI suite was not rerun.
+- Final UI evidence: `VoiceInView-Review15-UIFinal.xcresult` / `VoiceInView-Review15-ui-final.log` passed phrase-triggered playback and pause; `VoiceInView-Review15-NameCheck.xcresult` / `VoiceInView-Review15-name-check.log` passed pinch, capture pause/resume, clearing/editing the name, keyboard dismissal, landscape Save and the saved title in history. Portrait, landscape and phrase-playback screenshots were inspected. The intermediate name assertion failed because the test backspaced from the middle of the suggested title; the final flow uses the new clear-name button.
+- Final Release simulator build passed for arm64 and x86_64. Bundle checks confirmed version 0.1.0/build 15, unchanged bundle identifier, iOS 17 minimum, microphone/speech purpose strings, audio background mode and all three supported orientations. Project plist lint, 98 local documentation links and Git whitespace checks passed. Release log: `/private/tmp/VoiceInView-Review15-release.log`.
+- Several earlier compilation attempts were intentionally cancelled while diagnosing SwiftUI type-checking cost. Diagnostic timing located a 175943 ms reader expression; separating its modifiers reduced the measured per-component checks below one second. This measures compilation only, not transcription performance.
+
+Evidence outside Git: `/private/tmp/VoiceInView-Review15-validation.log` and `VoiceInView-Review15-Validation.xcresult` (61 unit tests passed; initial UI failures). New delivery and physical iPhone acceptance remain pending.
+
 ## Session preferences and explicit Save/Discard — 2026-10-10
 
 Source build 14 adds persisted Audio/Background defaults, quick controls, circular capture buttons, one-tap new sessions after saving, and explicit Save/Discard. Schema V5 adds a SessionDraft marker without altering previous models. Stop checkpoints a recovery draft; only Save publishes it. Existing sessions remain saved. No bundle ID or storage path change was made.

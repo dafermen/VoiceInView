@@ -14,7 +14,13 @@ final class SessionCoordinator {
     private(set) var currentIsDraft = false
     var needsSessionDecision: Bool { currentIsDraft }
     private(set) var resolvingSession = false
-    var sessionTitle = "Conference"
+    // A history rename is reflected unless the user has explicitly edited the pending name.
+    private var suggestedTitle = SessionTitle.suggested()
+    private var titleOverride: String?
+    var sessionTitle: String {
+        get { titleOverride ?? currentSession?.title ?? suggestedTitle }
+        set { titleOverride = newValue }
+    }
     @ObservationIgnored private var monitorTask: Task<Void, Never>?
 
     init(repository: TranscriptRepository, caption: CaptionViewModel? = nil, settings: AppSettings? = nil) {
@@ -31,6 +37,7 @@ final class SessionCoordinator {
                 throw StorageFailure.lowCapacity
             }
             if self.currentSession == nil {
+                self.suggestedTitle = SessionTitle.suggested()
                 self.currentSession = try self.repository.create(title: self.sessionTitle, draft: true)
                 self.currentIsDraft = true
             }
@@ -90,6 +97,7 @@ final class SessionCoordinator {
         guard caption.state == .ended, !caption.preparationPending,
               checkpointCurrent(ended: ended), let currentSession else { return false }
         do {
+            try repository.rename(currentSession, title: SessionTitle.resolved(sessionTitle, at: currentSession.startedAt))
             try repository.publish(currentSession)
             currentIsDraft = false
             storageMessage = nil
@@ -130,7 +138,8 @@ final class SessionCoordinator {
         await caption.reset()
         applyCapturePreferences()
         currentSession = nil
-        sessionTitle = "Conference"
+        titleOverride = nil
+        suggestedTitle = SessionTitle.suggested()
     }
 
     private func monitorSession() {

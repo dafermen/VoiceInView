@@ -15,7 +15,7 @@
 | App Store Connect app ID | 6820599198 |
 | Grupo interno de testers | Dev |
 | Versión en el proyecto | 0.1.0 |
-| Build en el proyecto | 14; nuevo flujo de preferencias, borradores y controles pendiente de distribución |
+| Build en el proyecto | 15; revisión por audio, pausa, indicadores y nombres; requiere nuevo archivo y distribución |
 | Almacenamiento local de sesiones | Application Support/vReader/Sessions.store |
 | Entorno Cloud seleccionado tras la prueba | Xcode 26.6 (17F113), macOS Tahoe 26.5.1 (25F80) |
 | Mac utilizado para exportar | Xcode 15.2, macOS Ventura 13.7.8 |

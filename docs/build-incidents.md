@@ -137,3 +137,15 @@ Para la próxima compilación: el script de validación debe esperar UIBackgroun
 ### Validación del flujo nuevo
 
 Las pruebas compatibles pasaron (59 unitarias y dos escenarios UI en ejecuciones finales). El primer intento UI excedió la espera al finalizar una ráfaga sintética de 320 párrafos: el fixture del flujo corto usa ahora ocho; los escenarios de lectura larga conservan su fixture original. Otro intento consultaba Stop durante la animación de rotación; se sustituyó la comprobación inmediata por una espera hasta que el control sea interactuable. El recorrido final guardar → nueva sesión → fullscreen horizontal → descartar pasó, conservando la sesión previamente guardada. Estos ajustes del test no prueban rendimiento prolongado con audio real.
+
+## 12. Próxima entrega: revisión de audio y controles (fuente 15)
+
+La confirmación del usuario de que la app funciona no demuestra que futuras modificaciones hayan llegado al teléfono. Build 15 necesita un archivo nuevo del commit correspondiente. Mantener bundle ID y esquema V5; no reutilizar el ejecutable del archivo 13/14 para intentar entregar estas funciones. Si Cloud repite el error de exportación, revisar el ZIP de esa compilación antes de aplicar el procedimiento de firma local.
+
+Pausa no crea otra sesión; la interrupción tampoco debe hacerlo al reanudar. Para diagnosticar saltos incorrectos, comprobar UUID del párrafo, tiempos guardados, duración real del audio y si hubo correcciones. No equiparar el medidor de entrada con una prueba de transcripción correcta.
+
+Validación local de esta mejora: se cancelaron varios intentos de compilación lentos y se recogieron tiempos del compilador. El getter del lector tardó 175943 ms comprobando tipos. Se separaron contenido, estilo, gestos y seguimiento; la repetición midió menos de un segundo por componente. Los indicadores de tiempo fueron flags locales de diagnóstico, no cambios de configuración publicados. También se cerraron los compiladores residuales de intentos cancelados.
+
+La primera ejecución completa pasó 61 pruebas unitarias. Los dos escenarios UI detectaron un teclado que podía permanecer abierto tras editar el nombre y una consulta de prueba que no encontraba el desplegable por nombre. Se añadió manejo explícito del foco/Done y un botón identificable para desplegar frases. El resultado de la repetición se registra en validation-report.md.
+
+La repetición confirmó la reproducción/pausa. La prueba del nombre necesitó una corrección adicional: borrar con retrocesos desde el centro del campo dejaba caracteres de la fecha. Se añadió un botón accesible para limpiar el nombre y se usó ese recorrido. La ejecución final pasó el guardado y la consulta del nombre en historial, también tras girar a horizontal.

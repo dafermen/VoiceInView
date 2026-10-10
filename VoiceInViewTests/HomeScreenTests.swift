@@ -69,8 +69,86 @@ final class HomeScreenTests: XCTestCase {
         app.buttons["fullScreenButton"].tap()
         XCUIDevice.shared.orientation = .portrait
         app.tabBars.buttons["Sessions"].tap()
-        XCTAssertEqual(app.staticTexts.matching(identifier: "Conference").count, 1)
+        XCTAssertEqual(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Session · ")).count, 1)
         XCTAssertFalse(app.staticTexts["Recovery drafts"].exists)
+    }
+
+    @MainActor
+    func testPausePinchAndNamedSave() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-reader", "--ui-test-session-flow"]
+        app.launch()
+        let primary = app.buttons["primaryCaptionAction"]
+        XCTAssertTrue(primary.waitForExistence(timeout: 20))
+        let reader = app.scrollViews["captionScrollView"]
+        reader.pinch(withScale: 1.3, velocity: 1)
+        app.buttons["readingOptionsButton"].tap()
+        let value = app.sliders["Caption size"].value as? String ?? ""
+        XCTAssertNotEqual(value, "28 points")
+        app.buttons["Done"].tap()
+        primary.tap()
+        expectation(for: NSPredicate(format: "label == 'Pause'"), evaluatedWith: primary)
+        waitForExpectations(timeout: 10)
+        XCTAssertTrue(app.progressIndicators["captureLevelMeter"].exists)
+        primary.tap()
+        expectation(for: NSPredicate(format: "label == 'Resume'"), evaluatedWith: primary)
+        waitForExpectations(timeout: 10)
+        XCTAssertFalse(app.progressIndicators["captureLevelMeter"].exists)
+        app.buttons["resumeCaptureButton"].tap()
+        expectation(for: NSPredicate(format: "label == 'Pause'"), evaluatedWith: primary)
+        waitForExpectations(timeout: 10)
+        app.buttons["stopCaptionAction"].tap()
+        let name = app.textFields["sessionTitleField"]
+        XCTAssertTrue(name.waitForExistence(timeout: 10))
+        name.tap()
+        app.buttons["clearSessionName"].tap()
+        name.typeText("Planning review\n")
+        expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.keyboards.firstMatch)
+        waitForExpectations(timeout: 5)
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = "Save-session-name"; shot.lifetime = .keepAlways; add(shot)
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        expectation(for: NSPredicate(format: "hittable == true"), evaluatedWith: app.buttons["saveSessionButton"])
+        waitForExpectations(timeout: 8)
+        let landscape = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        landscape.name = "Named-session-landscape"; landscape.lifetime = .keepAlways; add(landscape)
+        app.buttons["saveSessionButton"].tap()
+        expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.buttons["saveSessionButton"])
+        waitForExpectations(timeout: 5)
+        XCUIDevice.shared.orientation = .portrait
+        expectation(for: NSPredicate(format: "hittable == true"), evaluatedWith: app.tabBars.buttons["Sessions"])
+        waitForExpectations(timeout: 8)
+        app.tabBars.buttons["Sessions"].tap()
+        XCTAssertTrue(app.staticTexts["Planning review"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testTapParagraphStartsAudioAndPauseKeepsPosition() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-review", "--ui-test-media"]
+        app.launch()
+        XCTAssertTrue(app.tabBars.buttons["Sessions"].waitForExistence(timeout: 20))
+        app.tabBars.buttons["Sessions"].tap()
+        app.staticTexts["Review sample"].tap()
+        let paragraph = app.buttons["listenParagraph-0"]
+        XCTAssertTrue(paragraph.waitForExistence(timeout: 10))
+        paragraph.tap()
+        let play = app.buttons["recordingPlayButton"]
+        XCTAssertTrue(play.waitForExistence(timeout: 10))
+        expectation(for: NSPredicate(format: "label == 'Pause'"), evaluatedWith: play)
+        waitForExpectations(timeout: 10)
+        play.tap()
+        XCTAssertEqual(play.label, "Play")
+        app.buttons["phraseListButton"].tap()
+        let cue = app.buttons["listenCue-0"]
+        for _ in 0..<5 { if cue.isHittable { break }; app.swipeUp() }
+        XCTAssertTrue(cue.isHittable)
+        cue.tap()
+        XCTAssertEqual(play.label, "Pause")
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = "Phrase-playback"; shot.lifetime = .keepAlways; add(shot)
+        play.tap()
     }
 
     @MainActor
@@ -498,7 +576,7 @@ final class HomeScreenTests: XCTestCase {
         expectation(for: NSPredicate(format: "label == 'Pause'"), evaluatedWith: app.buttons["primaryCaptionAction"])
         waitForExpectations(timeout: 10)
         app.tabBars.buttons["Sessions"].tap()
-        app.staticTexts["Conference"].tap()
+        app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Session · ")).firstMatch.tap()
         XCTAssertFalse(app.buttons["editTranscriptButton"].isEnabled)
         app.buttons["reviewShareButton"].tap()
         XCTAssertFalse(app.buttons["editFromPreview"].isEnabled)

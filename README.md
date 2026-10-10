@@ -15,8 +15,11 @@ On 2026-10-09, the user confirmed successful installation and basic operation of
 On 2026-10-10, the Cloud Build 11 archive (Xcode 26.6 / iOS SDK 26.5) was successfully exported and uploaded from the Mac using Xcode 15.2. Screenshots confirm the first local upload processed as 0.1.0 (1), assigned to Dev. It appeared below older builds 5–8. The same feature archive was subsequently re-signed and uploaded as 0.1.0 (13) with explicit numbering; the user subsequently confirmed the update on the iPhone and that the audio/background switches work. Extended audio/subtitle and offline acceptance tests remain pending. Cloud export still fails with HTTP 502; changing Xcode 27 to 26.6 did not fix it. See the distribution runbook before retrying.
 Phase 10 online AI is not implemented.
 
-## Session controls (build 14 source)
-Remembered Audio/Background preferences, quick controls beside capture, circular microphone/pause/stop buttons, one-tap + after saving, and explicit Save/Discard with recovery drafts. See [the session workflow](docs/session-workflow.md). This change still requires a new TestFlight delivery; an installed build 13 will not gain it automatically from a GitHub push.
+## Capture and audio review (build 15 source)
+Tap a timed paragraph to listen to its recording, pause/resume capture or playback, see a microphone meter and a red indicator only for active audio recording, rename the suggested date/time title while saving, and pinch live captions to resize text. Interrupted capture offers explicit Resume while retaining saved draft content. No automatic microphone restart. See [session workflow](docs/session-workflow.md) and [audio review](docs/media-and-subtitles.md). Build 15 still requires a new TestFlight delivery.
+
+## Session controls (introduced in build 14)
+Remembered Audio/Background preferences, quick controls beside capture, circular microphone/pause/stop buttons, one-tap + after saving, and explicit Save/Discard with recovery drafts. See [the session workflow](docs/session-workflow.md). The user subsequently reported that the app was working well; the exact installed build number was not independently inspected. New source changes require their own TestFlight delivery.
 
 ## Implemented source
 - Built-in microphone capture with optional background continuation, contextual permission and diagnostics.

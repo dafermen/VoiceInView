@@ -25,3 +25,18 @@ extension CaptionState {
         }
     }
 }
+
+/// A useful default without an extra naming screen or a network service.
+enum SessionTitle {
+    static func suggested(at date: Date = Date(), locale: Locale = .current, timeZone: TimeZone = .current) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.timeZone = timeZone
+        formatter.setLocalizedDateFormatFromTemplate("MMM d HHmm")
+        return "Session · " + formatter.string(from: date)
+    }
+    static func resolved(_ proposed: String, at date: Date) -> String {
+        let clean = proposed.trimmingCharacters(in: .whitespacesAndNewlines)
+        return clean.isEmpty ? suggested(at: date) : String(clean.prefix(120))
+    }
+}

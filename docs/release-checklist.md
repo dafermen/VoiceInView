@@ -15,7 +15,7 @@ This is a gate, not a claim that release is approved.
 
 ## Must pass on Apple tooling
 - [x] Debug simulator build (Xcode 15.2, iOS 17.2 SDK).
-- [x] Latest session workflow: 59 compatible unit tests and two targeted UI scenarios, iOS 17.2 simulator. The earlier media delivery passed 56 unit tests and 12 UI scenarios; the full older UI suite was not rerun for build 14.
+- [x] Latest capture/review workflow: 61 compatible unit tests and two targeted UI scenarios across final runs, iOS 17.2 simulator. The full older UI suite was not rerun for build 15; earlier validation is preserved in validation-report.md.
 - [x] Modern source compiled/archived in Cloud, including Xcode 26.6 Build 11.
 - [ ] Modern AudioConversion test executed on Xcode 26+/iOS 26+.
 - [x] Release simulator build and bundle/plist/privacy/asset checks (Xcode 15.2).
@@ -49,3 +49,8 @@ This is a gate, not a claim that release is approved.
 Before any new delivery, read [distribution runbook](distribution-runbook.md) and [known incidents](build-incidents.md). Cloud automatic export remains affected by the recorded 502; the local workaround exported/uploaded the Build 11 archive as TestFlight 1 and then a re-numbered copy as 13.
 
 Phase 10 online AI is excluded and remains unimplemented.
+
+## Build 15 follow-up
+- [x] Implement phrase playback, pause/resume feedback, level meter, local suggested title and pinch sizing.
+- [ ] Fresh modern archive and TestFlight delivery of build 15.
+- [ ] Physical interruption, audio timing and accessibility acceptance of these changes.

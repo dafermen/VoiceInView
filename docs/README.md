@@ -36,3 +36,5 @@ Consulta también [el nuevo flujo de sesiones](session-workflow.md): preferencia
 Los informes `phase-*-report.md`, [el informe de entrega inicial](implementation-report.md) y las secciones antiguas de validación describen lo conocido en sus fechas. No son el estado actual. Mantenerlos permite aprender qué se intentó y por qué se cambió de camino.
 
 Al documentar un resultado, distinguir: implementado, compilado, probado en simulador, probado en dispositivo, subido, procesado y disponible para testers. Cada palabra requiere evidencia distinta.
+
+Build 15 añade revisión por frase, feedback de captura, reanudación manual, nombres y ampliación por gesto. Su validación y entrega se registran por separado en el informe de pruebas.

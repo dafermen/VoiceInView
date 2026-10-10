@@ -97,3 +97,11 @@ Build 11 dejó advertencias de Sendable en AudioConversion y RecordingExport. Es
 | Firma o distribución | Registros de archive/export/upload; una prueba de UI no valida certificados |
 
 El [plan de pruebas](testing.md) distingue los escenarios automatizados de los que requieren un iPhone.
+
+## Capture/review changes in build 15
+
+- `AudioCapturing.onLevel` → both speech engines → `CaptionViewModel.inputLevel`: optional MainActor callback, throttled for display; cleared on pause/stop/interruption.
+- `CaptionViewModel.canResume` and `CaptionScreen`: contextual manual recovery action; no automatic restart.
+- `SessionTitle` in SessionClock.swift → SessionCoordinator → optional inline title binding in CaptionScreen: local suggestion, trimmed name, fallback and length limit.
+- `SessionDetailView` → paragraph UUID → `SessionMediaView.initialParagraphID` → cue start → `SessionPlayer.play(from:)`: audio review without guessing old timestamps.
+- `CaptionScreen.pinchScale`: transient magnification; AppSettings persists the clamped final size.

@@ -1,6 +1,6 @@
 # Sesiones: iniciar, guardar y descartar
 
-Implementado en fuente para 0.1.0 build 14. La disponibilidad en TestFlight debe comprobarse por separado.
+Flujo introducido en build 14 y ampliado en fuente 0.1.0 build 15. La disponibilidad de cada entrega en TestFlight debe comprobarse por separado.
 
 ## Recorrido principal
 
@@ -29,3 +29,12 @@ Guardar quita la marca de borrador y conserva la identidad, texto, audio, correc
 - Pruebas: persistencia de preferencias, separación Stop/Save, descarte aislado, migración V4, reapertura de borrador y recorrido de UI incluyendo fullscreen horizontal.
 
 La grabación que empieza a mitad de sesión queda fuera de esta entrega; requiere definir el desplazamiento del audio respecto a los subtítulos.
+
+## Revisión y captura — build 15
+
+- El botón principal cambia de micrófono a Pausa y después a Reanudar. Pausa conserva la sesión, finaliza los resultados pendientes y apaga el micrófono. Reanudar continúa el mismo borrador; Stop termina la captura y muestra Guardar/Descartar. En el reproductor, Play/Pause controla únicamente el audio guardado.
+- Transcribing indica solo transcripción; Recording con icono rojo indica que se está grabando audio. El medidor muestra nivel recibido, no calidad ni exactitud del reconocimiento. Durante pausa/interrupción se limpia.
+- Una interrupción con sesión iniciada muestra que hay un borrador disponible y ofrece Resume. La causa completa se consulta tocando el aviso. No se reinicia el micrófono automáticamente: si iOS sigue ocupándolo, el nuevo intento mostrará el error. Lo recuperable es lo escrito, no texto provisional perdido.
+- Al detener, aparece un nombre sugerido con fecha/hora, editable en el mismo lugar que Save Session. Al editar puedes limpiar el campo con la X; Done cierra el teclado. Dejarlo vacío usa la sugerencia; se eliminan espacios extremos y se limita a 120 caracteres. No se envía texto a ningún servicio para generar nombres.
+- Pellizcar el área de lectura cambia la letra entre 20 y 44 puntos base, respetando Dynamic Type. La elección queda guardada al terminar el gesto. Aa y acciones de accesibilidad permiten ajustar sin gestos de dos dedos.
+- En Sessions, tocar un párrafo con audio y tiempos abre el reproductor desde esa frase. Los textos antiguos sin tiempos siguen siendo legibles/editables. Véase [audio y subtítulos](media-and-subtitles.md).

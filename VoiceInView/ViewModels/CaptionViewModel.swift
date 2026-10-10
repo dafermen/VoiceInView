@@ -21,6 +21,10 @@ final class CaptionViewModel {
     private(set) var elapsed: TimeInterval = 0
     private(set) var permissionDenied = false
     private(set) var preparationPending = false
+    private(set) var inputLevel: Float = 0
+    @ObservationIgnored private var lastMeterUpdate = Date.distantPast
+    var isRecordingAudio: Bool { state == .listening && recordingPrepared }
+    var canResume: Bool { startedAt != nil && (state == .paused || isProblem) && !preparationPending }
     private(set) var notice: String?
     // Snapshot of global choices for this capture; the coordinator restores defaults after reset.
     var saveAudio = false
@@ -50,6 +54,12 @@ final class CaptionViewModel {
     init(microphone: any AudioCapturing, speech: any SpeechTranscribing) {
         self.microphone = microphone
         self.speech = speech
+        microphone.onLevel = { [weak self] value in
+            guard let self, self.state == .listening, value.isFinite,
+                  Date().timeIntervalSince(self.lastMeterUpdate) >= 0.1 else { return }
+            self.lastMeterUpdate = Date()
+            self.inputLevel = min(max(value, 0), 1)
+        }
     }
 
     /// El compilador decide si conoce el motor moderno; el iOS del teléfono decide si puede usarlo.
@@ -227,6 +237,7 @@ final class CaptionViewModel {
         startedAt = nil
         elapsed = 0
         activeSince = nil
+        inputLevel = 0
         notice = nil
         state = .idle
     }
@@ -238,6 +249,7 @@ final class CaptionViewModel {
     private var isProblem: Bool { if case .problem = state { true } else { false } }
 
     private func settleDuration() {
+        inputLevel = 0
         if let activeSince { elapsed += SessionClock.seconds(activeSince.duration(to: .now)) }
         activeSince = nil
         onCheckpoint?(elapsed)

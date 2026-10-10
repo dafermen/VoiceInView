@@ -15,3 +15,11 @@ Subtitles align to this session's audio, with pauses removed. Native recognition
 - Verify long sessions, low storage, route changes, phone calls, airplane mode, device protection/backup and battery use on actual hardware.
 
 Local tests cover recording/decoding, M4A conversion, sample clock, rotation/resume offsets, migrations, deletion, subtitle formatting and UI playback/export. Hardware recognition, long-session timing and source-app coexistence remain device validation tasks.
+
+## Phrase review — build 15
+
+In a stopped session, tap a paragraph with saved audio/timing to open playback at its first available cue. The player also offers a collapsed Listen by phrase list, keeping export actions within reach: selecting one seeks and starts playback; selecting another while playing changes position without pausing. The current phrase is highlighted. Play/Pause is available throughout playback and fullscreen. Editing pauses playback; corrections rebuild the cue text and retain the paragraph's saved range. Estimated corrected timings are not guaranteed word-accurate.
+
+Missing audio or absent timing does not invent a seek position. Audio truncated by an earlier failure clips cues to the available recording. Plain transcripts remain selectable/editable. Pauses in recording are omitted from the sample timeline; playback pauses do not modify the recording.
+
+Device checks: tap early and late paragraphs, pause/resume, switch phrases while playing, correct a paragraph and repeat, delete audio and verify the text remains. Test interruptions and reopening playback without overlapping microphone capture.

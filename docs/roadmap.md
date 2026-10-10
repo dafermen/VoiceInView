@@ -25,3 +25,6 @@ Do not describe this state as App Store ready or offline proven.
 ## Session workflow — build 14 source
 
 Implemented remembered capture preferences, nearby controls, circular microphone/pause/stop, one-tap new session after saving, explicit Save/Discard and V5 recovery drafts. See [session workflow](session-workflow.md). The current changes passed 59 compatible unit tests and two targeted UI scenarios across final runs; this does not mean the entire older UI suite was rerun. A new modern archive, TestFlight delivery and physical acceptance are still required.
+
+## Audio review and capture feedback — build 15 source
+Timed paragraph/phrase playback, explicit capture and playback pause/resume, level feedback, contextual interruption recovery, local suggested names and pinch resizing are implemented. The schema remains V5 and modern-engine/device verification is a separate gate. See the current validation report before claiming TestFlight availability.

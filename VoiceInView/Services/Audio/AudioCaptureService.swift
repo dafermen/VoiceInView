@@ -6,6 +6,7 @@ import Foundation
 /// mixWithOthers permite coexistencia cuando iOS lo admite, no captura audio interno de otras apps.
 @MainActor
 final class AudioCaptureService: SpeechAudioCapturing {
+    var onLevel: (@MainActor @Sendable (Float) -> Void)?
     var audioSink: (@Sendable (CapturedAudio) -> Void)?
     var onFailure: (@MainActor @Sendable (CaptureFailure) -> Void)?
     let timeline = CaptureTimeline()

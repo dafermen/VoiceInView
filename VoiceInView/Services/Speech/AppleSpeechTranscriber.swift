@@ -152,9 +152,10 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
                     }
                 }
                 defer { watch.cancel() }
-                for await _ in levels {
+                for await level in levels {
                     guard !Task.isCancelled, self?.generation == identifier else { return }
                     self?.lastAudioAt = .now
+                    self?.audio.onLevel?(level)
                 }
             }
             return results.stream

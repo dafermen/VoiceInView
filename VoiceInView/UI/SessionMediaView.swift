@@ -77,7 +77,13 @@ final class SessionPlayer {
             }
         } catch { failure = "Audio playback could not start. Please try again." }
     }
+    func play(from value: Double) {
+        guard value.isFinite, value >= 0, value < duration else { return }
+        seek(value)
+        if !playing { toggle() }
+    }
     func seek(_ value: Double) {
+        guard value.isFinite else { return }
         time = min(max(value, 0), duration)
         player?.currentTime = time
     }
@@ -99,11 +105,13 @@ struct SessionMediaView: View {
     let repository: TranscriptRepository
     let paragraphs: [ReviewParagraph]
     let hasCorrections: Bool
+    var initialParagraphID: UUID? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var player = SessionPlayer()
     @State private var audioURL: URL?
     @State private var cues: [SubtitleCue] = []
     @State private var captions = true
+    @State private var showingPhrases = false
     @State private var deleting = false
     @State private var busy = false
     @State private var failure: String?
@@ -153,6 +161,28 @@ struct SessionMediaView: View {
                         Section {
                             Button("Edit transcript", systemImage: "pencil") { player.pause(); editing = true }
                                 .accessibilityIdentifier("editMediaTranscriptButton")
+                        }
+                        if audioURL != nil && !cues.isEmpty {
+                            Section {
+                                Button(showingPhrases ? "Hide phrases" : "Listen by phrase",
+                                       systemImage: showingPhrases ? "chevron.up" : "chevron.down") { showingPhrases.toggle() }
+                                    .accessibilityValue(showingPhrases ? "Expanded" : "Collapsed")
+                                    .accessibilityIdentifier("phraseListButton")
+                                if showingPhrases {
+                                ForEach(cues) { cue in
+                                    Button { player.play(from: cue.start) } label: {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(cue.text).foregroundStyle(.primary)
+                                            Label(SessionClock.format(cue.start), systemImage: "play.circle")
+                                                .font(.caption)
+                                        }.frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .listRowBackground(currentCue?.id == cue.id ? Color.accentColor.opacity(0.12) : Color.clear)
+                                    .accessibilityHint("Play the recording from this phrase")
+                                    .accessibilityIdentifier("listenCue-\(cue.id)")
+                                }
+                                }
+                            }
                         }
                         Section("Export") {
                             if audioURL != nil {
@@ -218,6 +248,9 @@ struct SessionMediaView: View {
                 audioURL = url; player.load(url)
             }
             try rebuildCues()
+            if let initialParagraphID, let cue = cues.first(where: { $0.paragraphID == initialParagraphID }) {
+                player.play(from: cue.start)
+            }
         } catch { failure = "Could not open session media. Your transcript is unchanged." }
     }
 

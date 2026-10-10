@@ -113,6 +113,8 @@ struct SessionDetailView: View {
     let canEdit: Bool
     let canPlay: Bool
     @State private var showingMedia = false
+    @State private var playbackParagraphID: UUID?
+    @State private var playableParagraphIDs: Set<UUID> = []
     @Query private var reviews: [SessionReview]
     @Query private var bookmarks: [CaptionBookmark]
     @State private var showingBookmarks = false
@@ -143,6 +145,35 @@ struct SessionDetailView: View {
         TranscriptReview.paragraphs(originals: originals, corrections: corrections ?? [:])
     }
 
+    private func refreshPlayableParagraphs() {
+        playableParagraphIDs = []
+        guard canPlay, let url = try? repository.audioURL(for: session.id),
+              FileManager.default.fileExists(atPath: url.path),
+              let media = try? repository.media(for: session.id),
+              let timings = try? media.decodedTimings() else { return }
+        playableParagraphIDs = Set(SubtitleExport.cues(paragraphs: paragraphs, timings: timings).map(\.paragraphID))
+    }
+
+    @ViewBuilder private func paragraphView(_ paragraph: ReviewParagraph, index: Int) -> some View {
+        if canPlay && playableParagraphIDs.contains(paragraph.id) && !paragraph.text.isEmpty {
+            Button {
+                playbackParagraphID = paragraph.id
+                showingMedia = true
+            } label: {
+                Text(paragraph.text).font(.title2).foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Listen from this paragraph")
+            .accessibilityIdentifier("listenParagraph-\(index)")
+        } else {
+            Text(paragraph.text.isEmpty ? "Empty paragraph" : paragraph.text)
+                .font(.title2).textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("reviewParagraph-\(index)")
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -153,7 +184,7 @@ struct SessionDetailView: View {
                     else if session.endedAt == nil { Text("Saved final captions from an unfinished session.") }
                     if !(corrections ?? [:]).isEmpty { Label("Edited transcript", systemImage: "pencil").font(.caption) }
                 }.font(.subheadline).foregroundStyle(.secondary)
-                Button("Audio & subtitles", systemImage: "waveform") { showingMedia = true }
+                Button("Audio & subtitles", systemImage: "waveform") { playbackParagraphID = nil; showingMedia = true }
                     .disabled(!canPlay || corrections == nil).accessibilityIdentifier("sessionMediaButton")
                 if !canPlay { Text("Stop listening before opening audio and subtitles.").font(.caption) }
                 if corrections == nil {
@@ -162,10 +193,7 @@ struct SessionDetailView: View {
                 } else {
                     LazyVStack(alignment: .leading, spacing: 20) {
                         ForEach(Array(paragraphs.enumerated()), id: \.element.id) { index, paragraph in
-                            Text(paragraph.text.isEmpty ? "Empty paragraph" : paragraph.text)
-                                .font(.title2).textSelection(.enabled)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .id(paragraph.id).accessibilityIdentifier("reviewParagraph-\(index)")
+                            paragraphView(paragraph, index: index).id(paragraph.id)
                         }
                     }.scrollTargetLayout()
                 }
@@ -190,9 +218,10 @@ struct SessionDetailView: View {
                     .disabled(corrections == nil).accessibilityIdentifier("reviewShareButton")
             }
         }
+        .task(id: showingMedia) { refreshPlayableParagraphs() }
         .sheet(isPresented: $showingMedia) {
             SessionMediaView(session: session, repository: repository, paragraphs: paragraphs,
-                             hasCorrections: !(corrections ?? [:]).isEmpty)
+                             hasCorrections: !(corrections ?? [:]).isEmpty, initialParagraphID: playbackParagraphID)
         }
         .sheet(isPresented: $showingEditor) {
             TranscriptEditorView(originals: originals, reviewed: paragraphs) { edited in

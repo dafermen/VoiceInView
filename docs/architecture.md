@@ -64,3 +64,10 @@ SubtitleExport groups native timed words into short cues, preserves silence, rem
 SessionDraft is an additive marker keyed by session UUID. ConferenceSession and previous schema models are unchanged, so a V1–V4 session without a marker remains a saved library entry. Create(draft: true) saves both objects together before capture. onFinalized/onCheckpoint/onEnded checkpoint the draft; none of these publish it. publish removes the marker after an explicit Save. Deletion removes the marker and associated data. The history screen partitions sessions by marker IDs and lets recovered drafts be reviewed, saved or discarded without automatically reopening the microphone.
 
 SessionCoordinator refuses newSession while a decision is pending. Save-and-new resets only after a successful publish; Discard stops/finalizes the recorder before deleting. AppSettings persists two global defaults. CaptionViewModel receives an audio snapshot before preparing and a mutable background choice; recorder timing cannot be changed retrospectively. The old autoSave preference is no longer used: recovery persistence and library publication are separate operations.
+
+## Capture feedback and phrase playback (build 15)
+The metering callback uses the existing microphone level stream, never a second AVAudioEngine tap. Both recognition engines forward values on MainActor; CaptionViewModel throttles rendering and resets the displayed level when capture stops. Recording status depends on a prepared recorder and listening state, not just a future preference.
+
+Saved paragraph playback joins by paragraph UUID to generated subtitle cues. The player clamps ordinary seeking and rejects invalid play-from positions; selecting another phrase during playback does not toggle it off. Pause/Resume retains the draft UUID and recording sample timeline. Interruption recovery is explicit, and draft durability still depends on successful storage writes.
+
+No schema migration or new background capability is required for this change. Suggested names and pinch preferences are local.

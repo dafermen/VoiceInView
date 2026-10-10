@@ -81,9 +81,10 @@ final class LegacySpeechTranscriber: SpeechTranscribing {
             let meter = try audio.start()
             lastAudioAt = .now
             levels = Task { [weak self] in
-                for await _ in meter {
+                for await level in meter {
                     guard let self, self.generation == identifier, !Task.isCancelled else { return }
                     self.lastAudioAt = .now
+                    self.audio.onLevel?(level)
                 }
             }
             watchdog = Task { [weak self] in

@@ -47,3 +47,5 @@ https://developer.apple.com/documentation/technotes/tn3183-adding-required-reaso
 https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacyaccessedapitypes/nsprivacyaccessedapitype
 https://developer.apple.com/app-store/app-privacy-details/
 https://developer.apple.com/app-store/review/guidelines/
+
+The live level indicator reuses the microphone's local RMS-derived level; it is not a separate recording or a transcription-quality score. Suggested session titles use local date/time formatting. Phrase playback reads the existing local recording. These controls add no network service or new data destination.

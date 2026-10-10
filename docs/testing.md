@@ -78,3 +78,10 @@ Run Release simulator validation and signed device archive; check icon/dark/tint
 
 ## Evidence record
 For each run record date, source commit, device/OS/SDK, scenario, result, latency/metrics, failure and retest. The user confirmed basic operation of TestFlight 0.1.0 (5) and (6) on their iPhone on 2026-10-09. The detailed physical scenarios above, including the revised reader during live speech, still require individual verification.
+
+## Build 15 acceptance
+- Start transcription with audio off: Transcribing and live level, no red recording indicator. Audio on: Recording only after recorder/capture starts. Pause: level clears, microphone stops, Resume keeps the session.
+- Interrupt capture, keep finalized text/draft, return to foreground without automatic restart, then explicitly Resume. Verify repeated failure if microphone remains unavailable.
+- Pinch to increase/decrease text, verify 20–44 bounds, relaunch to verify persistence, rotate/fullscreen and use Aa/VoiceOver alternatives.
+- Save with default title, custom title, whitespace-only title and long title; verify history/search after reopening.
+- Tap a timed paragraph; verify playback jumps, Play/Pause and another cue work. Test corrected text, absent timing, deleted/truncated audio and no overlap with capture.

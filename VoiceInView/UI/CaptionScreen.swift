@@ -10,12 +10,15 @@ struct CaptionScreen: View {
     var saveAndNewSession: (() async -> Void)? = nil
     var discardSession: (() async -> Void)? = nil
     var needsSessionDecision = false
+    var sessionTitle: Binding<String>? = nil
     var bookmarkSegment: ((CaptionSegment) -> Void)? = nil
     var showBookmarks: (() -> Void)? = nil
     var bookmarkedIDs: Set<UUID> = []
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .title) private var scaledSize: CGFloat = 28
+    @FocusState private var titleFocused: Bool
+    @GestureState private var pinchScale: CGFloat = 1
     @State private var readingStartID: UUID?
     @State private var isFullScreen = false
     @State private var followLive = true
@@ -27,7 +30,7 @@ struct CaptionScreen: View {
     @State private var showingActions = false
     @State private var followScrollTask: Task<Void, Never>?
 
-    var body: some View {
+    private var readerLayout: some View {
         GeometryReader { geometry in
             let compact = geometry.size.width > geometry.size.height && !dynamicTypeSize.isAccessibilitySize
             VStack(spacing: 0) {
@@ -39,19 +42,7 @@ struct CaptionScreen: View {
                     }
                     .padding(.horizontal, 16)
                 }
-                if let message = statusMessage {
-                    Button { showingStatus = true } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: isProblem || model.permissionDenied ? "exclamationmark.circle" : "info.circle")
-                            Text(message).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
-                            Image(systemName: "chevron.right").font(.caption)
-                        }
-                        .font(.subheadline).padding(.horizontal, 16).frame(minHeight: 44)
-                        .contentShape(Rectangle())
-                    }
-                    .accessibilityLabel(message + ". Show details")
-                    .accessibilityIdentifier("captionStatusDetails")
-                }
+                if let message = statusMessage { captureNotice(message) }
                 transcript
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 if model.state == .ended && needsSessionDecision {
@@ -82,6 +73,10 @@ struct CaptionScreen: View {
                 }
             }
         }
+    }
+
+    private var presentedReader: some View {
+        readerLayout
         .navigationTitle("VoiceInView")
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(isFullScreen ? .hidden : .visible, for: .tabBar)
@@ -97,6 +92,10 @@ struct CaptionScreen: View {
             .presentationDetents([.medium, .large])
         }
         .sheet(isPresented: $showingStatus) { statusDetails }
+    }
+
+    var body: some View {
+        presentedReader
         .confirmationDialog("Session actions", isPresented: $showingActions, titleVisibility: .visible) {
             Button("Recording options") { showingOptions = true }
             if let saveSession {
@@ -137,19 +136,54 @@ struct CaptionScreen: View {
         .onDisappear { followScrollTask?.cancel(); UIApplication.shared.isIdleTimerDisabled = false }
     }
 
+    private func captureNotice(_ message: String) -> some View {
+        HStack(spacing: 0) {
+            Button { showingStatus = true } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: isProblem || model.permissionDenied ? "exclamationmark.circle" : "info.circle")
+                    Text(message).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                    Image(systemName: "chevron.right").font(.caption)
+                }
+                .font(.subheadline).padding(.horizontal, 16).frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .accessibilityLabel(message + ". Show details")
+            .accessibilityIdentifier("captionStatusDetails")
+            if model.canResume {
+                Button { Task { await model.start() } } label: {
+                    Label("Resume", systemImage: "play.fill").font(.subheadline).frame(minHeight: 44)
+                }
+                .padding(.trailing, 16).accessibilityIdentifier("resumeCaptureButton")
+            }
+        }
+    }
+
+    private var microphoneMeter: some View {
+        ProgressView(value: Double(model.inputLevel)).frame(width: 44)
+            .tint(model.isRecordingAudio ? Color.red : Color.accentColor)
+            .accessibilityLabel("Microphone level")
+            .accessibilityValue("\(Int(model.inputLevel * 100)) percent")
+            .accessibilityIdentifier("captureLevelMeter")
+    }
+
     private var status: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Label(model.saveAudio && model.state == .listening ? "Recording" : statusTitle,
-                  systemImage: model.saveAudio && model.state == .listening ? "record.circle.fill" : (model.state == .listening ? "mic.fill" : "mic"))
-                .foregroundStyle(model.saveAudio && model.state == .listening ? Color.red : Color.primary)
+            Label(model.isRecordingAudio ? "Recording" : statusTitle,
+                  systemImage: model.isRecordingAudio ? "record.circle.fill" : (model.state == .listening ? "mic.fill" : "mic"))
+                .foregroundStyle(model.isRecordingAudio ? Color.red : Color.primary)
                 .font(.subheadline.weight(.semibold))
-                .accessibilityLabel(model.saveAudio && model.state == .listening ? "Recording audio and captions" : model.state.title)
+                .accessibilityLabel(model.isRecordingAudio ? "Recording audio and captions" : (model.state == .listening ? "Transcribing without saving audio" : model.state.title))
                 .accessibilityIdentifier("listeningStatus")
             TimelineView(.periodic(from: Date(), by: 1)) { context in
+                HStack(spacing: 6) {
                 Text(SessionClock.format(model.currentDuration(at: context.date)))
                     .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                     .accessibilityLabel("Listening time")
                     .accessibilityValue(SessionClock.format(model.currentDuration(at: context.date)))
+                if model.state == .listening {
+                    microphoneMeter
+                }
+                }
             }
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -200,86 +234,112 @@ struct CaptionScreen: View {
         followLive = false
     }
 
+    private var resizeGesture: some Gesture {
+        MagnificationGesture()
+            .updating($pinchScale) { value, scale, _ in scale = value }
+            .onEnded { value in
+                settings.captionSize = min(max(settings.captionSize * Double(value), 20), 44)
+            }
+    }
+
     private var captionFont: Font {
-        .system(size: scaledSize * CGFloat(settings.captionSize) / 28,
-                weight: settings.boldCaptions ? .semibold : .regular)
+        let magnified: Double = settings.captionSize * Double(pinchScale)
+        let bounded: Double = min(max(magnified, 20.0), 44.0)
+        let points: CGFloat = scaledSize * CGFloat(bounded) / 28.0
+        let weight: Font.Weight = settings.boldCaptions ? .semibold : .regular
+        return Font.system(size: points, weight: weight)
+    }
+
+    private func captionContent(height: CGFloat) -> some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 20) {
+                if !hasCaptions {
+                    Text("Live English captions will appear here.")
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("captionPlaceholder")
+                }
+                if firstVisibleIndex > 0 {
+                    Button("Load Earlier Captions") {
+                        let index = max(0, firstVisibleIndex - 300)
+                        pauseFollowing()
+                        readingStartID = model.transcript.finalized[index].id
+                    }
+                    .font(.body).frame(minHeight: 44)
+                }
+                ForEach(model.transcript.finalized.dropFirst(firstVisibleIndex)) { segment in
+                    VStack(alignment: .leading, spacing: 4) {
+                        if bookmarkedIDs.contains(segment.id) {
+                            Label("Bookmarked", systemImage: "bookmark.fill").font(.caption)
+                        }
+                        Text(segment.text).textSelection(.enabled)
+                            .accessibilityIdentifier("caption-" + segment.id.uuidString)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contextMenu {
+                        if let bookmarkSegment {
+                            Button(bookmarkedIDs.contains(segment.id) ? "Remove bookmark" : "Save bookmark",
+                                   systemImage: "bookmark") { bookmarkSegment(segment) }
+                        }
+                    }
+                    .accessibilityAction(named: "Toggle bookmark") { bookmarkSegment?(segment) }
+                }
+                // A single stable container avoids replacing the entire provisional view
+                // whenever the recognizer revises its audio range or identifier.
+                if !model.transcript.partial.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Live · may change").font(.caption)
+                        Text(model.transcript.partial.map(\.text).joined(separator: "\n"))
+                            .accessibilityIdentifier("provisionalCaption")
+                    }
+                    .id("provisionalCaption")
+                }
+                Color.clear.frame(height: 1).id("liveBottom")
+            }
+            .font(captionFont)
+            .lineSpacing(settings.lineSpacing)
+            .frame(maxWidth: .infinity, minHeight: max(0, height - 32), alignment: .topLeading)
+            .padding(16)
+            .transaction { $0.animation = nil }
+        }
+    }
+
+    private func styledCaptionContent(height: CGFloat) -> some View {
+        captionContent(height: height)
+        .defaultScrollAnchor(followLive ? .bottom : nil)
+        .foregroundStyle(settings.highContrast ? (colorScheme == .dark ? Color.white : Color.black) : Color.primary)
+        .background(settings.highContrast ? (colorScheme == .dark ? Color.black : Color.white) : Color(uiColor: .systemBackground))
+        .accessibilityIdentifier("captionScrollView")
+        .accessibilityValue("\(model.transcript.finalized.count) finished paragraphs. " +
+                            (followLive ? "Following live captions" : "Reading earlier captions"))
+    }
+
+    private func interactiveCaptionContent(height: CGFloat) -> some View {
+        styledCaptionContent(height: height)
+        .simultaneousGesture(DragGesture(minimumDistance: 10).onChanged { value in
+            if hasCaptions && value.translation.height > 10 && value.translation.height > abs(value.translation.width) {
+                pauseFollowing()
+            }
+        })
+        .simultaneousGesture(resizeGesture)
+        .accessibilityAction(named: Text("Increase text size")) { settings.captionSize = min(settings.captionSize + 2, 44) }
+        .accessibilityAction(named: Text("Decrease text size")) { settings.captionSize = max(settings.captionSize - 2, 20) }
+        .accessibilityAction(named: "Read earlier captions") { pauseFollowing() }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if !followLive && hasCaptions {
+                Button { followLive = true } label: {
+                    Label("Back to live", systemImage: "arrow.down.to.line")
+                        .font(.subheadline).frame(minHeight: 44).padding(.horizontal, 12)
+                }
+                .accessibilityIdentifier("backToLiveButton")
+                .background(.regularMaterial, in: Capsule()).padding(.bottom, 4)
+            }
+        }
     }
 
     private var transcript: some View {
         ScrollViewReader { proxy in
             GeometryReader { viewport in
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 20) {
-                        if !hasCaptions {
-                            Text("Live English captions will appear here.")
-                                .foregroundStyle(.secondary)
-                                .accessibilityIdentifier("captionPlaceholder")
-                        }
-                        if firstVisibleIndex > 0 {
-                            Button("Load Earlier Captions") {
-                                let index = max(0, firstVisibleIndex - 300)
-                                pauseFollowing()
-                                readingStartID = model.transcript.finalized[index].id
-                            }
-                            .font(.body).frame(minHeight: 44)
-                        }
-                        ForEach(model.transcript.finalized.dropFirst(firstVisibleIndex)) { segment in
-                            VStack(alignment: .leading, spacing: 4) {
-                                if bookmarkedIDs.contains(segment.id) {
-                                    Label("Bookmarked", systemImage: "bookmark.fill").font(.caption)
-                                }
-                                Text(segment.text).textSelection(.enabled)
-                                    .accessibilityIdentifier("caption-" + segment.id.uuidString)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contextMenu {
-                                if let bookmarkSegment {
-                                    Button(bookmarkedIDs.contains(segment.id) ? "Remove bookmark" : "Save bookmark",
-                                           systemImage: "bookmark") { bookmarkSegment(segment) }
-                                }
-                            }
-                            .accessibilityAction(named: "Toggle bookmark") { bookmarkSegment?(segment) }
-                        }
-                        // A single stable container avoids replacing the entire provisional view
-                        // whenever the recognizer revises its audio range or identifier.
-                        if !model.transcript.partial.isEmpty {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Live · may change").font(.caption)
-                                Text(model.transcript.partial.map(\.text).joined(separator: "\n"))
-                                    .accessibilityIdentifier("provisionalCaption")
-                            }
-                            .id("provisionalCaption")
-                        }
-                        Color.clear.frame(height: 1).id("liveBottom")
-                    }
-                    .font(captionFont)
-                    .lineSpacing(settings.lineSpacing)
-                    .frame(maxWidth: .infinity, minHeight: max(0, viewport.size.height - 32), alignment: .topLeading)
-                    .padding(16)
-                    .transaction { $0.animation = nil }
-                }
-                .defaultScrollAnchor(followLive ? .bottom : nil)
-                .foregroundStyle(settings.highContrast ? (colorScheme == .dark ? Color.white : Color.black) : Color.primary)
-                .background(settings.highContrast ? (colorScheme == .dark ? Color.black : Color.white) : Color(uiColor: .systemBackground))
-                .accessibilityIdentifier("captionScrollView")
-                .accessibilityValue("\(model.transcript.finalized.count) finished paragraphs. " +
-                                    (followLive ? "Following live captions" : "Reading earlier captions"))
-                .simultaneousGesture(DragGesture(minimumDistance: 10).onChanged { value in
-                    if hasCaptions && value.translation.height > 10 && value.translation.height > abs(value.translation.width) {
-                        pauseFollowing()
-                    }
-                })
-                .accessibilityAction(named: "Read earlier captions") { pauseFollowing() }
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    if !followLive && hasCaptions {
-                        Button { followLive = true } label: {
-                            Label("Back to live", systemImage: "arrow.down.to.line")
-                                .font(.subheadline).frame(minHeight: 44).padding(.horizontal, 12)
-                        }
-                        .accessibilityIdentifier("backToLiveButton")
-                        .background(.regularMaterial, in: Capsule()).padding(.bottom, 4)
-                    }
-                }
+                interactiveCaptionContent(height: viewport.size.height)
                 .onChange(of: model.transcript.finalized) { _, _ in scrollToLive(proxy) }
                 .onChange(of: model.transcript.partial) { _, _ in scrollToLive(proxy) }
                 .onChange(of: followLive) { _, enabled in if enabled { scrollToLive(proxy) } }
@@ -317,14 +377,33 @@ struct CaptionScreen: View {
     }
 
     private var resolutionControls: some View {
+        VStack(alignment: .leading, spacing: 4) {
+        if let sessionTitle {
+            HStack(spacing: 4) {
+                TextField("Session name (optional)", text: sessionTitle)
+                    .font(.subheadline).focused($titleFocused)
+                    .submitLabel(.done).onSubmit { titleFocused = false }
+                    .accessibilityIdentifier("sessionTitleField")
+                if titleFocused && !sessionTitle.wrappedValue.isEmpty {
+                    Button { sessionTitle.wrappedValue = "" } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                            .frame(width: 44, height: 44)
+                    }
+                    .accessibilityLabel("Clear session name").accessibilityIdentifier("clearSessionName")
+                }
+            }
+            .padding(.horizontal, 8).frame(minHeight: 36)
+            .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+        }
         HStack(spacing: 16) {
-            Button { saveSession?() } label: { Label("Save Session", systemImage: "square.and.arrow.down") }
+            Button { titleFocused = false; saveSession?() } label: { Label("Save Session", systemImage: "square.and.arrow.down") }
                 .accessibilityIdentifier("saveSessionButton")
             Spacer(minLength: 0)
             Button(role: .destructive) { confirmDiscard = true } label: { Label("Discard", systemImage: "trash") }
                 .accessibilityIdentifier("discardSessionButton")
         }
         .font(.subheadline).frame(minHeight: 44)
+        }
     }
 
     private var captureControls: some View {
@@ -462,7 +541,10 @@ struct CaptionScreen: View {
     }
 
     private var statusMessage: String? {
-        if case .problem(let message) = model.state { return message }
+        if case .problem(let message) = model.state {
+            return model.canResume && needsSessionDecision ? "Capture interrupted · draft available" : message
+        }
+        if model.state == .paused { return "Paused · microphone off" }
         if model.permissionDenied { return "Microphone access needed" }
         switch model.readiness {
         case .ready: break
@@ -484,7 +566,7 @@ struct CaptionScreen: View {
         switch model.state {
         case .idle: return "Ready"
         case .preparing: return "Preparing"
-        case .listening: return "Listening"
+        case .listening: return "Transcribing"
         case .stopping: return "Finishing"
         default: return model.state.title
         }

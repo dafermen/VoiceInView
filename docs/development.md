@@ -44,7 +44,7 @@ The script rejects placeholder identifiers, archives for a physical iOS destinat
 This script compiles with the selected local SDK; an archive compiled with Xcode 15.2 does not satisfy the currently documented upload SDK requirement. For the tested workaround, export the already-modern Cloud archive using the [distribution runbook](distribution-runbook.md), rather than recompiling it with the old SDK. Public release still requires the open release-checklist.md gates.
 
 ## Store/version rules
-Source version 0.1.0/build 14. Local schema version 5 with additive V1→V2→V3→V4→V5 migrations, no CloudKit. V5 adds SessionDraft markers; existing sessions remain saved. UIBackgroundModes includes audio; recording/background preferences are remembered explicit opt-ins. See [session workflow](session-workflow.md).
+Source version 0.1.0/build 15. Local schema version 5 with additive V1→V2→V3→V4→V5 migrations, no CloudKit. V5 adds SessionDraft markers; existing sessions remain saved. UIBackgroundModes includes audio; recording/background preferences are remembered explicit opt-ins. See [session workflow](session-workflow.md).
 Never delete/recreate a failed store automatically. Add a migration plan for future deployed schema changes.
 Use small conventional local commits. The origin remote is https://github.com/dafermen/VoiceInView.git.
 
