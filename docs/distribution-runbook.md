@@ -15,7 +15,7 @@
 | App Store Connect app ID | 6820599198 |
 | Grupo interno de testers | Dev |
 | Versión en el proyecto | 0.1.0 |
-| Build en el proyecto | 1; comprobar el número efectivo de cada subida en App Store Connect |
+| Build en el proyecto | 13; incrementar a un número no usado antes de la próxima entrega |
 | Almacenamiento local de sesiones | Application Support/vReader/Sessions.store |
 | Entorno Cloud seleccionado tras la prueba | Xcode 26.6 (17F113), macOS Tahoe 26.5.1 (25F80) |
 | Mac utilizado para exportar | Xcode 15.2, macOS Ventura 13.7.8 |
@@ -30,14 +30,14 @@ El archivo de Build 11 se descargó y se exportó desde el Mac con Xcode 15.2. L
 
 El binario exportado conservó DTXcodeBuild=17F113 y DTSDKName=iphoneos26.5: se compiló en Cloud, no se recompiló con el SDK de Xcode 15.2. La firma utilizó un certificado Cloud Managed Apple Distribution y un perfil de App Store válido. Exportar desde el Mac sigue necesitando conexión y servicios de Apple; no fue una firma completamente offline.
 
-Esta combinación funcionó con este archivo. No demuestra que cualquier Xcode antiguo pueda exportar cualquier archivo futuro. Tampoco confirma que el paquete ya esté disponible para testers.
+Esta combinación funcionó con este archivo. No demuestra que cualquier Xcode antiguo pueda exportar cualquier archivo futuro. Las capturas posteriores confirman que la primera subida terminó como 0.1.0 (1), asignada a Dev. La nueva subida 0.1.0 (13) aún requiere verificar procesamiento y disponibilidad.
 
 ## 3. Antes de iniciar una entrega
 
 1. Revisar cambios y estado de Git; conservar el commit exacto.
 2. Ejecutar las [validaciones adecuadas](testing.md). Para cambios funcionales, usar la suite y escenarios físicos pertinentes.
 3. Verificar equipo, bundle ID, esquema compartido y permisos. No guardar credenciales en el repositorio.
-4. Revisar versión/build y registrar el último build aceptado en App Store Connect. El número de ejecución de Cloud no es necesariamente CFBundleVersion.
+4. Revisar versión/build y registrar el mayor build aceptado en App Store Connect. Elegir un número nuevo superior y verificar CFBundleVersion dentro del IPA. El número de ejecución de Cloud no es necesariamente CFBundleVersion. La entrega local 13 ya se subió: no reutilizarla.
 5. Revisar acuerdos o avisos que aparezcan al titular en Apple Developer / App Store Connect.
 6. Comprobar que el workflow usa un Xcode/SDK admitido para subir a Apple. Confirmar los [requisitos vigentes de SDK](https://developer.apple.com/news/upcoming-requirements/?id=04282026a).
 7. Revisar [incidentes conocidos](build-incidents.md) y no repetir una solución ya descartada sin evidencia nueva.
@@ -64,6 +64,7 @@ Después del build, distinguir:
 | EXPORT SUCCEEDED | Se completó exportación/firma según sus opciones |
 | Upload succeeded | Apple recibió la subida |
 | Processing | Apple aún procesa el paquete |
+| Ready to Submit | Permite pruebas internas; no obliga a revisión externa para el grupo Dev |
 | Ready to Test / Testing | Revisar asignación de grupo y disponibilidad para el tester |
 | Actualización instalada en iPhone | Solo se confirma desde el dispositivo/TestFlight |
 
@@ -89,7 +90,7 @@ No copiar el comando del worker Cloud para ejecutarlo en el Mac: /Volumes/worksp
 
 Requisitos: archivo confiable de este proyecto descargado de Artifacts, Xcode instalado y cuenta Apple configurada con acceso al equipo. Una petición de autenticación o llavero se atiende en la interfaz de macOS; nunca escribir contraseñas en documentación o chats.
 
-Descomprimir el ZIP de Archive en una carpeta local. No modificar el ejecutable, el SDK ni los metadatos del archivo para simular otra compilación. Conservar el original.
+Descomprimir el ZIP de Archive en una carpeta local. Conservar el original. No alterar el ejecutable ni los metadatos de SDK/compilador para simular otra compilación. Para corregir únicamente el número de entrega de un archivo existente, trabajar en una copia: actualizar CFBundleVersion en Products/Applications/VoiceInView.app/Info.plist y ApplicationProperties.CFBundleVersion en el Info.plist del archivo, y volver a exportar/firmar. No modificar un IPA firmado para subirlo sin volver a firmar.
 
 Desde la raíz del repositorio, en bash/zsh, ajustar solo la ruta del archivo real:
 
@@ -125,7 +126,7 @@ options = {
     "teamID": "7799N4RYUG",
     "signingStyle": "automatic",
     "uploadSymbols": False,
-    "manageAppVersionAndBuildNumber": True,
+    "manageAppVersionAndBuildNumber": False,
 }
 path = Path(os.environ["VOICEINVIEW_DISTRIBUTION_DIR"]) / "ExportOptions.plist"
 with path.open("wb") as file:
@@ -179,7 +180,7 @@ set -o pipefail
   2>&1 | tee "$VOICEINVIEW_DISTRIBUTION_DIR/upload.log"
 ~~~
 
-La operación vuelve a preparar y firmar para la subida. manageAppVersionAndBuildNumber solicita gestión automática; confirmar el número efectivo en App Store Connect. No asumir que el archivo fuente build=1 ni que Cloud Build 11 determinen por sí solos el número finalmente disponible en TestFlight.
+La operación vuelve a preparar y firmar para la subida. Usamos manageAppVersionAndBuildNumber=false para conservar el número explícito ya verificado en el archivo y el IPA. En el primer intento, true conservó el 1: no confiar en esa opción para incrementar automáticamente. Confirmar siempre el número efectivo en App Store Connect.
 
 En la ejecución comprobada, la salida final fue:
 
@@ -201,7 +202,9 @@ Si terminó bien, no repetir la subida por no verlo inmediatamente en TestFlight
 5. En iPhone, abrir TestFlight y actualizar. Registrar versión/build efectivamente instalados.
 6. Probar grabación optativa, corrección, reproducción, subtítulos, pausa/reanudación y orientación. Seguir [la lista de audio y subtítulos](media-and-subtitles.md).
 
-La subida del 10 de octubre quedó confirmada; estos pasos posteriores todavía no tienen confirmación para ese paquete en el registro del proyecto.
+Las capturas de las 04:37 del 10 de octubre confirman 0.1.0 (1) procesada, en Dev, con una invitación y sin instalaciones registradas. Después se subió 0.1.0 (13); sus pasos posteriores están pendientes.
+
+Para instalar una compilación concreta en iPhone: TestFlight → VoiceInView → Previous Builds, o Versions and Build Groups → versión → build → Install. El número 1 puede contener código posterior al 8 si una exportación local reinició la numeración: comprobar fecha y procedencia. No atribuir con certeza la falta de actualización automática a esa numeración sin evidencia del dispositivo. No desinstalar la app como primer paso; contiene sesiones locales.
 
 ## 9. Qué guardar para la siguiente persona
 
@@ -212,6 +215,9 @@ No subir ZIPs de logs, archivos de firma, IPA, xcarchive o datos personales a Gi
 La ruta /private/tmp usada durante el incidente no es almacenamiento permanente. Esta guía reproduce el procedimiento en build/ para futuras ejecuciones.
 
 ## Referencias
+
+- [Estados de compilación, incluido Ready to Submit](https://developer.apple.com/help/app-store-connect/reference/app-uploads/app-build-statuses).
+- [Instalar una compilación concreta en TestFlight](https://testflight.apple.com/).
 
 - [Distribución mediante archivos y Organizer](https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases/).
 - [Certificados administrados por Apple](https://developer.apple.com/help/account/certificates/cloud-managed-certificates).

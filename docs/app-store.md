@@ -1,5 +1,5 @@
 # App Store preparation — Phase 9
-Status updated 2026-10-10: app registered, earlier TestFlight builds used on iPhone, and latest Cloud archive exported/uploaded from the Mac. Apple confirmed processing started; latest tester availability is unconfirmed. Not submitted for public App Review and not a certified release candidate. See [distribution runbook](distribution-runbook.md).
+Status updated 2026-10-10: app registered, earlier TestFlight builds used on iPhone, and latest Cloud archive exported/uploaded from the Mac. The first local upload processed as 0.1.0 (1), assigned to Dev. A re-signed copy was uploaded as 0.1.0 (13); its processing/tester availability is unconfirmed. Not submitted for public App Review and not a certified release candidate. See [distribution runbook](distribution-runbook.md).
 Current Apple guidelines, privacy details and metadata/icon documentation checked 2026-10-07.
 
 ## Positioning and metadata

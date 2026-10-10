@@ -28,7 +28,9 @@ This is a gate, not a claim that release is approved.
 - [ ] Inspect store/WAL file protection and backup exclusion.
 - [ ] Network/privacy/log review after model setup.
 - [x] Cloud Build 11 archive exported with distribution signing and uploaded from the Mac (2026-10-10).
-- [ ] Latest upload finished processing and is assigned to Dev; record effective TestFlight version/build.
+- [x] First local upload processed as 0.1.0 (1), assigned to Dev (screenshots 2026-10-10 04:37).
+- [x] Same feature archive re-signed, verified and uploaded as 0.1.0 (13) with explicit numbering.
+- [ ] Build 13 finished processing and is assigned to Dev; confirm installed version/build on iPhone.
 - [ ] Physical acceptance of the latest recording/subtitle features.
 - [ ] Full public-release archive/privacy review. Successful upload alone does not certify it.
 
@@ -42,6 +44,6 @@ This is a gate, not a claim that release is approved.
 - [ ] Final version/build/release notes.
 - [ ] App Review notes and submission review.
 
-Before any new delivery, read [distribution runbook](distribution-runbook.md) and [known incidents](build-incidents.md). Cloud automatic export remains affected by the recorded 502; the local workaround succeeded once for Build 11.
+Before any new delivery, read [distribution runbook](distribution-runbook.md) and [known incidents](build-incidents.md). Cloud automatic export remains affected by the recorded 502; the local workaround exported/uploaded the Build 11 archive as TestFlight 1 and then a re-numbered copy as 13.
 
 Phase 10 online AI is excluded and remains unimplemented.

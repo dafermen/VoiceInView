@@ -3,7 +3,7 @@ The source is checked out at /Users/dariomeneses/Projects/VoiceInView on macOS V
 Required: Xcode 15.2+ and a compatible iOS 17+ SDK/runtime. The project uses explicit file references and build phases; add new files to their target in Xcode. The modern speech files are conditionally compiled with compiler(>=6.2) and gated to iOS 26; older compilers use LegacySpeechTranscriber. See [ADR-006](decisions/ADR-006-xcode-15-compatibility.md) for the compatibility decision.
 A device running a much newer iOS can need newer Xcode developer services. Earlier USB installation attempts failed first while locked, then with “Could not support development.” Later, the user installed TestFlight builds 5 and 6 successfully. Do not confuse a USB debugging limitation with TestFlight installation. See [incident history](build-incidents.md) and [validation report](validation-report.md).
 
-Current distribution procedure: [Cloud archive → local export/upload](distribution-runbook.md). On 2026-10-10 it succeeded for the Build 11 archive after Cloud export failed on both Xcode 27 and 26.6. Processing and tester availability of that latest package remain unconfirmed. Student introduction: [junior guide](junior-guide.md).
+Current distribution procedure: [Cloud archive → local export/upload](distribution-runbook.md). On 2026-10-10 it succeeded for the Build 11 archive after Cloud export failed on both Xcode 27 and 26.6. The first local upload processed as 0.1.0 (1), assigned to Dev. A re-signed copy was uploaded as 0.1.0 (13); its processing and tester availability remain unconfirmed. Source build is now 13; choose a new unused higher build for the next delivery. Student introduction: [junior guide](junior-guide.md).
 
 ## Windows static checks
 ~~~powershell

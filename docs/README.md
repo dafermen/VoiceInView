@@ -24,7 +24,8 @@ Actualizada el 10 de octubre de 2026. Los documentos de aprendizaje están en es
 - Las mejoras posteriores incluyen corrección de texto, audio opcional, reproducción y subtítulos SRT/WebVTT.
 - La compilación Cloud 11 produjo el archivo con Xcode 26.6. Su exportación automática falló.
 - Ese mismo archivo se exportó y subió desde el Mac con Xcode 15.2 el 10 de octubre. Apple confirmó la subida y el inicio del procesamiento.
-- Falta confirmar el número final asignado en App Store Connect, el fin del procesamiento, la asignación al grupo Dev y las pruebas físicas de esas últimas mejoras.
+- Las capturas confirman que esa subida terminó como 0.1.0 (1), asignada a Dev. La gestión automática no incrementó el número.
+- Se volvió a firmar y subir una copia como 0.1.0 (13), con numeración explícita. Falta confirmar procesamiento/asignación de 13 e instalación y pruebas físicas de las últimas mejoras.
 - La exportación automática de Cloud continúa sin solución confirmada. Existe una alternativa comprobada para este archivo; no una garantía de compatibilidad futura.
 
 ## Cómo interpretar el historial

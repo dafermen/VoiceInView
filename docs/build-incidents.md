@@ -91,7 +91,7 @@ Se aisló el fallo de comunicación/autenticación del entorno Cloud y se compro
 
 El IPA exportado conservó SDK iphoneos26.5 y DTXcodeBuild 17F113. Xcode 15.2 se usó para exportar/subir un binario moderno, no para recompilarlo con su SDK antiguo.
 
-El número “Build 11” identifica una ejecución Cloud. El archivo fuente tenía CFBundleVersion=1; la opción de gestión automática de versión/build se habilitó para subir. El número final en TestFlight no se confirmó. No etiquetar la entrega como “TestFlight build 11” sin comprobarlo allí.
+El número “Build 11” identifica una ejecución Cloud. El archivo fuente tenía CFBundleVersion=1; la opción de gestión automática de versión/build se habilitó para subir. Las capturas del 10 de octubre a las 04:37 confirman el número final 0.1.0 (1), procesamiento Complete, grupo Dev y estado Ready to Submit. La gestión automática conservó el 1. No etiquetar la entrega como “TestFlight build 11” sin comprobarlo allí.
 
 ### Evidencia y conservación
 
@@ -117,3 +117,11 @@ No fueron el error de exportación: Archive terminó correctamente. Son deuda t�
 4. Si el Mac también falla, diagnosticar su nuevo error; no suponer que sea el mismo.
 5. Si Apple rechaza el procesamiento, conservar ese rechazo por separado de Upload succeeded.
 6. Actualizar este registro con el resultado observado, incluyendo intentos que no funcionaron.
+
+## 10. Entrega reciente con número menor que las anteriores
+
+La subida local más reciente apareció como build 1 debajo de los builds 8, 7, 6 y 5. El usuario aún veía la versión anterior en iPhone. Esto demuestra una secuencia de numeración confusa, pero no prueba por sí solo la causa de la selección automática en el teléfono. Ready to Submit no impide pruebas internas, según la documentación de Apple enlazada en la guía de distribución.
+
+Se conservó el archivo Cloud original y se preparó una copia con CFBundleVersion=13 en los dos Info.plist pertinentes. El ejecutable archivado permaneció idéntico; SDK iphoneos26.5 y compilador 17F113 se conservaron. Se exportó y firmó con Xcode 15.2 y manageAppVersionAndBuildNumber=false; se verificaron identidad, versión, firma y perfil de distribución. La comprobación codesign requirió acceso al almacén de confianza fuera del sandbox; en ese contexto pasó. La subida 0.1.0 (13) terminó con Upload succeeded y EXPORT SUCCEEDED.
+
+Pendiente: confirmar procesamiento de 13, asignarla a Dev si hace falta e instalarla desde TestFlight. El proyecto conserva ahora build 13; antes de otra entrega elegir un número mayor no utilizado. Cloud sigue teniendo el fallo de exportación documentado; esta subida local no lo resuelve.

@@ -11,7 +11,8 @@ This section is the current summary. Dated sections below preserve the evidence 
 - Distribution summary showed the existing bundle/team, a Cloud Managed Apple Distribution certificate, an App Store profile, beta-reports-active=true and get-task-allow=false.
 - A second export operation with destination=upload, uploadSymbols=true and manageAppVersionAndBuildNumber=true completed at approximately 00:07 America/New_York on October 10. Output: Uploaded package is processing; Upload succeeded; EXPORT SUCCEEDED.
 - This proves successful submission to Apple's processing pipeline, not completed processing, latest build installation, App Review approval or resolution of Cloud's automatic export.
-- Effective TestFlight build number, processing completion, group assignment and physical tests of the latest media features remain unconfirmed. Earlier TestFlight 5/6 basic operation was user-confirmed.
+- Screenshots at 04:37 confirm the first local upload completed processing as 0.1.0 (1), assigned to Dev, Ready to Submit, with one invitation and no recorded installs. This status allows internal testing.
+- A copy of the same Cloud archive was re-signed and uploaded as 0.1.0 (13) with automatic numbering disabled. Archive executable equality, IPA version/bundle/SDK, distribution profile and codesign verification passed. Upload succeeded; processing/group availability of 13 and physical tests remain unconfirmed. No Swift implementation changed in this numbering correction. Earlier TestFlight 5/6 basic operation was user-confirmed.
 - Modern source compiled, but modern AudioConversion runtime tests were not executed. Swift concurrency warnings on the Xcode 26.6 archive remain open; see the incident record.
 
 Reproduction: [distribution runbook](distribution-runbook.md). Diagnosis, earlier obstacles and unsuccessful attempts: [incident history](build-incidents.md). Full private logs/artifacts are not committed.
