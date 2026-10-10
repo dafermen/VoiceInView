@@ -159,3 +159,5 @@ En la prueba de hojas anidadas, buscar Done globalmente coincidía con Translati
 El check de GitHub de `35fdc3b` (build fuente 15) se consultó durante esta entrega y reportó Archive – iOS satisfactorio. Eso no certifica instalación en el iPhone ni cambia el diagnóstico histórico de los builds 9–12.
 
 El recorrido final de lectura/edición/reproducción/compartir pasó. La hoja nativa expone Guardar en Archivos con un tipo distinto de Button; se consulta por su etiqueta, como los tests existentes de compartir. Release y 67 tests unitarios pasaron. Los nombres de los artefactos y los límites están en el informe de validación.
+
+Xcode Cloud finalizó satisfactoriamente el archivo del commit de implementación `d9ebefa` a las 17:32:22 UTC: cero errores y tres advertencias preexistentes de concurrencia de audio. No se ha confirmado todavía la descarga de idiomas ni la traducción real en un iPhone. Durante el seguimiento, Apple publicó un check-run nuevo para el resultado final, mientras el ID inicial seguía mostrando in_progress. Para próximas compilaciones, consultar los check-runs del commit otra vez; no depender indefinidamente del primer ID.

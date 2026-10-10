@@ -57,7 +57,8 @@ Phase 10 online AI is excluded and remains unimplemented.
 
 ## Build 16 gates
 
-- [ ] Compile the Translation branch using a modern SDK; Xcode 15.2 excludes that branch.
+- [x] Modern Cloud archive passed for implementation commit d9ebefa on 2026-10-10; Xcode 15.2 local tests exclude Translation. Three existing audio concurrency warnings remain.
 - [ ] Verify Apple translation on an iOS 18+ iPhone, including first-download denial/cancellation and offline translation after downloading.
 - [ ] Verify V6 upgrade on an existing physical installation and review bilingual subtitle readability.
-- [ ] Archive/distribute the new source; do not relabel an earlier archive as build 16.
+- [x] Archive the new implementation source in Xcode Cloud; do not relabel an earlier archive as build 16.
+- [ ] Confirm TestFlight processing, tester availability and actual iPhone installation.
