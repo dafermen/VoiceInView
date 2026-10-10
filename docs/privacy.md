@@ -1,12 +1,12 @@
 # Privacy and data flows
-Reviewed source and current Apple documentation on 2026-10-08. Archive/device validation remains pending.
+Source data-flow description updated for optional recording and subtitles; status reconciled 2026-10-10. An archive has been exported/uploaded, but a full binary privacy audit and physical protection/network checks remain pending.
 
 | Data or action | Behavior | Location / recipient |
 | --- | --- | --- |
 | Microphone audio | User-started listening, optional background continuation, bounded queues; optional Save audio selected before a session | Memory by default; opt-in local protected CAF recording, M4A export |
 | Speech analysis | SFSpeechRecognizer en-US with on-device support checked and required; modern SpeechAnalyzer where available; no remote fallback | Device; installed Apple models |
 | Model setup | System English Dictation setup for compatibility engine; explicit Install English Model only for modern engine | Apple's system asset service |
-| Final captions | Auto-save by default; can disable before a session | Local SwiftData store |
+| Final captions | Auto-save by default; can disable before a session unless Save audio requires transcript persistence | Local SwiftData store |
 | Transcript corrections and reading position | Original recognition is retained; corrections and last read paragraph are stored separately | Local SwiftData store |
 | Partial captions | Provisional, displayed in memory; not saved | Device memory |
 | Session metadata | UUID, title, dates, active-listening duration, language and ended status | Local SwiftData store |
@@ -36,7 +36,7 @@ No explicit file timestamp or boot-time APIs are used by application source. Aud
 
 ## Policy and production status
 User-facing policy is accessible in Settings. Public draft: privacy-policy-draft.md.
-Owner identity, contact and a public policy URL remain required before distribution.
+Owner identity, contact and a public policy URL remain required for public release.
 Re-review actual data flows, App Privacy answers and current requirements whenever SDKs or features change.
 
 Sources:

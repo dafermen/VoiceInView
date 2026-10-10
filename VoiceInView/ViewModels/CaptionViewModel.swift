@@ -8,6 +8,9 @@ enum CaptionState: Equatable {
     var active: Bool { self == .listening || self == .preparing }
 }
 
+/// Máquina de estados de la escucha: transforma resultados de Speech en estado para SwiftUI.
+/// Las dependencias se inyectan para probar permisos y resultados sin usar un micrófono real.
+/// No escribe SwiftData directamente: comunica cambios al coordinador mediante callbacks.
 @MainActor
 @Observable
 final class CaptionViewModel {
@@ -48,6 +51,8 @@ final class CaptionViewModel {
         self.speech = speech
     }
 
+    /// El compilador decide si conoce el motor moderno; el iOS del teléfono decide si puede usarlo.
+    /// Disponibilidad de API no implica modelo instalado: readiness comprueba esa condición después.
     convenience init() {
         let audio = AudioCaptureService()
         #if compiler(>=6.2)
@@ -76,6 +81,8 @@ final class CaptionViewModel {
         catch { readiness = .problem(error.localizedDescription) }
     }
 
+    /// Cada intento recibe una generación. Tras un await, esa identidad evita aplicar respuestas
+    /// antiguas si el usuario canceló, salió de la app o inició otra operación mientras esperaba.
     func start() async {
         guard foreground, !state.active, !state.busy, !preparationPending, state != .ended else { return }
         preparationPending = true

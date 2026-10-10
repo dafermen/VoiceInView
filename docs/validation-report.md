@@ -1,4 +1,21 @@
-# Validation report — 2026-10-09
+# Validation report — updated 2026-10-10
+
+## Latest distribution evidence — 2026-10-10
+
+This section is the current summary. Dated sections below preserve the evidence and open gates as they were recorded; earlier statements such as “no upload” or “registration pending” are historical.
+
+- Source for the media/subtitle delivery: commit 261b8b4. Local validation for that feature passed 56 compatible unit tests and 12 UI scenarios across final full/focused runs; see the recording section below.
+- Cloud builds 9 and 10 archived with Xcode 27 (27A266a) but failed in export: managed session authentication warning, HTTP 502 on listTeams, then missing-profile errors.
+- Cloud Build 11 archived with Xcode 26.6 (17F113); its app metadata reports SDK iphoneos26.5. Export failed with the same 502. Changing the toolchain did not fix Cloud.
+- On the Mac, Xcode 15.2 exported that downloaded archive successfully. The IPA retained its modern build/SDK metadata; no local recompilation or metadata falsification was used.
+- Distribution summary showed the existing bundle/team, a Cloud Managed Apple Distribution certificate, an App Store profile, beta-reports-active=true and get-task-allow=false.
+- A second export operation with destination=upload, uploadSymbols=true and manageAppVersionAndBuildNumber=true completed at approximately 00:07 America/New_York on October 10. Output: Uploaded package is processing; Upload succeeded; EXPORT SUCCEEDED.
+- This proves successful submission to Apple's processing pipeline, not completed processing, latest build installation, App Review approval or resolution of Cloud's automatic export.
+- Effective TestFlight build number, processing completion, group assignment and physical tests of the latest media features remain unconfirmed. Earlier TestFlight 5/6 basic operation was user-confirmed.
+- Modern source compiled, but modern AudioConversion runtime tests were not executed. Swift concurrency warnings on the Xcode 26.6 archive remain open; see the incident record.
+
+Reproduction: [distribution runbook](distribution-runbook.md). Diagnosis, earlier obstacles and unsuccessful attempts: [incident history](build-incidents.md). Full private logs/artifacts are not committed.
+
 
 ## Transcript review, export and compact New Session — 2026-10-09
 

@@ -13,8 +13,9 @@ This is a gate, not a claim that release is approved.
 
 ## Must pass on Apple tooling
 - [x] Debug simulator build (Xcode 15.2, iOS 17.2 SDK).
-- [x] Compatibility unit and UI suite (48 unit + 11 UI, iOS 17.2 simulator).
-- [ ] Retained modern-engine build and AudioConversion test on Xcode 26+/iOS 26+.
+- [x] Compatibility suite: 56 unit tests and 12 UI scenarios across final full/focused runs, iOS 17.2 simulator.
+- [x] Modern source compiled/archived in Cloud, including Xcode 26.6 Build 11.
+- [ ] Modern AudioConversion test executed on Xcode 26+/iOS 26+.
 - [x] Release simulator build and bundle/plist/privacy/asset checks (Xcode 15.2).
 - [ ] Real compatible iPhone English Dictation/model setup and offline recognition, including 50-second request transitions.
 - [ ] Airplane Mode/Wi-Fi-off transcription proof and latency recording.
@@ -26,10 +27,13 @@ This is a gate, not a claim that release is approved.
 - [ ] 30/60/120 minute memory/CPU/battery/thermal sessions.
 - [ ] Inspect store/WAL file protection and backup exclusion.
 - [ ] Network/privacy/log review after model setup.
-- [ ] Signed device archive and Organizer validation.
+- [x] Cloud Build 11 archive exported with distribution signing and uploaded from the Mac (2026-10-10).
+- [ ] Latest upload finished processing and is assigned to Dev; record effective TestFlight version/build.
+- [ ] Physical acceptance of the latest recording/subtitle features.
+- [ ] Full public-release archive/privacy review. Successful upload alone does not certify it.
 
-## Required owner inputs before distribution
-- [ ] Final bundle ID and signing team.
+## Required owner inputs before public release
+- [x] Existing bundle ID com.dafermen.vReader and team 7799N4RYUG verified in successful export.
 - [ ] Licensing/copyright/publisher decision.
 - [ ] Real support URL/contact and published privacy policy URL.
 - [ ] Final App Privacy/age-rating/export-compliance answers.
@@ -37,5 +41,7 @@ This is a gate, not a claim that release is approved.
 - [ ] Approved icon and genuine current screenshots.
 - [ ] Final version/build/release notes.
 - [ ] App Review notes and submission review.
+
+Before any new delivery, read [distribution runbook](distribution-runbook.md) and [known incidents](build-incidents.md). Cloud automatic export remains affected by the recorded 502; the local workaround succeeded once for Build 11.
 
 Phase 10 online AI is excluded and remains unimplemented.

@@ -222,6 +222,8 @@ struct SessionMediaView: View {
     }
 
     private enum ExportKind { case audio, bundle, srt, vtt }
+    /// Prepara archivos en una carpeta temporal propia; cleanup los elimina tras compartir/cancelar.
+    /// La elección del destino pertenece al usuario mediante la hoja nativa de iOS.
     private func prepareExport(kind: ExportKind) {
         guard !busy else { return }
         player.pause(); cleanup(); busy = true
@@ -270,6 +272,8 @@ struct MediaActivityView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
+/// Codifica una copia M4A al compartir. El CAF original sigue siendo la fuente y no se modifica.
+/// La cancelación se propaga al exportador; revisar su aislamiento antes de migrar a Swift 6.
 enum RecordingExport {
     static func m4a(from source: URL, to destination: URL) async throws {
         guard let exporter = AVAssetExportSession(asset: AVURLAsset(url: source), presetName: AVAssetExportPresetAppleM4A) else {

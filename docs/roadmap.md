@@ -15,5 +15,9 @@ The user authorized continuous implementation through Phase 9. Each stage has a 
 | 9 App Store | Release materials prepared | Signed Release archive, all gates and owner inputs |
 | 10 Optional online AI | Not started | Requires a separate explicit request |
 
-Next work: run Mac validation scripts, fix any real compiler/test failures, complete physical device/offline/profiling checks, supply publisher/signing/URLs/license inputs and finish release-checklist.md.
+## Subsequent delivery status — 2026-10-10
+
+Reader/fullscreen, corrections, bookmarks, optional audio, playback, background opt-in and SRT/WebVTT are implemented. Local validation passed 56 compatible unit tests and 12 UI scenarios across full/focused runs. Basic earlier TestFlight operation was user-confirmed. The Cloud 11 archive was exported and uploaded from the Mac; processing completion and physical validation of the latest features remain unconfirmed.
+
+Next work: confirm the latest TestFlight build, perform the device/media/offline/reliability scenarios, address modern concurrency warnings with appropriate testing, and complete public-release inputs. Use [distribution runbook](distribution-runbook.md) for the Cloud export workaround and [incident history](build-incidents.md) before retrying.
 Do not describe this state as App Store ready or offline proven.

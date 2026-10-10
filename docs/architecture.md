@@ -37,10 +37,10 @@ Future schema changes require an explicit migration plan.
 System language/model preparation can use system download services. The compatibility engine cannot explicitly download models; its readiness screen directs users to English Dictation settings. Speech authorization is requested explicitly for that engine. The modern engine retains explicit AssetInventory installation. Explicit file export/Copy/Share can send text to user-selected destinations.
 Optional local audio storage is per-session opt-in. No developer network client, tracking, ads, analytics, account or embedded secret.
 Manifest includes app-owned preferences and disk-space reasons. Source review is not a binary privacy/security audit.
-Phase 9 prepares metadata/icon/scripts/checklist; actual Mac/device/Organizer validation and owner publication inputs are pending.
+Phase 9 prepared metadata/icon/scripts/checklist. Local unit/UI/build checks and basic TestFlight use have since been recorded. On 2026-10-10, a Cloud archive was exported/uploaded from the Mac; see [distribution runbook](distribution-runbook.md). Detailed device/privacy/reliability validation and public-release inputs remain pending.
 Phase 10 is not implemented.
 
-ADRs: 001 offline-first, 002 Apple speech/minimum OS, 003 foreground microphone, 004 speech pipeline, 005 local session persistence.
+ADRs: 001 offline-first, 002 Apple speech/minimum OS, 003 original foreground microphone policy, 004 speech pipeline, 005 original local storage, 006 Xcode 15 compatibility. The V4 recording/background section below supersedes the original no-recording/foreground-only constraints where noted. For a teaching-oriented explanation, read [the junior guide](junior-guide.md) and [code walkthrough](code-walkthrough.md).
 
 ## Transcript review and export
 V3 adds one SessionReview record per session containing a JSON correction map keyed by caption UUID and the last read caption UUID. Recognition captions and bookmark snapshots remain unchanged. V1-to-V2-to-V3 lightweight migration adds the new model without changing the earlier models. Session deletion explicitly removes captions, bookmarks and review metadata together.

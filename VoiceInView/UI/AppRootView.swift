@@ -3,6 +3,8 @@ import SwiftData
 import UIKit
 import AVFoundation
 
+/// Raíz de presentación. Abre el almacén antes de crear la sesión y propaga el ciclo de vida.
+/// Un error de apertura se muestra al usuario: no se borra la base ni se simula éxito en memoria.
 @MainActor
 struct AppRootView: View {
     @Environment(\.scenePhase) private var scenePhase

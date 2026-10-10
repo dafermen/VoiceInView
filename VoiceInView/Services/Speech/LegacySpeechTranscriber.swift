@@ -1,6 +1,8 @@
 import Foundation
 
 /// Offline-only compatibility engine. Audio arriving during request finalization waits in a bounded queue.
+/// Cada solicitud tiene identidad y desplazamiento temporal propios. La cola conserva audio
+/// entrante mientras finaliza la solicitud anterior; el límite evita crecimiento de memoria sin control.
 @MainActor
 final class LegacySpeechTranscriber: SpeechTranscribing {
     private let audio: any SpeechAudioCapturing

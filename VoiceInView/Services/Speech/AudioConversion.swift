@@ -10,6 +10,8 @@ actor AudioConversion {
 
     init(target: AVAudioFormat) { self.target = target }
 
+    /// Convierte muestras al formato elegido por Speech; no realiza reconocimiento de palabras.
+    /// El converter conserva estado entre bloques y entrega cada buffer fuente una sola vez.
     func convert(_ audio: CapturedAudio) throws -> AnalyzerInput? {
         let source = audio.buffer
         if source.format == target { return AnalyzerInput(buffer: source) }
@@ -36,6 +38,7 @@ actor AudioConversion {
         return output.frameLength > 0 ? AnalyzerInput(buffer: output) : nil
     }
 
+    /// Drena muestras retenidas por el conversor al cerrar; limita iteraciones para no esperar sin fin.
     func flush() throws -> [AnalyzerInput] {
         guard let converter else { return [] }
         var inputs: [AnalyzerInput] = []

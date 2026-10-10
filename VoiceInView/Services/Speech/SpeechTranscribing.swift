@@ -36,6 +36,9 @@ enum TranscriptionFailure: LocalizedError, Sendable {
     }
 }
 
+/// Contrato compartido por los motores reales y los dobles de prueba.
+/// start entrega un flujo de revisiones; finish intenta finalizar y cancel puede perder lo provisional.
+/// La interfaz no ofrece un fallback de reconocimiento remoto.
 @MainActor
 protocol SpeechTranscribing: AnyObject {
     func readiness() async -> SpeechReadiness

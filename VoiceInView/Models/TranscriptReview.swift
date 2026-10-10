@@ -10,6 +10,7 @@ enum ReviewFailure: LocalizedError {
     var errorDescription: String? { "This session changed. Reopen the editor before saving corrections." }
 }
 
+/// Borrador con snapshots de Undo/Redo; una nueva edición descarta el futuro y limita el pasado a 100.
 struct EditHistory<Value: Equatable> {
     private(set) var value: Value
     private var past: [Value] = []
@@ -36,6 +37,8 @@ struct EditHistory<Value: Equatable> {
     }
 }
 
+/// Resuelve una única versión visible del texto: corrección por UUID si existe, original en otro caso.
+/// Reutilizar esta regla evita diferencias entre lectura, búsqueda y archivos compartidos.
 enum TranscriptReview {
     static func paragraphs(originals: [ReviewParagraph], corrections: [String: String]) -> [ReviewParagraph] {
         originals.map { ReviewParagraph(id: $0.id, text: corrections[$0.id.uuidString] ?? $0.text) }

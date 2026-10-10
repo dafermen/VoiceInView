@@ -4,14 +4,21 @@
 
 Native iPhone app designed to caption English speech on device during conferences, classes, meetings and presentations, without sending recognition audio to a server, when on-device English support is available.
 
+## Documentation / documentación
+
+Start with the [documentation index](docs/README.md). Spanish learning material: [junior/student guide](docs/junior-guide.md) and [code walkthrough](docs/code-walkthrough.md). Before the next delivery, read the [distribution runbook](docs/distribution-runbook.md) and [incident history](docs/build-incidents.md).
+
 ## Current status
 Implementation and release-preparation source through Phase 9 are present. This is a DEVELOPMENT BUILD, not a certified release candidate.
 The project now targets iOS 17 and builds with Xcode 15.2 on macOS Ventura. A compatibility speech engine uses SFSpeechRecognizer with on-device recognition required. The modern iOS 26 engine is retained behind compiler/OS availability checks. See [validation results](docs/validation-report.md) for executed checks; real-device accuracy and offline behavior remain unverified.
 On 2026-10-09, the user confirmed successful installation and basic operation of TestFlight builds 0.1.0 (5) and (6) on their iPhone. This does not establish offline accuracy or extended reliability.
-The user explicitly authorized continuous progression through Phase 9 despite pending Apple validation. Phase 10 online AI is not implemented.
+On 2026-10-10, the Cloud Build 11 archive (Xcode 26.6 / iOS SDK 26.5) was successfully exported and uploaded from the Mac using Xcode 15.2. Apple confirmed upload and processing started; final processing, TestFlight build number/group assignment and device validation of the new audio/subtitle features are not yet confirmed. Cloud export still fails with HTTP 502; changing Xcode 27 to 26.6 did not fix it. See the distribution runbook before retrying.
+Phase 10 online AI is not implemented.
 
 ## Implemented source
 - Built-in microphone capture with optional background continuation, contextual permission and diagnostics.
+- Optional local audio recording, playback with fullscreen captions, M4A export and independent audio deletion.
+- Corrected TXT plus synchronized SRT/WebVTT sharing, with native word timing or estimated timing after corrections.
 - SpeechTranscribing boundary with offline-only SFSpeechRecognizer on older toolchains/OS versions, plus SpeechAnalyzer/SpeechTranscriber when built with Xcode 26+ and run on iOS 26+.
 - Compatibility requests rotate after 50 seconds of audio; incoming audio waits in a bounded queue during finalization. Overflow/timeouts stop visibly. Speech permission and system model availability are explicit.
 - Partial/final caption assembly with independent analyzer-run identities.
@@ -66,7 +73,7 @@ Subtitles use the captured-audio clock: pauses are removed from both audio and s
 - VoiceInView/ViewModels — observable presentation and session coordination.
 - VoiceInView/Services/Audio and Speech — native capture and isolated speech engine.
 - VoiceInView/Models and Persistence — transcript assembly, schema, local storage and settings.
-- VoiceInView/Utilities — time formatting, transcript review and TXT/PDF export.
+- VoiceInView/Utilities — time formatting, transcript review, TXT/PDF and SRT/WebVTT export.
 - VoiceInViewUnitTests / VoiceInViewTests — compatibility/lifecycle, transcript, storage, settings and UI tests; see the validation report for executed counts. Modern audio conversion tests require Xcode 26/iOS 26.
 - scripts — Windows static checks and Mac build/archive validation.
 - docs — architecture, ADRs, phase reports, privacy and release material.

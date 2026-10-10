@@ -1,6 +1,9 @@
 import Foundation
 import SwiftData
 
+/// Frontera de persistencia: el resto de la app solicita operaciones sin gestionar ModelContext.
+/// Conserva modelos originales, aplica migraciones y mantiene rutas de audio dentro del almacén.
+/// El contexto vive en MainActor; los fallos se propagan para que la interfaz permita recuperación.
 @MainActor
 final class TranscriptRepository {
     let container: ModelContainer
@@ -48,6 +51,8 @@ final class TranscriptRepository {
         return session
     }
 
+    /// Aplica cambios por UUID para que reintentar un guardado no duplique párrafos.
+    /// Solo los segmentos con tiempo de sesión válido alimentan el mapa de subtítulos.
     func apply(_ change: FinalizedChange, to session: ConferenceSession) throws {
         if cacheSessionID != session.id {
             currentCaptions = Dictionary(uniqueKeysWithValues: session.captions.map { ($0.id, $0) })
@@ -164,6 +169,8 @@ final class TranscriptRepository {
         return try context.fetch(request).first
     }
 
+    /// Guarda diferencias respecto al reconocimiento original, no reemplaza el original.
+    /// Rechaza borradores cuyos IDs ya no corresponden a la sesión para evitar guardar texto obsoleto.
     func saveCorrections(_ paragraphs: [ReviewParagraph], for session: ConferenceSession) throws {
         let originals = session.orderedCaptions.map { ReviewParagraph(id: $0.id, text: $0.text) }
         guard paragraphs.map(\.id) == originals.map(\.id) else { throw ReviewFailure.sessionChanged }
@@ -193,6 +200,7 @@ final class TranscriptRepository {
         return try context.fetch(request).first
     }
 
+    /// Acepta únicamente el nombre esperado para la sesión; no interpreta rutas arbitrarias guardadas.
     func audioURL(for sessionID: UUID) throws -> URL? {
         guard let name = try media(for: sessionID)?.audioName,
               name == sessionID.uuidString + ".caf" else { return nil }
@@ -221,6 +229,7 @@ final class TranscriptRepository {
         return url
     }
 
+    /// Elimina el archivo y su referencia; conserva transcripción, correcciones y tiempos de subtítulos.
     func deleteAudio(for sessionID: UUID) throws {
         guard let record = try media(for: sessionID) else { return }
         if let url = try audioURL(for: sessionID), FileManager.default.fileExists(atPath: url.path) {

@@ -13,6 +13,8 @@ final class SessionAudioRecorder: @unchecked Sendable {
 
     init(url: URL) { self.url = url }
 
+    /// Reserva un cupo sin bloquear el tap. Si la cola está llena, comunica el fallo explícitamente.
+    /// El estado mutable del archivo se usa solo en la cola serial; cada bloque libera su cupo.
     func append(_ audio: CapturedAudio, onError: @escaping @Sendable () -> Void) {
         guard slots.wait(timeout: .now()) == .success else {
             queue.async { [self] in failure = RecordingFailure.unavailable }
@@ -45,7 +47,9 @@ final class SessionAudioRecorder: @unchecked Sendable {
         }
     }
 
+    /// Espera las escrituras anteriores y comunica un fallo; no debe llamarse desde la cola del writer.
     func flush() throws { try queue.sync { if let failure { throw failure } } }
+    /// Cierra después de lo ya encolado. Mantiene el audio escrito incluso si hubo un fallo posterior.
     func finish() throws {
         try queue.sync {
             file = nil
@@ -70,6 +74,8 @@ final class CaptureTimeline: @unchecked Sendable {
     private let lock = NSLock()
     private var seconds = 0.0
     var duration: Double { lock.lock(); defer { lock.unlock() }; return seconds }
+    /// Devuelve el inicio del bloque y avanza frames/sampleRate segundos bajo el mismo candado.
+    /// Sin bloques durante Pause, ni la grabación ni sus subtítulos acumulan el tiempo de espera.
     func stamp(frames: AVAudioFrameCount, sampleRate: Double) -> Double {
         lock.lock(); defer { lock.unlock() }
         let start = seconds

@@ -10,6 +10,8 @@ struct SubtitleCue: Identifiable, Equatable, Sendable {
 
 enum SubtitleFormat: String, CaseIterable { case srt, vtt }
 
+/// Funciones puras: transforman párrafos revisados y tiempos en cues/archivos sin acceder al disco.
+/// No inventan sincronización para sesiones antiguas que no tienen tiempos guardados.
 enum SubtitleExport {
     /// Corrected text keeps its paragraph audio range. Word timing is retained
     /// when words match; inserted/replaced words are distributed over that range.
@@ -69,6 +71,7 @@ enum SubtitleExport {
         }
     }
 
+    /// SRT usa coma en milisegundos; WebVTT usa punto y cabecera. Se escapa el texto como contenido.
     static func render(_ cues: [SubtitleCue], format: SubtitleFormat) -> String {
         let body = cues.enumerated().map { index, cue in
             "\(index + 1)\n\(timestamp(cue.start, format: format)) --> \(timestamp(cue.end, format: format))\n\(escaped(cue.text))\n"

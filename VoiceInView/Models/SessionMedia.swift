@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 
+/// Palabra y rango de audio en segundos; Codable permite guardarla dentro del JSON de tiempos.
 struct TimedWord: Codable, Equatable, Sendable {
     let text: String
     let start: Double
@@ -18,6 +19,7 @@ struct CaptionTiming: Codable, Sendable {
 final class SessionMedia {
     @Attribute(.unique) var sessionID: UUID
     var audioName: String?
+    /// JSON de UUID de párrafo a CaptionTiming: separado del texto para conservar correcciones/originales.
     var timings: Data
     init(sessionID: UUID, audioName: String? = nil) {
         self.sessionID = sessionID

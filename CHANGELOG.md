@@ -3,6 +3,12 @@
 ## Unreleased — 0.1.0 development, through Phase 9
 iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation of TestFlight builds 5 and 6 on their iPhone; detailed offline and release verification remain pending. This is not a release-certified binary.
 
+### Documentation — 2026-10-10
+- Added Spanish student/junior guide, code walkthrough, documentation index, distribution runbook and incident history.
+- Documented Cloud export failures on Xcode 27 and 26.6, and successful local export/upload of the Cloud 11 archive with Xcode 15.2. Apple processing/TestFlight availability of that package still needs confirmation.
+- Added educational source comments on state, buffer ownership, timing, persistence and exports; no runtime behavior changed.
+- Reconciled current status and validation counts while keeping earlier phase reports historical.
+
 ### Changed
 - New Session is a 44-point blue circular +. Completed portrait sessions omit the old footer to expand the reader; fullscreen and landscape retain accessible controls.
 - Expanded the caption reader with a compact status strip and an adaptive landscape control bar. Reading options now open from Aa; save/new-session actions and full status information live in the session menu.
@@ -45,8 +51,8 @@ iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation 
 
 ### Limitations
 - Actual Airplane Mode captions, device compatibility, accessibility and 30/60/120-minute performance unverified.
-- Foreground built-in microphone only; no audio recording, accounts, cloud AI, analytics, ads or tracking.
-- Publisher/signing/license/public URLs and real screenshots still required.
+- Built-in microphone only; background listening and local recording are per-session opt-ins. No internal other-app audio capture, accounts, cloud AI, analytics, ads or tracking.
+- Publisher/license/public URLs, final privacy review and genuine public-release screenshots remain pending. App identity/signing and the local upload path have been exercised; this is not App Store release approval.
 
 ## Earlier foundation
 Phases 0–1 added SwiftUI/Xcode structure, microphone capture, permissions, states, initial tests and documentation.

@@ -1,6 +1,8 @@
 import Foundation
 import Observation
 
+/// Une la sesión de pantalla con su persistencia, sin convertir la vista en una base de datos.
+/// Sus callbacks guardan resultados finales y preparan audio solo cuando el usuario lo eligió.
 @MainActor
 @Observable
 final class SessionCoordinator {
@@ -9,6 +11,8 @@ final class SessionCoordinator {
     private(set) var currentSession: ConferenceSession?
     var storageMessage: String?
     let settings: AppSettings
+    /// El audio necesita una sesión persistida para asociar archivo, texto y tiempos.
+    /// Por eso grabar también guarda la transcripción aunque la preferencia general esté apagada.
     var autoSave: Bool { settings.autoSave || caption.saveAudio }
     var sessionTitle = "Conference"
     @ObservationIgnored private var monitorTask: Task<Void, Never>?

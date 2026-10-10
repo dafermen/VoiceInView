@@ -1,16 +1,16 @@
 # App Store preparation — Phase 9
-Status: release materials prepared; NOT a validated release candidate and NOT submitted.
+Status updated 2026-10-10: app registered, earlier TestFlight builds used on iPhone, and latest Cloud archive exported/uploaded from the Mac. Apple confirmed processing started; latest tester availability is unconfirmed. Not submitted for public App Review and not a certified release candidate. See [distribution runbook](distribution-runbook.md).
 Current Apple guidelines, privacy details and metadata/icon documentation checked 2026-10-07.
 
 ## Positioning and metadata
-Name: VoiceInView. App Store Connect registration and name availability remain pending.
+Name: VoiceInView. App Store Connect app record exists (6820599198); the earlier name vReader was unavailable.
 Subtitle: Live English Captions (21 characters).
 Tagline: See what's being said.
 Draft description, keywords, version/build and release notes: app-store-metadata.json.
 Do not publish draft claims until the feature, offline and supported-device tests pass.
 
 ## Owner inputs still required
-Publisher/copyright/license decision, public Support URL with contact, published Privacy Policy URL, privacy contact and App Store Connect access.
+Publisher/copyright/license decision, public Support URL with contact, published Privacy Policy URL, privacy contact. App Store Connect access and distribution signing have been exercised.
 Signing uses team `7799N4RYUG` and the existing bundle identifier `com.dafermen.vReader`. The display-name change does not change that identity. No signing material or secrets are stored in source.
 
 ## Supported device and offline representation
@@ -31,7 +31,7 @@ Do not use fabricated feature screenshots or imply live captioning is validated 
 
 ## Launch and versioning
 Generated native launch screen, explicit store-loading/failure/retry states and no first-launch microphone prompt.
-Version 0.1.0, build 1. Increment build numbers for each uploaded binary; choose final public version before submission.
+Project version 0.1.0, build 1. Cloud build numbers, archive CFBundleVersion and the final TestFlight build number are distinct. The successful local upload used manageAppVersionAndBuildNumber=true; confirm its effective build in App Store Connect. Ensure a valid unused build number for each upload and choose the final public version before submission.
 
 ## App Privacy draft
 Based on current source: no developer collection or tracking, no account/advertising/analytics. Local audio/transcripts are not transmitted by the app; user sharing uses the chosen destination.
@@ -42,12 +42,12 @@ Complete the current age-rating questionnaire for actual features; no public fee
 No custom cryptography implementation is included; storage protection uses OS facilities. Review the actual encryption questionnaire and applicable requirements before setting export-compliance declarations. No automatic exemption statement is added to Info.plist.
 
 ## App Review notes draft
-No login. On a supported iPhone, Settings > Offline Readiness checks microphone, English model and storage. Install the model with Internet, then use Captions > Start Listening. Audio stays local. Pause/Resume retains earlier captions; Stop saves finalized segments when auto-save is on. Sessions supports rename/delete/export. Locking or leaving the app stops capture.
+No login. On a supported iPhone, Settings > Offline Readiness checks microphone, English model and storage. Install the model with Internet, then use Captions > Start Listening. Audio stays local. Pause/Resume retains earlier captions; Stop saves finalized segments when auto-save is on. Sessions supports rename/delete/export. Locking or leaving stops capture by default; explicit per-session Continue in background can retain an active capture. Interruptions still stop it.
 Provide exact tested device/OS details, permission setup instructions and known limitations after validation.
 
 ## Validation
-Run scripts/validate-macos.sh, manual iPhone checklist and reliability matrix. Run scripts/archive-macos.sh with final team/identifier and inspect the archive in Organizer. Do not upload until release-checklist.md is complete.
-No Release compilation, archive validation, accessibility/device profiling or submission was possible on Windows.
+Run scripts/validate-macos.sh and the relevant iPhone scenarios. For delivery, follow the current distribution runbook; scripts/archive-macos.sh uses the selected local SDK and does not upload. Internal TestFlight delivery is distinct from public release approval. Complete release-checklist.md before public submission.
+The original Windows-only validation could not compile/archive. Later Mac/Cloud results are recorded in [validation-report.md](validation-report.md).
 
 Sources:
 https://developer.apple.com/app-store/review/guidelines/

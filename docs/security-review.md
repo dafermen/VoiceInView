@@ -1,5 +1,5 @@
 # Phase 8 source security review
-Scope: application source/configuration through Phase 8; no binary/dynamic audit is claimed.
+Historical review of application source/configuration through Phase 8. The bullets below describe that earlier scope; the later V4 recording/background extension changes the no-audio-storage assumption. Read [current privacy/data flows](privacy.md), [media design](media-and-subtitles.md) and [validation results](validation-report.md) for present behavior. No binary/dynamic security audit is claimed.
 - Core uses only on-device Apple Speech, AVFoundation, SwiftData, SwiftUI and Foundation.
 - No HTTP client, cloud speech fallback, embedded credentials, analytics/ad/tracking SDK or account flow.
 - Only explicit model installation can initiate system-managed model download.

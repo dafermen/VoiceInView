@@ -31,6 +31,8 @@ struct TranscriptAssembler {
     private(set) var partial: [CaptionSegment] = []
     private var runOrder: [UUID: Int] = [:]
 
+    /// Sustituye revisiones solapadas del mismo run, conservando identidad y orden de lectura.
+    /// Devuelve un delta persistible: eliminaciones y upserts. Repetir palabras no equivale a duplicar.
     mutating func apply(_ update: TranscriptionUpdate) -> FinalizedChange {
         guard update.start.isFinite, update.end.isFinite,
               update.start >= 0, update.end >= update.start else {

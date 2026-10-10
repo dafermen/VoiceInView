@@ -1,6 +1,9 @@
 import AVFoundation
 import Foundation
 
+/// Configura la captura y coordina sus errores desde MainActor.
+/// El tap de audio copia bloques y los entrega; la escritura de archivos vive en otra cola.
+/// mixWithOthers permite coexistencia cuando iOS lo admite, no captura audio interno de otras apps.
 @MainActor
 final class AudioCaptureService: SpeechAudioCapturing {
     var audioSink: (@Sendable (CapturedAudio) -> Void)?

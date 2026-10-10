@@ -3,6 +3,8 @@ import AVFoundation
 import CoreMedia
 import Speech
 
+/// Adaptador moderno: gestiona activos, entradas y resultados de SpeechAnalyzer.
+/// Suma el desplazamiento de la sesión a los tiempos del motor para alinear audio y subtítulos.
 @available(iOS 26.0, *)
 @MainActor
 final class AppleSpeechTranscriber: SpeechTranscribing {
