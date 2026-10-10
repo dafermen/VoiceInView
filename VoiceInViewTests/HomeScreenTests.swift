@@ -2,6 +2,40 @@ import XCTest
 
 final class HomeScreenTests: XCTestCase {
     @MainActor
+    func testEnglishLearningRevealSaveAndReplay() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-review", "--ui-test-media", "--ui-test-translation"]
+        app.launch()
+        XCTAssertTrue(app.buttons["capturePreferencesButton"].waitForExistence(timeout: 20))
+        app.buttons["capturePreferencesButton"].tap()
+        XCTAssertTrue(app.switches["saveAudioToggle"].waitForExistence(timeout: 5))
+        app.navigationBars["Capture preferences"].buttons["Done"].tap()
+        app.tabBars.buttons["Sessions"].tap()
+        app.staticTexts["Review sample"].tap()
+        app.buttons["learnEnglishButton"].tap()
+        XCTAssertTrue(app.staticTexts["learningEnglish"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["learningSpanish"].exists)
+        app.buttons["revealLearningSpanish"].tap()
+        XCTAssertTrue(app.staticTexts["learningSpanish"].exists)
+        app.segmentedControls["learningSpeed"].buttons["0.75×"].tap()
+        app.buttons["learningRepeat"].tap()
+        app.buttons["learningPlay"].tap()
+        XCTAssertEqual(app.buttons["learningPlay"].label, "Stop practice audio")
+        app.buttons["learningPlay"].tap()
+        app.buttons["saveLearningExpression"].tap()
+        app.buttons["confirmLearningExpression"].tap()
+        app.segmentedControls["learningCollection"].buttons["Saved expressions"].tap()
+        XCTAssertTrue(app.staticTexts["learningEnglish"].exists)
+        XCTAssertFalse(app.staticTexts["learningSpanish"].exists)
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = "Saved-learning-expression"; screenshot.lifetime = .keepAlways; add(screenshot)
+        app.navigationBars["Aprender inglés"].buttons["Done"].tap()
+        app.buttons["learnEnglishButton"].tap()
+        app.segmentedControls["learningCollection"].buttons["Saved expressions"].tap()
+        XCTAssertTrue(app.staticTexts["learningEnglish"].exists)
+    }
+
+    @MainActor
     func testSavedTranslationLanguagesEditingPlaybackAndShare() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--ui-test-review", "--ui-test-media", "--ui-test-translation"]

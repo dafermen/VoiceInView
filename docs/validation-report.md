@@ -1,3 +1,9 @@
+## Build 18 — Aprender inglés y Capture Preferences (2026-10-10)
+
+**TEST SUCCEEDED**: 76 pruebas unitarias y un recorrido UI dirigidos al aprendizaje. Verificadas V6→V7, expresiones tras reapertura/borrado, independencia de transcripciones, límites de audio, velocidad/repetición, español oculto/revelado y acceso por icono único de preferencias. Xcode 15.2, simulador iOS 17.2; la suite UI completa anterior no se repitió.
+
+Release **BUILD SUCCEEDED**, metadatos e identidad verificados. Captura final inspeccionada. Evidencia y pasos restantes: [punto de reanudación de aprendizaje](learning-checkpoint.md). No se afirma entrega Cloud/TestFlight ni prueba física de esta versión. La primera compilación falló por una referencia de estilo privada y fue corregida antes de las pruebas finales.
+
 ## Build 17 — revisión de traducciones y vista en directo (2026-10-10)
 
 - Debug y Release de simulador compilados con Xcode 15.2. Bundle Release verificado: build 17, identidad anterior, mínimo iOS 17, orientaciones, audio en background, assets y privacidad.

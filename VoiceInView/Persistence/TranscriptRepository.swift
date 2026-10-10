@@ -15,7 +15,7 @@ final class TranscriptRepository {
     let storageURL: URL?
 
     init(inMemory: Bool = false, directory: URL? = nil) throws {
-        let schema = Schema(versionedSchema: SessionSchemaV6.self)
+        let schema = Schema(versionedSchema: SessionSchemaV7.self)
         let configuration: ModelConfiguration
         if inMemory {
             storageURL = nil
@@ -141,6 +141,7 @@ final class TranscriptRepository {
         let savedMedia = try media(for: identifier)
         let savedDraft = try draft(for: identifier)
         let savedTranslation = try translation(for: identifier)
+        let savedExpressions = try learningExpressions(for: identifier)
         let audioURL = try audioURL(for: identifier)
         if let audioURL, FileManager.default.fileExists(atPath: audioURL.path) {
             try FileManager.default.removeItem(at: audioURL)
@@ -148,6 +149,7 @@ final class TranscriptRepository {
         if let savedMedia { context.delete(savedMedia) }
         if let savedDraft { context.delete(savedDraft) }
         if let savedTranslation { context.delete(savedTranslation) }
+        for expression in savedExpressions { context.delete(expression) }
         // Explicit deletion also covers iOS 17 stores where cascade propagation
         // can leave registered caption objects behind in the context.
         for caption in session.captions { context.delete(caption) }
@@ -257,6 +259,31 @@ final class TranscriptRepository {
         }
         record.audioName = nil
         try context.save()
+    }
+
+    func learningExpressions(for sessionID: UUID) throws -> [LearningExpression] {
+        try context.fetch(FetchDescriptor<LearningExpression>(
+            predicate: #Predicate { $0.sessionID == sessionID }, sortBy: [SortDescriptor(\.createdAt)]))
+    }
+
+    /// Validación antes de mutar: no aceptar expresiones ajenas a su contexto ni borradores activos.
+    func saveLearningExpression(unit: LearningUnit, english: String, spanish: String,
+                                for session: ConferenceSession) throws {
+        let text = english.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard try draft(for: session.id) == nil, !text.isEmpty, text.count <= 500,
+              unit.english.localizedStandardContains(text),
+              try reviewedParagraphs(for: session).contains(where: { $0.id == unit.paragraphID && $0.text == unit.context })
+        else { throw ReviewFailure.sessionChanged }
+        guard !(try learningExpressions(for: session.id)).contains(where: {
+            $0.paragraphID == unit.paragraphID && $0.english == text && $0.context == unit.context
+        }) else { return }
+        context.insert(LearningExpression(sessionID: session.id, unit: unit, english: text,
+            spanish: String(spanish.trimmingCharacters(in: .whitespacesAndNewlines).prefix(1000))))
+        do { try context.save() } catch { context.rollback(); throw error }
+    }
+    func removeLearningExpression(_ expression: LearningExpression) throws {
+        context.delete(expression)
+        do { try context.save() } catch { context.rollback(); throw error }
     }
 
     func translation(for sessionID: UUID) throws -> SessionTranslation? {

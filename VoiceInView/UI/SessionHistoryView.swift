@@ -127,6 +127,7 @@ struct SessionDetailView: View {
     @Query private var bookmarks: [CaptionBookmark]
     @State private var showingBookmarks = false
     @State private var showingTranslation = false
+    @State private var showingLearning = false
     @State private var showingEditor = false
     @State private var showingShare = false
     @State private var renaming = false
@@ -199,6 +200,9 @@ struct SessionDetailView: View {
                 Button("Translate to Spanish", systemImage: "character.bubble") { showingTranslation = true }
                     .disabled(!canEdit || !canPlay || corrections == nil || paragraphs.isEmpty)
                     .accessibilityIdentifier("sessionTranslationButton")
+                Button("Aprender inglés", systemImage: "book") { showingLearning = true }
+                    .disabled(!canEdit || !canPlay || corrections == nil || paragraphs.isEmpty)
+                    .accessibilityIdentifier("learnEnglishButton")
                 if !canPlay { Text("Stop listening before opening audio and subtitles.").font(.caption) }
                 if corrections == nil {
                     ContentUnavailableView("Corrections unavailable", systemImage: "exclamationmark.triangle",
@@ -235,6 +239,9 @@ struct SessionDetailView: View {
         .sheet(isPresented: $showingMedia) {
             SessionMediaView(session: session, repository: repository, paragraphs: paragraphs,
                              hasCorrections: !(corrections ?? [:]).isEmpty, initialParagraphID: playbackParagraphID)
+        }
+        .sheet(isPresented: $showingLearning) {
+            EnglishLearningView(session: session, repository: repository)
         }
         .sheet(isPresented: $showingTranslation) {
             SessionTranslationView(session: session, repository: repository, searchQuery: initialSearch)

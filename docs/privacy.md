@@ -56,3 +56,6 @@ English source snapshots, machine Spanish and Spanish edits live in the local V6
 
 
 Build 17 adds temporary foreground live translation of confirmed captions. It is cleared when the reader closes and never alters saved English. The personal vocabulary lives in UserDefaults, separately from the backup-excluded session database; preferences can follow iOS backup settings. Clear and save the vocabulary to remove its entries. No vocabulary content is logged or sent to a new third-party service.
+
+
+Build 18 stores study expressions and optional Spanish notes in the same local, backup-excluded session database (V7). Study copies keep their original context when transcripts are edited. Deleting a session also deletes its learning collection; removing a learning expression does not modify the transcript. Practice plays existing audio and never records the learner.

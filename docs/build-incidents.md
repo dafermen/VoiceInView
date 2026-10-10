@@ -165,3 +165,7 @@ Xcode Cloud finalizó satisfactoriamente el archivo del commit de implementació
 
 ## Build 17 — nuevas comprobaciones de regresión
 La primera prueba usaba un selector Format incompleto y una expectativa sobre la palabra inicial después de empezar el audio. Al comprobar explícitamente Pause, se detectó que el reproductor se abría sin empezar. La selección se pasó a una única entidad identificable con sheet(item:), evitando separar el booleano de presentación del UUID del párrafo. Los formatos se hicieron visibles mediante segmentos TXT/PDF/SRT/VTT. Ver resultado de la corrección en [el punto de reanudación](implementation-checkpoint.md). La exportación espera al cierre de la vista previa antes de abrir la hoja nativa. Estos problemas de interfaz no deben atribuirse al servicio de traducción Apple.
+
+
+## Build 18 — aprendizaje
+El primer Debug detectó una referencia a PlaybackButtonStyle, privado en SessionMediaView. Se sustituyó por un estilo SwiftUI estándar. Después pasaron 76 pruebas unitarias, el recorrido UI de aprendizaje y Release. Para reanudar con poco cupo, leer [el checkpoint](learning-checkpoint.md); no volver a implementar modelos ni migración V7.

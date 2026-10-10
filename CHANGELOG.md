@@ -1,3 +1,9 @@
+## 2026-10-10 — English learning (source build 18)
+- Replace the two-symbol Capture Preferences button with one sliders icon.
+- Add session-based English practice: phrase playback, slow speed, repeat, hidden Spanish and saved expressions with context/audio.
+- Add V6→V7 migration for independent local study records. Preserve existing text, translations, bookmarks and audio.
+- Stop practice playback on exit, background or interruption; no microphone capture or pronunciation scoring.
+
 ## 2026-10-10 — Translation review and live preview (source build 17)
 - Listen to English audio from a translated paragraph; keep approximate existing subtitle timing.
 - Add a local personal dictionary with recognition hints and preferred Spanish terms.

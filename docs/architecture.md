@@ -75,3 +75,7 @@ No schema migration or new background capability is required for this change. Su
 ## Saved translation (V6)
 
 SessionTranslation stores a validated JSON snapshot separately from recognition, SessionReview and media. It contains exact reviewed English, generated Spanish and Spanish-only edits. A full-source comparison invalidates stale translations. The SwiftUI Translation runner is SDK/OS gated, requests language preparation only after a user action, and saves only a complete result belonging to the active request. Existing models and store identity are unchanged. See [translation](translation.md).
+
+
+## Learning expressions (V7)
+Build 18 adds LearningExpression snapshots associated by session/paragraph UUID. LearningUnit is a pure presentation model using corrected source and current Spanish; it never synthesizes missing timing. PracticePlayer owns a separate playback lifecycle and cancels looping on exit/background/interruption. No microphone or new remote service is involved. Repository deletion removes study records with their session; deleting only a study record preserves source/translation/audio. See [learning design](learning.md).

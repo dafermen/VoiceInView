@@ -216,3 +216,8 @@ por eso es importante revisar la gramática. El diccionario es una preferencia, 
 `LiveTranslationBuffer` separa captura de presentación: limita memoria, evita peticiones paralelas y comprueba
 que cada respuesta siga correspondiendo al texto solicitado. Volver al inglés elimina únicamente la vista previa.
 La exportación espera a que cierre la hoja de revisión antes de abrir la hoja de compartir del sistema.
+
+
+## Aprender inglés — build 18
+
+Escucha/repite fragmentos a 0.75× o 1×, revela el español y conserva expresiones con contexto/audio. Capture Preferences ahora tiene un solo icono. Consulta [la guía de aprendizaje](learning.md) para uso, arquitectura V7 y límites.

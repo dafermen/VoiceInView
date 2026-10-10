@@ -42,3 +42,8 @@ Build 15 añade revisión por frase, feedback de captura, reanudación manual, n
 Build 16 incorpora [traducción al español](translation.md) de sesiones guardadas, edición independiente y exportación bilingüe. La validación local y la prueba real del traductor se distinguen en el informe.
 
 - [Build 17: punto de reanudación y validación](implementation-checkpoint.md) — seis mejoras de traducción, estado verificable y pruebas pendientes.
+
+
+## Aprender inglés — build 18
+
+Escucha/repite fragmentos a 0.75× o 1×, revela el español y conserva expresiones con contexto/audio. Capture Preferences ahora tiene un solo icono. Consulta [la guía de aprendizaje](learning.md) para uso, arquitectura V7 y límites.

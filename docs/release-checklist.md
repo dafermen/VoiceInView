@@ -1,3 +1,10 @@
+## Build 18 — English learning
+- [x] V6→V7 migration and learning tests passed in the validation report.
+- [x] Final Debug/Release and UI test results recorded in [the checkpoint](learning-checkpoint.md).
+- [ ] iPhone: slow playback, looping, interruptions, headphones and text-only sessions.
+- [ ] VoiceOver/Dynamic Type/landscape review of the learning screen.
+- [ ] Cloud/TestFlight delivery confirmed separately from source publication.
+
 ## Build 17 — nuevas comprobaciones
 - [ ] Compilación moderna en Xcode Cloud del commit de esta entrega.
 - [ ] iPhone: traducción directa, descarga/rechazo de idiomas, volver a inglés, interrupción y segundo plano.

@@ -440,8 +440,7 @@ struct CaptionScreen: View {
 
     private var capturePreferencesButton: some View {
             Button { showingCaptureOptions = true } label: {
-                Image(systemName: model.saveAudio ? "waveform.circle.fill" : "waveform.circle")
-                Image(systemName: model.continueInBackground ? "moon.circle.fill" : "moon.circle")
+                Image(systemName: "slider.horizontal.3")
             }
             .frame(minWidth: 44, minHeight: 44)
             .accessibilityLabel("Capture preferences")

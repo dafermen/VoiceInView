@@ -19,3 +19,6 @@ Public policy URL: [OWNER MUST PROVIDE].
 This draft must be reviewed against the final binary and published before App Store submission.
 
 Optional translation of saved text and confirmed live English captions uses Apple’s Translation framework on supported devices. Apple may ask to download language models; installed languages allow on-device translation. English, Spanish and Spanish edits are stored locally and removed when you delete the session. Apple may collect API usage and performance metrics, but not the original or translated content. Live Spanish preview stays in memory and is not automatically saved. Personal vocabulary is stored as a device preference and used as recognition hints and preferred translation terms; clearing its entries removes it. Device preference backups follow iOS settings. VoiceInView adds no third-party translation service.
+
+
+Build 18 stores study expressions and optional Spanish notes in the same local, backup-excluded session database (V7). Study copies keep their original context when transcripts are edited. Deleting a session also deletes its learning collection; removing a learning expression does not modify the transcript. Practice plays existing audio and never records the learner.

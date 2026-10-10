@@ -97,3 +97,8 @@ Current installTap API is supported at the iOS 17 baseline and deprecated beginn
 Public-release metadata, contact/support/privacy URLs, remaining questionnaire answers and genuine screenshots are pending.
 
 [Delivery report](docs/implementation-report.md) · [Validation results](docs/validation-report.md) · [Architecture](docs/architecture.md) · [Roadmap](docs/roadmap.md) · [Privacy](docs/privacy.md)
+
+
+## Aprender inglés — build 18
+
+Escucha/repite fragmentos a 0.75× o 1×, revela el español y conserva expresiones con contexto/audio. Capture Preferences ahora tiene un solo icono. Consulta [la guía de aprendizaje](docs/learning.md) para uso, arquitectura V7 y límites.
