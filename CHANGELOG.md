@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Saved-session Spanish translation (source build 16)
+- Add explicit English→Spanish translation using Apple's Translation framework on iOS 18+, with progress, cancellation and language download preparation.
+- Preserve English, machine Spanish and Spanish edits independently with additive V5→V6 migration; detect English changes before saving or sharing translated content.
+- Add English/Spanish/bilingual reading, Spanish editing and TXT/PDF/SRT/WebVTT exports; replay English audio with translated captions using existing time windows.
+- Retain iOS 17 compatibility for reading existing translations; actual Translation framework execution requires a modern SDK/device. See the validation report for executed checks.
+
+
 ## Unreleased — 0.1.0 development, through Phase 9
 iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation of TestFlight builds 5 and 6 on their iPhone; detailed offline and release verification remain pending. This is not a release-certified binary.
 

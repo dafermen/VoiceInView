@@ -118,6 +118,7 @@ struct SessionDetailView: View {
     @Query private var reviews: [SessionReview]
     @Query private var bookmarks: [CaptionBookmark]
     @State private var showingBookmarks = false
+    @State private var showingTranslation = false
     @State private var showingEditor = false
     @State private var showingShare = false
     @State private var renaming = false
@@ -186,6 +187,9 @@ struct SessionDetailView: View {
                 }.font(.subheadline).foregroundStyle(.secondary)
                 Button("Audio & subtitles", systemImage: "waveform") { playbackParagraphID = nil; showingMedia = true }
                     .disabled(!canPlay || corrections == nil).accessibilityIdentifier("sessionMediaButton")
+                Button("Translate to Spanish", systemImage: "character.bubble") { showingTranslation = true }
+                    .disabled(!canEdit || !canPlay || corrections == nil || paragraphs.isEmpty)
+                    .accessibilityIdentifier("sessionTranslationButton")
                 if !canPlay { Text("Stop listening before opening audio and subtitles.").font(.caption) }
                 if corrections == nil {
                     ContentUnavailableView("Corrections unavailable", systemImage: "exclamationmark.triangle",
@@ -222,6 +226,9 @@ struct SessionDetailView: View {
         .sheet(isPresented: $showingMedia) {
             SessionMediaView(session: session, repository: repository, paragraphs: paragraphs,
                              hasCorrections: !(corrections ?? [:]).isEmpty, initialParagraphID: playbackParagraphID)
+        }
+        .sheet(isPresented: $showingTranslation) {
+            SessionTranslationView(session: session, repository: repository)
         }
         .sheet(isPresented: $showingEditor) {
             TranscriptEditorView(originals: originals, reviewed: paragraphs) { edited in

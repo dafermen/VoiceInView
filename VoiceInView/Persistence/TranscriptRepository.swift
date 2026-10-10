@@ -15,7 +15,7 @@ final class TranscriptRepository {
     let storageURL: URL?
 
     init(inMemory: Bool = false, directory: URL? = nil) throws {
-        let schema = Schema(versionedSchema: SessionSchemaV5.self)
+        let schema = Schema(versionedSchema: SessionSchemaV6.self)
         let configuration: ModelConfiguration
         if inMemory {
             storageURL = nil
@@ -140,12 +140,14 @@ final class TranscriptRepository {
         let savedReview = try review(for: identifier)
         let savedMedia = try media(for: identifier)
         let savedDraft = try draft(for: identifier)
+        let savedTranslation = try translation(for: identifier)
         let audioURL = try audioURL(for: identifier)
         if let audioURL, FileManager.default.fileExists(atPath: audioURL.path) {
             try FileManager.default.removeItem(at: audioURL)
         }
         if let savedMedia { context.delete(savedMedia) }
         if let savedDraft { context.delete(savedDraft) }
+        if let savedTranslation { context.delete(savedTranslation) }
         // Explicit deletion also covers iOS 17 stores where cascade propagation
         // can leave registered caption objects behind in the context.
         for caption in session.captions { context.delete(caption) }
@@ -255,6 +257,30 @@ final class TranscriptRepository {
         }
         record.audioName = nil
         try context.save()
+    }
+
+    func translation(for sessionID: UUID) throws -> SessionTranslation? {
+        var request = FetchDescriptor<SessionTranslation>(predicate: #Predicate { $0.sessionID == sessionID })
+        request.fetchLimit = 1
+        return try context.fetch(request).first
+    }
+
+    func reviewedParagraphs(for session: ConferenceSession) throws -> [ReviewParagraph] {
+        let originals = session.orderedCaptions.map { ReviewParagraph(id: $0.id, text: $0.text) }
+        return TranscriptReview.paragraphs(originals: originals,
+            corrections: try review(for: session.id)?.decodedCorrections() ?? [:])
+    }
+
+    /// Guarda el lote completo de forma atómica. Nunca publica resultados parciales ni obsoletos.
+    func saveTranslation(_ snapshot: TranslationSnapshot, for session: ConferenceSession) throws {
+        try snapshot.validate()
+        guard try draft(for: session.id) == nil,
+              snapshot.isCurrent(try reviewedParagraphs(for: session)) else { throw TranslationFailure.sourceChanged }
+        let encoded = try JSONEncoder().encode(snapshot)
+        let record = try translation(for: session.id) ?? SessionTranslation(sessionID: session.id, payload: encoded)
+        context.insert(record)
+        record.payload = encoded
+        do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
     }
 
     func save() throws { try context.save() }

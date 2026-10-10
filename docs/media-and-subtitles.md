@@ -23,3 +23,7 @@ In a stopped session, tap a paragraph with saved audio/timing to open playback a
 Missing audio or absent timing does not invent a seek position. Audio truncated by an earlier failure clips cues to the available recording. Plain transcripts remain selectable/editable. Pauses in recording are omitted from the sample timeline; playback pauses do not modify the recording.
 
 Device checks: tap early and late paragraphs, pause/resume, switch phrases while playing, correct a paragraph and repeat, delete audio and verify the text remains. Test interruptions and reopening playback without overlapping microphone capture.
+
+## Spanish and bilingual captions
+
+Open Translation from a saved session. Its language selector controls text export and the player opened from that screen. The recording remains English. Spanish words are distributed approximately across existing English cue windows; bilingual cues include both languages. Missing timing is never invented for old sessions. See [translation](translation.md).

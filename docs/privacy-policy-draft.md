@@ -17,3 +17,5 @@ Privacy questions: [OWNER MUST PROVIDE CONTACT BEFORE PUBLICATION].
 Publisher identity: [OWNER MUST PROVIDE].
 Public policy URL: [OWNER MUST PROVIDE].
 This draft must be reviewed against the final binary and published before App Store submission.
+
+Optional translation of saved English text uses Apple’s Translation framework on supported devices. Apple may ask to download language models; installed languages allow on-device translation. English, Spanish and Spanish edits are stored locally and removed when you delete the session. Apple may collect API usage and performance metrics, but not the original or translated content. VoiceInView adds no third-party translation service.

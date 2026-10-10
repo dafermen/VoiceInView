@@ -105,3 +105,7 @@ El [plan de pruebas](testing.md) distingue los escenarios automatizados de los q
 - `SessionTitle` in SessionClock.swift → SessionCoordinator → optional inline title binding in CaptionScreen: local suggestion, trimmed name, fallback and length limit.
 - `SessionDetailView` → paragraph UUID → `SessionMediaView.initialParagraphID` → cue start → `SessionPlayer.play(from:)`: audio review without guessing old timestamps.
 - `CaptionScreen.pinchScale`: transient magnification; AppSettings persists the clamped final size.
+
+## Traducción guardada (build 16)
+
+`Models/SessionTranslation.swift` contiene el snapshot, la tabla V6 y la transformación pura de subtítulos. `TranscriptRepository.saveTranslation` rechaza IDs incompletos y texto de origen cambiado. `UI/SessionTranslationView.swift` adapta Translation de Apple a la pantalla de lectura y mantiene la cancelación por UUID de intento. `TranscriptEditorView` se reutiliza con etiquetas españolas de edición, sin guardar sobre las correcciones inglesas. [Guía completa](translation.md).

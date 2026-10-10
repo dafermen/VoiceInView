@@ -38,3 +38,7 @@ La grabación que empieza a mitad de sesión queda fuera de esta entrega; requie
 - Al detener, aparece un nombre sugerido con fecha/hora, editable en el mismo lugar que Save Session. Al editar puedes limpiar el campo con la X; Done cierra el teclado. Dejarlo vacío usa la sugerencia; se eliminan espacios extremos y se limita a 120 caracteres. No se envía texto a ningún servicio para generar nombres.
 - Pellizcar el área de lectura cambia la letra entre 20 y 44 puntos base, respetando Dynamic Type. La elección queda guardada al terminar el gesto. Aa y acciones de accesibilidad permiten ajustar sin gestos de dos dedos.
 - En Sessions, tocar un párrafo con audio y tiempos abre el reproductor desde esa frase. Los textos antiguos sin tiempos siguen siendo legibles/editables. Véase [audio y subtítulos](media-and-subtitles.md).
+
+## Traducir después de guardar
+
+Sessions → sesión → Translate to Spanish abre la lectura en español, inglés o ambos. El lápiz corrige únicamente español; editar inglés deja la traducción pendiente de actualización. La captura conserva su flujo actual. [Guía y límites](translation.md).

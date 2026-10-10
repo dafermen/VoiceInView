@@ -94,6 +94,18 @@ struct AppRootView: View {
                     for _ in 0..<85 { recorder.append(CapturedAudio(buffer: buffer)) {} }
                     try recorder.finish()
                 }
+                if ProcessInfo.processInfo.arguments.contains("--ui-test-translation") {
+                    let source = try repository.reviewedParagraphs(for: sample)
+                    let spanish = source.enumerated().map { index, paragraph in
+                        ReviewParagraph(id: paragraph.id, text: index == 0 ? "Hola mundo. Aprendemos juntos." : "Párrafo \(index + 1). Leer y compartir debería ser sencillo.")
+                    }
+                    try repository.saveTranslation(TranslationSnapshot(source: source, generated: spanish), for: sample)
+                    if ProcessInfo.processInfo.arguments.contains("--ui-test-translation-stale") {
+                        var changed = source
+                        changed[0].text = "The English transcript changed."
+                        try repository.saveCorrections(changed, for: sample)
+                    }
+                }
                 coordinator = SessionCoordinator(repository: repository)
                 storageFailure = false
                 return

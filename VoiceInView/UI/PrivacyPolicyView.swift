@@ -12,6 +12,7 @@ struct PrivacyPolicyView: View {
                 Text("Export, Copy and Share are explicit actions. The destination you choose may sync or transmit the transcript, audio or subtitles according to its own privacy policy.")
                 Text("Listening normally stops when you leave the app. If Continue in background is enabled, the microphone remains active until you pause or stop, or iOS interrupts it. VoiceInView captures the microphone, not the internal audio of other apps.")
                 Text("VoiceInView includes no advertising, tracking, analytics or required account.")
+                Text("Optional translation of saved English text uses Apple’s Translation framework on supported devices. Apple may ask to download language models; installed languages allow on-device translation. English, Spanish and Spanish edits are stored locally and removed when you delete the session. Apple may collect API usage and performance metrics, but not the original or translated content. VoiceInView adds no third-party translation service.")
                 Text("Last updated: October 10, 2026.")
                     .font(.footnote)
             }

@@ -28,3 +28,7 @@ Implemented remembered capture preferences, nearby controls, circular microphone
 
 ## Audio review and capture feedback — build 15 source
 Timed paragraph/phrase playback, explicit capture and playback pause/resume, level feedback, contextual interruption recovery, local suggested names and pinch resizing are implemented. The schema remains V5 and modern-engine/device verification is a separate gate. See the current validation report before claiming TestFlight availability.
+
+## Source build 16
+
+Saved-session Spanish translation, bilingual review and translated subtitle sharing are implemented. Live translation and synthesized Spanish audio remain outside this delivery. Real translation quality, on-device downloads/offline behavior and TestFlight delivery are separate acceptance steps.

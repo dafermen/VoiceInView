@@ -149,3 +149,13 @@ Validación local de esta mejora: se cancelaron varios intentos de compilación 
 La primera ejecución completa pasó 61 pruebas unitarias. Los dos escenarios UI detectaron un teclado que podía permanecer abierto tras editar el nombre y una consulta de prueba que no encontraba el desplegable por nombre. Se añadió manejo explícito del foco/Done y un botón identificable para desplegar frases. El resultado de la repetición se registra en validation-report.md.
 
 La repetición confirmó la reproducción/pausa. La prueba del nombre necesitó una corrección adicional: borrar con retrocesos desde el centro del campo dejaba caracteres de la fecha. Se añadió un botón accesible para limpiar el nombre y se usó ese recorrido. La ejecución final pasó el guardado y la consulta del nombre en historial, también tras girar a horizontal.
+
+## 13. Traducción guardada y validación con SDK antiguo — 2026-10-10
+
+Xcode 15.2 no incluye Translation. La app conserva iOS 17 mediante importación condicional y comprobación iOS 18; la generación real necesita un archivo compilado con SDK moderno. Los tests con traducción prefijada solo validan el flujo de datos, edición, reproducción y exportación. No atribuirles calidad de traducción ni prueba offline.
+
+En la prueba de hojas anidadas, buscar Done globalmente coincidía con Translation y Audio & subtitles. Se limitó al navigation bar del reproductor. Las siguientes pruebas no pudieron activar el Menu de Compartir al volver de la hoja, incluso esperando a que fuera accesible. Se sustituyó por un botón normal y un diálogo nativo de formatos. Conservar los logs fallidos como evidencia de automatización, no como fallos del traductor de Apple.
+
+El check de GitHub de `35fdc3b` (build fuente 15) se consultó durante esta entrega y reportó Archive – iOS satisfactorio. Eso no certifica instalación en el iPhone ni cambia el diagnóstico histórico de los builds 9–12.
+
+El recorrido final de lectura/edición/reproducción/compartir pasó. La hoja nativa expone Guardar en Archivos con un tipo distinto de Button; se consulta por su etiqueta, como los tests existentes de compartir. Release y 67 tests unitarios pasaron. Los nombres de los artefactos y los límites están en el informe de validación.

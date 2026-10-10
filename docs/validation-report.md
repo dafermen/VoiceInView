@@ -1,5 +1,18 @@
 # Validation report — updated 2026-10-10
 
+## Saved-session Spanish translation — 2026-10-10, source build 16
+
+Implemented English/Spanish/bilingual saved-session reading, Apple's iOS 18+ Translation integration, separate machine/edited Spanish, source-change detection, translated text/PDF/subtitle sharing and English audio playback with translated captions. V6 adds SessionTranslation without changing V1–V5 model definitions or app/store identity.
+
+- Xcode 15.2 / iOS 17.2 simulator: **67 compatible unit tests passed**, including six translation tests for V5 migration, persisted Spanish edits/deletion, stale English rejection, incomplete-result protection, subtitle timing/escaping and empty/short paragraphs. The Apple Translation branch is excluded by this SDK and was not exercised by these tests.
+- The initial UI flow verified language selection, Spanish editing and translated playback, then failed because two nested navigation bars exposed Done. The test now scopes Done to the player. Following attempts could not activate the Menu share control after sheet dismissal, even after an accessibility wait. Sharing now uses an ordinary button and native format dialog. The stale-translation UI scenario passed. The final complete read/edit/play/share scenario passed after switching to the native share control’s actual accessibility type.
+- Final targeted UI results: **two scenarios passed across final runs**. `VoiceInView-Translation16-verified.log` / `VoiceInView-Translation16-Verified.xcresult` passed language switching, Spanish correction/save, translated playback/pause and native SRT sharing. `VoiceInView-Translation16-ui.log` passed stale-translation blocking (its other scenario failed before the share-control fix). The full pre-existing UI suite was not rerun. Portrait reader and return-from-player screenshots were inspected.
+- Final Release simulator build passed for arm64 and x86_64: `VoiceInView-Translation16-release-final.log`. Bundle checks verified source build 16, unchanged identity, iOS 17 minimum, microphone/speech strings, audio background mode, three orientations, assets and privacy manifest. Project plist lint, 111 local documentation links and Git whitespace checks passed.
+- Test fixtures seed Spanish text only in DEBUG; they do not simulate or establish actual Apple translation quality, model downloads or offline operation.
+
+Initial evidence: `/private/tmp/VoiceInView-Translation16-tests.log` and `VoiceInView-Translation16-Tests.xcresult` (67 unit passes, one UI pass, one initial UI failure). Modern-SDK compilation, actual iPhone translation and TestFlight availability require separate evidence.
+
+
 ## Capture feedback and phrase review — 2026-10-10, source build 15
 
 Implemented paragraph-to-audio playback and a collapsible timed-phrase list; explicit capture/playback pause and resume; metering and recording/transcribing distinction; interruption recovery without automatic restart; local suggested names and inline editing; pinch resizing with accessibility alternatives. No schema, app identity or storage-path change.

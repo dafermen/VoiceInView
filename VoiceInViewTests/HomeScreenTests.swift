@@ -2,6 +2,73 @@ import XCTest
 
 final class HomeScreenTests: XCTestCase {
     @MainActor
+    func testSavedTranslationLanguagesEditingPlaybackAndShare() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-review", "--ui-test-media", "--ui-test-translation"]
+        app.launch()
+        XCTAssertTrue(app.tabBars.buttons["Sessions"].waitForExistence(timeout: 20))
+        app.tabBars.buttons["Sessions"].tap()
+        app.staticTexts["Review sample"].tap()
+        app.buttons["sessionTranslationButton"].tap()
+        let paragraph = app.staticTexts["translatedParagraph-0"]
+        XCTAssertTrue(paragraph.waitForExistence(timeout: 10))
+        XCTAssertEqual(paragraph.label, "Hola mundo. Aprendemos juntos.")
+        app.segmentedControls["translationLanguagePicker"].buttons["Both"].tap()
+        XCTAssertTrue(paragraph.label.contains("Acmee"))
+        XCTAssertTrue(paragraph.label.contains("Hola mundo"))
+        app.segmentedControls["translationLanguagePicker"].buttons["English"].tap()
+        XCTAssertFalse(paragraph.label.contains("Hola mundo"))
+        app.segmentedControls["translationLanguagePicker"].buttons["Español"].tap()
+        app.buttons["editSpanishButton"].tap()
+        app.buttons["editParagraph-0"].tap()
+        let editor = app.textViews.firstMatch
+        XCTAssertTrue(editor.waitForExistence(timeout: 5))
+        editor.tap()
+        editor.typeText(" Traducción revisada.")
+        app.buttons["Apply"].tap()
+        app.buttons["saveTranscriptEdits"].tap()
+        XCTAssertTrue(paragraph.waitForExistence(timeout: 5))
+        XCTAssertTrue(paragraph.label.contains("Traducción revisada."))
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = "Spanish-translation-reader"; shot.lifetime = .keepAlways; add(shot)
+        app.buttons["translatedMediaButton"].tap()
+        let play = app.buttons["recordingPlayButton"]
+        XCTAssertTrue(play.waitForExistence(timeout: 5))
+        play.tap()
+        expectation(for: NSPredicate(format: "label CONTAINS %@", "Hola"), evaluatedWith: app.staticTexts["playbackCaption"])
+        waitForExpectations(timeout: 8)
+        play.tap()
+        app.navigationBars["Audio & subtitles"].buttons["Done"].tap()
+        let afterPlayer = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        afterPlayer.name = "Translation-after-player"; afterPlayer.lifetime = .keepAlways; add(afterPlayer)
+        let sharing = app.buttons["shareTranslationButton"]
+        expectation(for: NSPredicate(format: "hittable == true"), evaluatedWith: sharing)
+        waitForExpectations(timeout: 8)
+        sharing.tap()
+        app.buttons["Subtitles (SRT)"].tap()
+        let saveFile = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Save to Files")).firstMatch
+        XCTAssertTrue(saveFile.waitForExistence(timeout: 8))
+        let shared = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shared.name = "Spanish-subtitle-share"; shared.lifetime = .keepAlways; add(shared)
+    }
+
+    @MainActor
+    func testStaleSpanishIsHiddenUntilRetranslation() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-review", "--ui-test-translation", "--ui-test-translation-stale"]
+        app.launch()
+        XCTAssertTrue(app.tabBars.buttons["Sessions"].waitForExistence(timeout: 20))
+        app.tabBars.buttons["Sessions"].tap()
+        app.staticTexts["Review sample"].tap()
+        app.buttons["sessionTranslationButton"].tap()
+        XCTAssertTrue(app.staticTexts["translationOutdated"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.staticTexts["translatedParagraph-0"].exists)
+        XCTAssertFalse(app.buttons["shareTranslationButton"].isEnabled)
+        app.segmentedControls["translationLanguagePicker"].buttons["English"].tap()
+        XCTAssertEqual(app.staticTexts["translatedParagraph-0"].label, "The English transcript changed.")
+    }
+
+    @MainActor
     func testGlobalCapturePreferencesPersistWithoutStartingMicrophone() throws {
         let app = XCUIApplication()
         app.launch()

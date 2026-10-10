@@ -223,3 +223,7 @@ La ruta /private/tmp usada durante el incidente no es almacenamiento permanente.
 - [Certificados administrados por Apple](https://developer.apple.com/help/account/certificates/cloud-managed-certificates).
 - [Acciones de Xcode Cloud](https://developer.apple.com/documentation/xcode/configuring-your-xcode-cloud-workflow-s-actions).
 - [Requisitos de SDK de Apple](https://developer.apple.com/news/upcoming-requirements/?id=04282026a).
+
+## Build 16: Translation branch
+
+Use a fresh archive from source build 16 or later. Translation generation is compiled only when the SDK supplies the Translation module and runs only on iOS 18+. A successful Xcode 15.2 local build verifies compatibility UI/data logic, not the Apple translation implementation. Keep bundle identifier, signing team and store path unchanged.

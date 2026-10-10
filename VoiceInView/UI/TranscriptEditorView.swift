@@ -4,6 +4,7 @@ import SwiftUI
 struct TranscriptEditorView: View {
     let originals: [ReviewParagraph]
     let initial: [ReviewParagraph]
+    let translation: Bool
     let save: ([ReviewParagraph]) throws -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var history: EditHistory<[ReviewParagraph]>
@@ -13,7 +14,8 @@ struct TranscriptEditorView: View {
     @State private var confirmingRestore = false
     @State private var failure: String?
 
-    init(originals: [ReviewParagraph], reviewed: [ReviewParagraph], save: @escaping ([ReviewParagraph]) throws -> Void) {
+    init(originals: [ReviewParagraph], reviewed: [ReviewParagraph], translation: Bool = false, save: @escaping ([ReviewParagraph]) throws -> Void) {
+        self.translation = translation
         self.originals = originals
         initial = reviewed
         self.save = save
@@ -36,11 +38,11 @@ struct TranscriptEditorView: View {
                     .buttonStyle(.borderless).frame(minHeight: 44)
                     Button("Find and replace", systemImage: "magnifyingglass") { showingFind = true }
                         .accessibilityIdentifier("findReplaceButton")
-                    Button("Restore original", systemImage: "clock.arrow.circlepath") { confirmingRestore = true }
+                    Button(translation ? "Restore translation" : "Restore original", systemImage: "clock.arrow.circlepath") { confirmingRestore = true }
                         .accessibilityIdentifier("restoreOriginalDraft")
                         .disabled(history.value == originals)
                 } footer: {
-                    Text("Tap a paragraph to correct it. Changes stay in this draft until you save. The original recognition is always kept.")
+                    Text(translation ? "Edit Spanish here. The English transcript stays unchanged. Restore translation returns to the machine translation." : "Tap a paragraph to correct it. Changes stay in this draft until you save. The original recognition is always kept.")
                 }
                 Section("Transcript") {
                     ForEach(Array(history.value.enumerated()), id: \.element.id) { index, paragraph in
@@ -61,7 +63,7 @@ struct TranscriptEditorView: View {
                     }
                 }
             }
-            .navigationTitle("Edit transcript").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(translation ? "Edit Spanish" : "Edit transcript").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { if dirty { confirmingDiscard = true } else { dismiss() } }
@@ -90,7 +92,7 @@ struct TranscriptEditorView: View {
                 Button("Discard changes", role: .destructive) { dismiss() }
                 Button("Keep editing", role: .cancel) {}
             }
-            .confirmationDialog("Restore the original recognition in this draft?", isPresented: $confirmingRestore, titleVisibility: .visible) {
+            .confirmationDialog(translation ? "Restore the machine translation in this draft?" : "Restore the original recognition in this draft?", isPresented: $confirmingRestore, titleVisibility: .visible) {
                 Button("Restore original", role: .destructive) { history.set(originals) }
                 Button("Cancel", role: .cancel) {}
             }

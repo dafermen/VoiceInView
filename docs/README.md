@@ -38,3 +38,5 @@ Los informes `phase-*-report.md`, [el informe de entrega inicial](implementation
 Al documentar un resultado, distinguir: implementado, compilado, probado en simulador, probado en dispositivo, subido, procesado y disponible para testers. Cada palabra requiere evidencia distinta.
 
 Build 15 añade revisión por frase, feedback de captura, reanudación manual, nombres y ampliación por gesto. Su validación y entrega se registran por separado en el informe de pruebas.
+
+Build 16 incorpora [traducción al español](translation.md) de sesiones guardadas, edición independiente y exportación bilingüe. La validación local y la prueba real del traductor se distinguen en el informe.

@@ -54,3 +54,10 @@ Phase 10 online AI is excluded and remains unimplemented.
 - [x] Implement phrase playback, pause/resume feedback, level meter, local suggested title and pinch sizing.
 - [ ] Fresh modern archive and TestFlight delivery of build 15.
 - [ ] Physical interruption, audio timing and accessibility acceptance of these changes.
+
+## Build 16 gates
+
+- [ ] Compile the Translation branch using a modern SDK; Xcode 15.2 excludes that branch.
+- [ ] Verify Apple translation on an iOS 18+ iPhone, including first-download denial/cancellation and offline translation after downloading.
+- [ ] Verify V6 upgrade on an existing physical installation and review bilingual subtitle readability.
+- [ ] Archive/distribute the new source; do not relabel an earlier archive as build 16.

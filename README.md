@@ -8,6 +8,10 @@ Native iPhone app designed to caption English speech on device during conference
 
 Start with the [documentation index](docs/README.md). Spanish learning material: [junior/student guide](docs/junior-guide.md) and [code walkthrough](docs/code-walkthrough.md). Before the next delivery, read the [distribution runbook](docs/distribution-runbook.md) and [incident history](docs/build-incidents.md).
 
+## Spanish translation
+
+Source build **16** adds translation of saved English transcripts: Spanish or bilingual reading, independent Spanish corrections, TXT/PDF/SRT/WebVTT sharing and English audio playback with translated captions. Translation generation requires iOS 18+ and Apple's downloaded language models; iOS 17 retains the rest of the app. See [the translation guide](docs/translation.md) and [validation evidence](docs/validation-report.md). A source update is not confirmation of TestFlight availability.
+
 ## Current status
 Implementation and release-preparation source through Phase 9 are present. This is a DEVELOPMENT BUILD, not a certified release candidate.
 The project now targets iOS 17 and builds with Xcode 15.2 on macOS Ventura. A compatibility speech engine uses SFSpeechRecognizer with on-device recognition required. The modern iOS 26 engine is retained behind compiler/OS availability checks. See [validation results](docs/validation-report.md) for executed checks; real-device accuracy and offline behavior remain unverified.

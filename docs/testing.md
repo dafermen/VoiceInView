@@ -85,3 +85,7 @@ For each run record date, source commit, device/OS/SDK, scenario, result, latenc
 - Pinch to increase/decrease text, verify 20–44 bounds, relaunch to verify persistence, rotate/fullscreen and use Aa/VoiceOver alternatives.
 - Save with default title, custom title, whitespace-only title and long title; verify history/search after reopening.
 - Tap a timed paragraph; verify playback jumps, Play/Pause and another cue work. Test corrected text, absent timing, deleted/truncated audio and no overlap with capture.
+
+## Build 16 translation acceptance
+
+Verify V5→V6 migration, persisted Spanish edits, unchanged English, incomplete-result rejection, stale-source detection and cascade cleanup. Verify both-language subtitle timestamps, escaping and text conservation. UI fixtures cover saved translation selection/edit/play/share and stale translation blocking; they are not Apple translation tests. On an iOS 18+ iPhone test real English→Spanish, first download, download refusal, cancellation mid-session, retry, offline after download, long paragraphs, Spanish corrections, source correction/retranslation and upgrade without losing sessions.

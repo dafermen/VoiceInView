@@ -198,3 +198,7 @@ Pausa finaliza el turno de Speech y conserva el borrador. Reanudar inicia otro t
 Un gesto de ampliación usa estado temporal durante el movimiento. Solo al finalizar persiste el tamaño en AppSettings: esto evita escribir preferencias en cada actualización del gesto. Se limita al mismo intervalo que el control Aa. SessionTitle usa DateFormatter local y limpia el nombre al guardar; no necesita IA ni red.
 
 SwiftUI describe vistas mediante tipos genéricos. Una cadena muy larga de modificadores puede resultar cara de comprobar para el compilador aunque sea rápida en ejecución. En esta entrega se midieron unos 176 segundos en el getter del lector; separar contenido, estilo, interacción y seguimiento redujo cada comprobación a menos de un segundo en la ejecución medida. Esto no es una medición de velocidad de transcripción. Los componentes conservan los mismos IDs de párrafo y acciones.
+
+## 17. Traducir sin destruir el original
+
+Lee [el recorrido de traducción](translation.md). La idea central es separar datos originales de datos derivados: cada párrafo conserva su UUID; la traducción guarda una copia del inglés usado, un resultado automático y las correcciones españolas. Si el inglés cambia, conservar el mismo UUID no basta: comparar el contenido detecta que hay que retraducir. Un lote se guarda solo cuando todas las respuestas son válidas. Cancelar evita publicar resultados parciales. La migración V6 añade una tabla en lugar de modificar los modelos anteriores.

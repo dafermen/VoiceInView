@@ -24,7 +24,7 @@ Audio/background choices initially default off but persist after the user change
 ## Persistence and deletion
 SwiftData uses an explicit application-support store with CloudKit disabled. The transcript and recording directory is excluded from backup and created with complete-until-first-user-authentication protection.
 A finalized segment save commits incrementally; unfinished sessions can be reopened after interruption. Unsaved/partial text can be lost on cancellation or termination. Compatibility results remain provisional until request finalization (normally around 50 seconds); backgrounding can lose that current chunk.
-Session deletion removes its recording, synchronized timing, draft marker, related captions, bookmarks and saved corrections/reading position, but this is logical deletion and not a forensic secure-erase guarantee. Exported copies and clipboard content are controlled separately by the destination/user.
+Session deletion removes its recording, synchronized timing, draft marker, related captions, bookmarks, saved translations and corrections/reading position, but this is logical deletion and not a forensic secure-erase guarantee. Exported copies and clipboard content are controlled separately by the destination/user.
 Deleting the app removes its local data; backup exclusion means users should export transcripts they wish to retain.
 Verify SQLite/WAL sidecar protection and backup exclusion on device before release.
 
@@ -49,3 +49,7 @@ https://developer.apple.com/app-store/app-privacy-details/
 https://developer.apple.com/app-store/review/guidelines/
 
 The live level indicator reuses the microphone's local RMS-derived level; it is not a separate recording or a transcription-quality score. Suggested session titles use local date/time formatting. Phrase playback reads the existing local recording. These controls add no network service or new data destination.
+
+## Optional saved-text translation
+
+English source snapshots, machine Spanish and Spanish edits live in the local V6 store. Apple Translation prepares/downloads language models with system consent; downloaded models enable on-device translation. No third-party translation service or app HTTP client is added. Apple may collect API usage/performance metrics, including languages and bundle ID, but not the original or translated content according to [TranslationSession documentation](https://developer.apple.com/documentation/translation/translationsession). Text export obeys the selected language. Session deletion removes its translation; exported copies remain under the destination's control.

@@ -106,6 +106,8 @@ struct SessionMediaView: View {
     let paragraphs: [ReviewParagraph]
     let hasCorrections: Bool
     var initialParagraphID: UUID? = nil
+    var translatedCues: [SubtitleCue]? = nil
+    var translationLanguage: String? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var player = SessionPlayer()
     @State private var audioURL: URL?
@@ -158,9 +160,14 @@ struct SessionMediaView: View {
                 if !fullScreen {
                     List {
                         if audioURL == nil { Text("No audio saved for this session. Enable Save audio before starting your next session.") }
+                        if translatedCues == nil {
                         Section {
                             Button("Edit transcript", systemImage: "pencil") { player.pause(); editing = true }
                                 .accessibilityIdentifier("editMediaTranscriptButton")
+                        }
+                        }
+                        if let translationLanguage {
+                            Text("Captions: \(translationLanguage). Audio remains in English. Edit Spanish from Translation. Timing within each paragraph is approximate.").font(.caption)
                         }
                         if audioURL != nil && !cues.isEmpty {
                             Section {
@@ -256,7 +263,7 @@ struct SessionMediaView: View {
 
     private func rebuildCues() throws {
         let times = try repository.media(for: session.id)?.decodedTimings() ?? [:]
-        let generated = SubtitleExport.cues(paragraphs: reviewed, timings: times)
+        let generated = translatedCues ?? SubtitleExport.cues(paragraphs: reviewed, timings: times)
         // A failed recording may retain only a prefix. Never display captions past that prefix.
         if audioURL != nil, player.duration > 0 {
             cues = generated.compactMap { cue in

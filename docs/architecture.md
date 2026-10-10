@@ -71,3 +71,7 @@ The metering callback uses the existing microphone level stream, never a second 
 Saved paragraph playback joins by paragraph UUID to generated subtitle cues. The player clamps ordinary seeking and rejects invalid play-from positions; selecting another phrase during playback does not toggle it off. Pause/Resume retains the draft UUID and recording sample timeline. Interruption recovery is explicit, and draft durability still depends on successful storage writes.
 
 No schema migration or new background capability is required for this change. Suggested names and pinch preferences are local.
+
+## Saved translation (V6)
+
+SessionTranslation stores a validated JSON snapshot separately from recognition, SessionReview and media. It contains exact reviewed English, generated Spanish and Spanish-only edits. A full-source comparison invalidates stale translations. The SwiftUI Translation runner is SDK/OS gated, requests language preparation only after a user action, and saves only a complete result belonging to the active request. Existing models and store identity are unchanged. See [translation](translation.md).
