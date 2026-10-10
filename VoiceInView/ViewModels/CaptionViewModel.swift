@@ -19,6 +19,18 @@ final class CaptionViewModel {
     private(set) var permissionDenied = false
     private(set) var preparationPending = false
     private(set) var notice: String?
+    // Per-session choices: a new session never silently enables recording.
+    var saveAudio = false
+    var continueInBackground = false
+    private(set) var recordingPrepared = false
+    var canChooseCaptureOptions: Bool { startedAt == nil && !recordingPrepared && !state.active && !state.busy }
+    func prepareRecording(at url: URL) throws {
+        guard let capture = microphone as? AudioCaptureService else { throw RecordingFailure.unavailable }
+        guard !recordingPrepared else { return }
+        capture.recorder = SessionAudioRecorder(url: url)
+        recordingPrepared = true
+    }
+
     var onFinalized: ((FinalizedChange) -> Void)?
     var onEnded: (() -> Void)?
     var onWillStart: (() throws -> Void)?
@@ -139,6 +151,10 @@ final class CaptionViewModel {
         consumer?.cancel()
         consumer = nil
         transcript.discardPartial()
+        if let capture = microphone as? AudioCaptureService {
+            do { try capture.recorder?.finish() }
+            catch { notice = "Audio recording was interrupted. The saved portion is available in Sessions. " + error.localizedDescription }
+        }
         state = .ended
         onEnded?()
     }
@@ -161,6 +177,7 @@ final class CaptionViewModel {
     /// Called synchronously by scene changes so a queued cleanup cannot restart or prolong capture.
     func prepareForBackground() -> UUID? {
         foreground = false
+        if continueInBackground && state == .listening { return nil }
         guard state.active else { return nil }
         generation = UUID()
         do { try microphone.stop() } catch { notice = CaptureFailure.sessionFailure.message }
@@ -189,6 +206,14 @@ final class CaptionViewModel {
         consumer?.cancel()
         consumer = nil
         await speech.cancel()
+        if let capture = microphone as? AudioCaptureService {
+            try? capture.recorder?.finish()
+            capture.recorder = nil
+            capture.timeline.reset()
+        }
+        recordingPrepared = false
+        saveAudio = false
+        continueInBackground = false
         transcript = TranscriptAssembler()
         startedAt = nil
         elapsed = 0

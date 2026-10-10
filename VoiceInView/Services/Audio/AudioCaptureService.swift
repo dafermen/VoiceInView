@@ -5,6 +5,8 @@ import Foundation
 final class AudioCaptureService: SpeechAudioCapturing {
     var audioSink: (@Sendable (CapturedAudio) -> Void)?
     var onFailure: (@MainActor @Sendable (CaptureFailure) -> Void)?
+    let timeline = CaptureTimeline()
+    var recorder: SessionAudioRecorder?
     private let session = AVAudioSession.sharedInstance()
     private var engine: AVAudioEngine?
     private var continuation: AsyncStream<Float>.Continuation?
@@ -32,7 +34,7 @@ final class AudioCaptureService: SpeechAudioCapturing {
         let identifier = UUID()
         generation = identifier
         do {
-            try session.setCategory(.record, mode: .measurement, options: [])
+            try session.setCategory(.playAndRecord, mode: .measurement, options: [.mixWithOthers, .defaultToSpeaker])
             try session.setActive(true)
             sessionActive = true
         } catch {
@@ -60,10 +62,19 @@ final class AudioCaptureService: SpeechAudioCapturing {
             // installTap is available at the iOS 17 baseline; newer SDK replacements stay outside this compatibility path.
             let deliver = stream.continuation
             let sink = audioSink
+            let recorder = recorder
+            let timeline = timeline
+            do { try recorder?.flush() } catch { throw CaptureFailure.recordingFailure }
             let copyFailure: @Sendable () -> Void = { [weak self] in
                 Task { @MainActor [weak self] in
                     guard let self, self.generation == identifier else { return }
                     self.onFailure?(.engineFailure)
+                }
+            }
+            let recordingFailure: @Sendable () -> Void = { [weak self] in
+                Task { @MainActor [weak self] in
+                    guard let self, self.generation == identifier else { return }
+                    self.onFailure?(.recordingFailure)
                 }
             }
             let tap: @Sendable (AVAudioPCMBuffer, AVAudioTime) -> Void = { buffer, _ in
@@ -78,7 +89,7 @@ final class AudioCaptureService: SpeechAudioCapturing {
                 let rms = sqrt(energy / Float(frames))
                 let decibels = 20 * log10(max(rms, 0.000001))
                 deliver.yield(min(max((decibels + 60) / 60, 0), 1))
-                if let sink {
+                if sink != nil || recorder != nil {
                     guard let copy = AVAudioPCMBuffer(pcmFormat: buffer.format, frameCapacity: buffer.frameLength),
                           let destination = copy.floatChannelData else {
                         copyFailure()
@@ -90,7 +101,10 @@ final class AudioCaptureService: SpeechAudioCapturing {
                             destination[channel][frame * copy.stride] = channels[channel][frame * stride]
                         }
                     }
-                    sink(CapturedAudio(buffer: copy))
+                    let start = timeline.stamp(frames: copy.frameLength, sampleRate: copy.format.sampleRate)
+                    let captured = CapturedAudio(buffer: copy, sessionStart: start)
+                    recorder?.append(captured, onError: recordingFailure)
+                    sink?(captured)
                 }
             }
             input.installTap(onBus: 0, bufferSize: 1024, format: format, block: tap)
@@ -125,6 +139,7 @@ final class AudioCaptureService: SpeechAudioCapturing {
                 throw CaptureFailure.sessionFailure
             }
         }
+        try recorder?.flush()
     }
 
     private func observeChanges(engine: AVAudioEngine, identifier: UUID) {

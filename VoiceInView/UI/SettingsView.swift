@@ -14,6 +14,7 @@ struct SettingsView: View {
                 NavigationLink("Microphone Check") { MicrophoneCheckView() }
                     .disabled(coordinator.caption.state.active || coordinator.caption.state.busy)
             }
+            CaptureOptionsView(model: coordinator.caption)
             Section("Captions") {
                 LabeledContent("Language", value: "English (United States)")
                 Text("Additional transcription languages are not available yet.").font(.caption)
@@ -29,14 +30,14 @@ struct SettingsView: View {
                 Toggle("Auto-save final captions", isOn: $settings.autoSave)
                     .disabled(coordinator.caption.state.active || coordinator.caption.state.busy ||
                               (coordinator.caption.startedAt != nil && coordinator.caption.state != .ended))
-                Text("When off, captions remain in memory until you tap Save Session or save a bookmark. Leaving or closing the app may lose unsaved text.")
+                Text("Recording audio also saves the session. Otherwise, when off, captions remain in memory until you tap Save Session or save a bookmark. Leaving or closing the app may lose unsaved text.")
                     .font(.caption)
                 Text("Saved sessions are excluded from device backup. Export anything you need to keep.")
                     .font(.caption)
             }
             Section("Privacy") {
                 NavigationLink("Privacy Policy") { PrivacyPolicyView() }
-                Text("No accounts, analytics, tracking or stored audio.")
+                Text("No accounts, analytics or tracking. Audio is saved only when you enable it for a session.")
             }
         }
         .navigationTitle("Settings")

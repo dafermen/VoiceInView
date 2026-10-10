@@ -11,6 +11,7 @@ final class LegacySpeechTranscriber: SpeechTranscribing {
     private var runID = UUID()
     private var runCompleted = false
     private var runEnd: Double = 0
+    private var runOffset: Double?
     private var raw: AsyncThrowingStream<CapturedAudio, Error>.Continuation?
     private var output: AsyncThrowingStream<TranscriptionUpdate, Error>.Continuation?
     private var processing: Task<Void, Never>?
@@ -107,6 +108,7 @@ final class LegacySpeechTranscriber: SpeechTranscribing {
                             try self.beginRun(identifier: identifier)
                             seconds = 0
                         }
+                        if seconds == 0 { self.runOffset = frame.sessionStart }
                         self.backend.append(frame)
                         seconds += Double(frame.buffer.frameLength) / frame.buffer.format.sampleRate
                     }
@@ -130,6 +132,7 @@ final class LegacySpeechTranscriber: SpeechTranscribing {
         runID = UUID()
         runCompleted = false
         runEnd = 0
+        runOffset = nil
         let currentRun = runID
         try backend.start { [weak self] event in
             guard let self, self.generation == identifier, self.runID == currentRun else { return }
@@ -138,8 +141,11 @@ final class LegacySpeechTranscriber: SpeechTranscribing {
                 guard !self.runCompleted else { return }
                 // Legacy results are cumulative for a whole request, not independent sentence ranges.
                 self.runEnd = max(self.runEnd, result.end.isFinite ? result.end : 0, 0.001)
-                let update = TranscriptionUpdate(runID: currentRun, start: 0, end: self.runEnd,
-                                                 text: result.text, isFinal: result.isFinal)
+                let offset = self.runOffset ?? 0
+                let update = TranscriptionUpdate(runID: currentRun, start: offset, end: offset + self.runEnd,
+                    text: result.text, isFinal: result.isFinal,
+                    words: result.words.map { TimedWord(text: $0.text, start: offset + $0.start, end: offset + $0.end) },
+                    sessionTime: self.runOffset != nil)
                 if case .dropped = self.output?.yield(update) {
                     self.complete(error: TranscriptionFailure.overflow)
                     return

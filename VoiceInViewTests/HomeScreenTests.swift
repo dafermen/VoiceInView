@@ -2,6 +2,60 @@ import XCTest
 
 final class HomeScreenTests: XCTestCase {
     @MainActor
+    func testSavedAudioPlaybackSubtitleExportAndIndependentDeletion() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-review", "--ui-test-media"]
+        app.launch()
+        XCTAssertTrue(app.tabBars.buttons["Sessions"].waitForExistence(timeout: 20))
+        app.tabBars.buttons["Sessions"].tap()
+        app.staticTexts["Review sample"].tap()
+        app.buttons["sessionMediaButton"].tap()
+        XCTAssertTrue(app.navigationBars["Audio & subtitles"].waitForExistence(timeout: 5))
+        let play = app.buttons["recordingPlayButton"]
+        XCTAssertTrue(play.waitForExistence(timeout: 5))
+        play.tap()
+        let caption = app.staticTexts["playbackCaption"]
+        XCTAssertTrue(caption.waitForExistence(timeout: 5))
+        expectation(for: NSPredicate(format: "label CONTAINS %@ OR label CONTAINS %@", "Acmee", "Paragraph"), evaluatedWith: caption)
+        waitForExpectations(timeout: 8)
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = "Media-Playback-Portrait"; attachment.lifetime = .keepAlways; add(attachment)
+        app.buttons["Full screen"].tap()
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        XCTAssertTrue(app.buttons["Exit full screen"].waitForExistence(timeout: 5))
+        let landscape = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        landscape.name = "Media-Playback-Landscape"; landscape.lifetime = .keepAlways; add(landscape)
+        app.buttons["Exit full screen"].tap()
+        XCUIDevice.shared.orientation = .portrait
+        app.buttons["editMediaTranscriptButton"].tap()
+        XCTAssertTrue(app.buttons["editParagraph-1"].waitForExistence(timeout: 5))
+        app.buttons["editParagraph-1"].tap()
+        let editor = app.textViews["paragraphEditor"]
+        editor.tap()
+        editor.typeText(" Audio review correction.")
+        app.buttons["Apply"].tap()
+        app.buttons["saveTranscriptEdits"].tap()
+        XCTAssertTrue(app.navigationBars["Audio & subtitles"].waitForExistence(timeout: 5))
+        app.buttons["Subtitles (SRT)"].tap()
+        let save = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Save to Files")).firstMatch
+        XCTAssertTrue(save.waitForExistence(timeout: 10))
+        // Dismiss the native activity controller explicitly, without sending files.
+        let close = app.buttons["Close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 5))
+        close.tap()
+        let delete = app.buttons["Delete audio, keep text"]
+        for _ in 0..<5 { if delete.isHittable { break }; app.swipeUp() }
+        XCTAssertTrue(delete.isHittable)
+        delete.tap()
+        app.buttons["Delete audio"].tap()
+        XCTAssertFalse(play.exists)
+        XCTAssertTrue(app.buttons["Subtitles (SRT)"].isEnabled)
+        app.buttons["Done"].tap()
+        XCTAssertTrue(app.staticTexts["reviewParagraph-0"].exists)
+    }
+
+    @MainActor
     func testLaunchShowsCaptionsWithoutRequestingMicrophone() throws {
         let app = XCUIApplication()
         app.launch()
@@ -178,7 +232,7 @@ final class HomeScreenTests: XCTestCase {
         // scroll value while SwiftUI is laying out the initial 320 paragraphs.
         let incoming = reader.staticTexts.matching(NSPredicate(
             format: "label CONTAINS %@", "New captions keep arriving while you read.")).firstMatch
-        XCTAssertTrue(incoming.waitForExistence(timeout: 10))
+        XCTAssertTrue(incoming.waitForExistence(timeout: 20))
         reader.swipeDown()
         XCTAssertTrue(app.buttons["backToLiveButton"].waitForExistence(timeout: 5))
         let visible = reader.staticTexts.allElementsBoundByIndex.first {

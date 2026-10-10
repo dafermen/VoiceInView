@@ -1,6 +1,6 @@
 import Foundation
 
-/// Testable boundary for transient microphone capture; audio is never persisted.
+/// Testable boundary for microphone capture. Saving audio is explicitly opt-in.
 @MainActor
 protocol AudioCapturing: AnyObject {
     var permission: MicrophonePermission { get }

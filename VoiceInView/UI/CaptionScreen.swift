@@ -20,6 +20,7 @@ struct CaptionScreen: View {
     @State private var showingOptions = false
     @State private var showingStatus = false
     @State private var showingActions = false
+    @State private var followScrollTask: Task<Void, Never>?
 
     var body: some View {
         GeometryReader { geometry in
@@ -75,6 +76,7 @@ struct CaptionScreen: View {
         .sheet(isPresented: $showingOptions) { readingOptions }
         .sheet(isPresented: $showingStatus) { statusDetails }
         .confirmationDialog("Session actions", isPresented: $showingActions, titleVisibility: .visible) {
+            Button("Recording options") { showingOptions = true }
             if let saveSession {
                 Button("Save Session", action: saveSession)
                     .disabled(model.transcript.finalized.isEmpty)
@@ -97,14 +99,16 @@ struct CaptionScreen: View {
         .onChange(of: model.state) { _, _ in applyWakePreference() }
         .onChange(of: settings.keepAwake) { _, _ in applyWakePreference() }
         .onAppear { applyWakePreference() }
-        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+        .onDisappear { followScrollTask?.cancel(); UIApplication.shared.isIdleTimerDisabled = false }
     }
 
     private var status: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Label(statusTitle, systemImage: model.state == .listening ? "mic.fill" : "mic")
+            Label(model.saveAudio && model.state == .listening ? "Recording" : statusTitle,
+                  systemImage: model.saveAudio && model.state == .listening ? "record.circle.fill" : (model.state == .listening ? "mic.fill" : "mic"))
+                .foregroundStyle(model.saveAudio && model.state == .listening ? Color.red : Color.primary)
                 .font(.subheadline.weight(.semibold))
-                .accessibilityLabel(model.state.title)
+                .accessibilityLabel(model.saveAudio && model.state == .listening ? "Recording audio and captions" : model.state.title)
                 .accessibilityIdentifier("listeningStatus")
             TimelineView(.periodic(from: Date(), by: 1)) { context in
                 Text(SessionClock.format(model.currentDuration(at: context.date)))
@@ -245,6 +249,7 @@ struct CaptionScreen: View {
                 .onChange(of: model.transcript.partial) { _, _ in scrollToLive(proxy) }
                 .onChange(of: followLive) { _, enabled in if enabled { scrollToLive(proxy) } }
                 .onChange(of: isFullScreen) { _, _ in scrollToLive(proxy) }
+                .onChange(of: viewport.size) { _, _ in scrollToLive(proxy) }
             }
         }
     }
@@ -319,6 +324,7 @@ struct CaptionScreen: View {
                     Toggle("Bold text", isOn: $settings.boldCaptions)
                     Toggle("High contrast", isOn: $settings.highContrast)
                 }
+                CaptureOptionsView(model: model)
                 Section {
                     Toggle("Follow live captions", isOn: followBinding)
                     Toggle("Keep screen awake while listening", isOn: $settings.keepAwake)
@@ -385,7 +391,7 @@ struct CaptionScreen: View {
         case .problem: return "Speech recognition needs attention"
         }
         if let notice = model.notice { return notice }
-        if !settings.autoSave && hasCaptions { return "Auto-save is off · Save from Session actions" }
+        if !settings.autoSave && !model.saveAudio && hasCaptions { return "Auto-save is off · Save from Session actions" }
         return nil
     }
 
@@ -406,7 +412,7 @@ struct CaptionScreen: View {
         case .preparing: return "Preparing…"
         case .stopping: return "Finishing…"
         case .ended: return "New Session"
-        case .idle: return "Start Listening"
+        case .idle: return model.saveAudio ? "Start Recording" : "Start Listening"
         }
     }
 
@@ -434,7 +440,14 @@ struct CaptionScreen: View {
 
     private func scrollToLive(_ proxy: ScrollViewProxy) {
         guard followLive else { return }
-        // Do not repeatedly animate provisional word revisions.
+        // A lazy stack can still have the previous content size during onChange.
+        // Coalesce bursts and repeat after layout; never jump after the user scrolls back.
+        followScrollTask?.cancel()
         proxy.scrollTo("liveBottom", anchor: .bottom)
+        followScrollTask = Task { @MainActor in
+            do { try await Task.sleep(for: .milliseconds(70)) } catch { return }
+            guard followLive, !Task.isCancelled else { return }
+            proxy.scrollTo("liveBottom", anchor: .bottom)
+        }
     }
 }

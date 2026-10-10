@@ -3,6 +3,26 @@ import XCTest
 
 @MainActor
 final class CaptionViewModelTests: XCTestCase {
+    func testBackgroundListeningRequiresOptInAndNewSessionResetsChoices() async {
+        let speech = MockSpeech()
+        let model = CaptionViewModel(microphone: CaptionMicrophone(), speech: speech)
+        XCTAssertFalse(model.saveAudio)
+        XCTAssertFalse(model.continueInBackground)
+        await model.start()
+        await model.background()
+        XCTAssertNotEqual(model.state, .listening)
+        await model.reset()
+        model.foregrounded()
+        model.continueInBackground = true
+        await model.start()
+        await model.background()
+        XCTAssertEqual(model.state, .listening)
+        await model.stop()
+        await model.reset()
+        XCTAssertFalse(model.continueInBackground)
+        XCTAssertFalse(model.saveAudio)
+    }
+
     func testMissingModelNeverStartsCaptureOrInstallsImplicitly() async {
         let speech = MockSpeech()
         speech.status = .missingAssets

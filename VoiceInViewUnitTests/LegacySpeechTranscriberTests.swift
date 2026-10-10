@@ -5,6 +5,31 @@ import XCTest
 
 @MainActor
 final class LegacySpeechTranscriberTests: XCTestCase {
+    func testSampleTimelineSurvivesRequestRotationAndResume() async throws {
+        let backend = TestSpeechBackend()
+        let audio = TestSpeechAudio()
+        let service = LegacySpeechTranscriber(audio: audio, backend: backend, requestDuration: 0.015)
+        let updates = try await service.start()
+        let collection = collect(updates)
+        for start in [20.0, 20.01, 20.02] {
+            var frame = try makeFrame()
+            frame.sessionStart = start
+            audio.audioSink?(frame)
+        }
+        try await service.finish()
+        let first = try await collection.value
+        XCTAssertEqual(first.finalized.map(\.start), [20, 20.02])
+        XCTAssertTrue(first.finalized.allSatisfy { $0.sessionTime == true })
+        let resumed = try await service.start()
+        let resumedCollection = collect(resumed)
+        var frame = try makeFrame()
+        frame.sessionStart = 20.03
+        audio.audioSink?(frame)
+        try await service.finish()
+        let second = try await resumedCollection.value
+        XCTAssertEqual(second.finalized.first?.start, 20.03)
+    }
+
     func testRequestsRequireOfflineRecognition() {
         let request = LegacySpeechBackend.offlineRequest()
         XCTAssertTrue(request.requiresOnDeviceRecognition)

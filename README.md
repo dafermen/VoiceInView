@@ -11,7 +11,7 @@ On 2026-10-09, the user confirmed successful installation and basic operation of
 The user explicitly authorized continuous progression through Phase 9 despite pending Apple validation. Phase 10 online AI is not implemented.
 
 ## Implemented source
-- Foreground built-in microphone capture, contextual permission and diagnostics.
+- Built-in microphone capture with optional background continuation, contextual permission and diagnostics.
 - SpeechTranscribing boundary with offline-only SFSpeechRecognizer on older toolchains/OS versions, plus SpeechAnalyzer/SpeechTranscriber when built with Xcode 26+ and run on iOS 26+.
 - Compatibility requests rotate after 50 seconds of audio; incoming audio waits in a bounded queue during finalization. Overflow/timeouts stop visibly. Speech permission and system model availability are explicit.
 - Partial/final caption assembly with independent analyzer-run identities.
@@ -55,8 +55,10 @@ See [development](docs/development.md), [testing](docs/testing.md) and [release 
 9. Tap Review & share to preview exactly what will be copied or exported. Choose Full transcript or Bookmarks, TXT or PDF, and whether to include session details. Edit is also available from this preview. Copy uses the displayed text; Save file and Share use the selected format.
 10. Saved sessions remember the paragraph you were reading. Tap a bookmark in session details to jump to its paragraph when it still exists. Tap the session title to rename it.
 
-Leaving/locking the app stops microphone capture; restart requires user action. Unfinished captions can be lost on cancellation. With the compatibility engine, a provisional request can contain about 50 seconds of speech; use Pause/Stop to finalize before leaving. Saved sessions are excluded from device backup; export anything you need to retain.
-Audio is never stored or uploaded by the app. Explicit sharing may transmit text through the chosen destination.
+Leaving/locking the app stops microphone capture by default. Enable Continue in background before starting a session to keep listening while switching apps or locking the screen. Calls and other interruptions still stop capture; restart requires user action. Unfinished captions can be lost on cancellation. With the compatibility engine, a provisional request can contain about 50 seconds of speech; use Pause/Stop to finalize before leaving. Saved sessions are excluded from device backup; export anything you need to retain.
+Audio is never uploaded by the app. Saving audio is optional and off for each new session; enable Save audio with transcript in Aa or Settings before starting. Audio-enabled sessions also save their transcript. Stop the session, then open Sessions > Audio & subtitles for playback, seeking, fullscreen captions, M4A sharing, SRT/WebVTT, or audio + text + subtitles together. Native sharing includes Save to Files. TXT/PDF review and editing remain in Review & share. You can delete audio separately. Recording takes additional storage (hundreds of MB per hour); all local session data is excluded from backup.
+
+Subtitles use the captured-audio clock: pauses are removed from both audio and subtitle files. Native word timing is used where available; edited passages use estimated timing within their saved audio range. Old sessions without timing retain their text but cannot produce synchronized subtitles. This does not capture internal audio from YouTube, meeting apps or other apps; their sound must reach the microphone through the speaker. Mixing and background behavior require testing on the actual device and source app.
 
 ## Architecture / folders
 - VoiceInView/App — application entry.
@@ -71,7 +73,7 @@ Audio is never stored or uploaded by the app. Explicit sharing may transmit text
 
 ## Limitations / release gates
 Real offline transcription, latency, 30/60/120-minute reliability, accessibility, database recovery and protection/backup behavior remain unverified. Xcode Cloud produced the archive distributed through TestFlight.
-Built-in microphone only; Bluetooth input, background capture and online AI are not implemented.
+Built-in microphone only; Bluetooth input and online AI are not implemented. Background microphone capture is per-session opt-in.
 Current installTap API is supported at the iOS 17 baseline and deprecated beginning iOS 27; migration to its iOS 27 replacement requires that SDK and new validation.
 Public-release metadata, contact/support/privacy URLs, remaining questionnaire answers and genuine screenshots are pending.
 

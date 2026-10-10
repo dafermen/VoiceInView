@@ -9,7 +9,7 @@ final class SessionCoordinator {
     private(set) var currentSession: ConferenceSession?
     var storageMessage: String?
     let settings: AppSettings
-    var autoSave: Bool { settings.autoSave }
+    var autoSave: Bool { settings.autoSave || caption.saveAudio }
     var sessionTitle = "Conference"
     @ObservationIgnored private var monitorTask: Task<Void, Never>?
 
@@ -18,12 +18,17 @@ final class SessionCoordinator {
         self.caption = caption ?? CaptionViewModel()
         self.settings = settings ?? AppSettings()
         self.caption.onWillStart = { [weak self] in
-            guard let self, self.currentSession == nil, self.autoSave else { return }
+            guard let self, self.autoSave else { return }
             let capacity = StorageReadiness.check(at: self.repository.storageURL)
             if let bytes = capacity.availableBytes, bytes < StorageReadiness.minimumBytes {
                 throw StorageFailure.lowCapacity
             }
-            self.currentSession = try self.repository.create(title: self.sessionTitle)
+            if self.currentSession == nil {
+                self.currentSession = try self.repository.create(title: self.sessionTitle)
+            }
+            if self.caption.saveAudio, !self.caption.recordingPrepared, let session = self.currentSession {
+                try self.caption.prepareRecording(at: self.repository.prepareRecording(for: session))
+            }
         }
         self.caption.onFinalized = { [weak self] change in
             guard let self, self.autoSave, let session = self.currentSession else { return }

@@ -84,10 +84,11 @@ enum SessionSchemaV2: VersionedSchema {
 }
 
 enum SessionMigrationPlan: SchemaMigrationPlan {
-    static var schemas: [any VersionedSchema.Type] { [SessionSchemaV1.self, SessionSchemaV2.self, SessionSchemaV3.self] }
+    static var schemas: [any VersionedSchema.Type] { [SessionSchemaV1.self, SessionSchemaV2.self, SessionSchemaV3.self, SessionSchemaV4.self] }
     static var stages: [MigrationStage] {
         [.lightweight(fromVersion: SessionSchemaV1.self, toVersion: SessionSchemaV2.self),
-         .lightweight(fromVersion: SessionSchemaV2.self, toVersion: SessionSchemaV3.self)]
+         .lightweight(fromVersion: SessionSchemaV2.self, toVersion: SessionSchemaV3.self),
+         .lightweight(fromVersion: SessionSchemaV3.self, toVersion: SessionSchemaV4.self)]
     }
 }
 

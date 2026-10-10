@@ -17,7 +17,7 @@ Signing uses team `7799N4RYUG` and the existing bundle identifier `com.dafermen.
 iOS 17 minimum. The compatibility engine requires on-device English support and Speech Recognition permission; builds with Xcode 26+ use the modern speech engine on iOS 26+ when available. Establish a real tested device matrix before submission. OS version alone does not guarantee compatibility.
 Prepare English Dictation or install the modern engine's English model while online, then validate Airplane Mode with Wi-Fi off. Initial model preparation is not offline. No cloud fallback or online AI is present.
 Captions can be wrong due to distance, noise, accent, speed, obstruction, simultaneous speakers and device hardware.
-Capture is foreground-only. Lock/background/interruption stops it; no automatic resume.
+Capture stops on lock/background by default. Continue in background is explicit per-session opt-in. Calls and other interruptions still stop capture; no automatic resume. Optional recording, playback and subtitle export work entirely on-device. Other-app audio must reach the microphone acoustically; do not claim internal system-audio capture.
 
 ## Screenshots and icon
 Prepared 1024x1024 opaque caption-bubble icon in the AppIcon asset catalog; design approval and Xcode asset validation pending. Check system-generated dark/tinted appearance.

@@ -3,7 +3,7 @@ Reviewed source and current Apple documentation on 2026-10-08. Archive/device va
 
 | Data or action | Behavior | Location / recipient |
 | --- | --- | --- |
-| Microphone audio | Captured only during user-started foreground listening; copied briefly into bounded queues | Device memory; no audio files |
+| Microphone audio | User-started listening, optional background continuation, bounded queues; optional Save audio selected before a session | Memory by default; opt-in local protected CAF recording, M4A export |
 | Speech analysis | SFSpeechRecognizer en-US with on-device support checked and required; modern SpeechAnalyzer where available; no remote fallback | Device; installed Apple models |
 | Model setup | System English Dictation setup for compatibility engine; explicit Install English Model only for modern engine | Apple's system asset service |
 | Final captions | Auto-save by default; can disable before a session | Local SwiftData store |
@@ -12,7 +12,7 @@ Reviewed source and current Apple documentation on 2026-10-08. Archive/device va
 | Session metadata | UUID, title, dates, active-listening duration, language and ended status | Local SwiftData store |
 | Preferences | Caption size, wake, appearance and auto-save | App's UserDefaults domain |
 | Disk capacity | Checked for storage readiness and low-storage safeguard | Local value, not transmitted |
-| Export / Copy / Share | Only after user action | Destination chosen by user; may transmit or sync text |
+| Export / Copy / Share | Only after user action | Destination chosen by user; may transmit or sync text, audio and subtitle files |
 | Diagnostics | Microphone check shows volume only | Device memory |
 
 No account, analytics, advertising, tracking, OpenAI key, server endpoint or custom network client exists.
@@ -20,9 +20,9 @@ On-device support is checked before each compatibility request. Modern model res
 Microphone and Speech Recognition purpose strings are declared. The compatibility engine requests speech authorization through an explicit user action and sets requiresOnDeviceRecognition=true only after verifying supportsOnDeviceRecognition. The modern SpeechAnalyzer engine does not request legacy speech authorization.
 
 ## Persistence and deletion
-SwiftData uses an explicit application-support store with CloudKit disabled. The transcript directory is excluded from backup and created with complete-until-first-user-authentication protection.
+SwiftData uses an explicit application-support store with CloudKit disabled. The transcript and recording directory is excluded from backup and created with complete-until-first-user-authentication protection.
 A finalized segment save commits incrementally; unfinished sessions can be reopened after interruption. Unsaved/partial text can be lost on cancellation or termination. Compatibility results remain provisional until request finalization (normally around 50 seconds); backgrounding can lose that current chunk.
-Session deletion removes related captions, bookmarks and saved corrections/reading position, but this is logical deletion and not a forensic secure-erase guarantee. Exported copies and clipboard content are controlled separately by the destination/user.
+Session deletion removes its recording, synchronized timing, related captions, bookmarks and saved corrections/reading position, but this is logical deletion and not a forensic secure-erase guarantee. Exported copies and clipboard content are controlled separately by the destination/user.
 Deleting the app removes its local data; backup exclusion means users should export transcripts they wish to retain.
 Verify SQLite/WAL sidecar protection and backup exclusion on device before release.
 

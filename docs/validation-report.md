@@ -178,3 +178,17 @@ The source is implementation-ready for this validation handoff; App Store readin
 - Project references, shared-scheme targets, metadata field lengths, shell-script syntax and Git whitespace checks passed. The PowerShell validator was updated but not executed on this Mac.
 - Logs/result bundle: `build/rename-validation.log` and `build/validation-20261008-113618/Tests.xcresult`. These checks ran before moving the workspace folder from vReader to VoiceInView; log paths retain the former directory. Earlier validation artifacts belonged to the previous checkout and were deleted when the user replaced that checkout.
 - The GitHub repository is now `dafermen/VoiceInView`. App Store Connect name registration, Xcode Cloud onboarding/build and TestFlight upload remain pending.
+
+## 2026-10-09 — optional recording and synchronized subtitles
+
+Added opt-in local audio recording, sample-clock timing across speech rotations and pause/resume, playback with fullscreen captions, editing from playback, M4A/SRT/WebVTT and combined sharing, independent audio deletion, and opt-in background listening. V4 adds media metadata without changing prior model definitions.
+
+Validation on Xcode 15.2 / iOS 17.2 iPhone SE (3rd generation) simulator:
+- 56 compatible unit tests passed, including CAF recording/decoding, pause concatenation, M4A export/decoding, file-write failure preservation, native speech-run offsets, subtitle formatting/escaping/corrections, V3 migration, audio/session deletion and background opt-in/reset. The modern conversion test is excluded by this older compiler.
+- All 12 UI scenarios passed across the final full run and focused rerun. The focused run verified rereading under a 320-paragraph fixture, synchronized playback, fullscreen rotation, editing from the player, native SRT sharing and deleting audio while retaining text/subtitles.
+- The initial UI run exposed a lazy-stack timing issue: following now coalesces updates and repeats scrolling after layout, including size changes. A fixture-load wait was aligned to the existing 20-second long-transcript wait. Native share dismissal and duplicate editor labels were corrected in the UI test.
+- Debug and Release simulator builds passed; release app identity, portrait/landscape support, background audio array and revised microphone purpose string inspected. DEBUG media fixtures absent from the Release binary.
+- Project/plist syntax, source registration, shell syntax, documentation links, metadata limits and git whitespace checks passed. PowerShell static validation was updated for the authorized recorder and 12 UI cases; PowerShell itself was not executed on this Mac.
+- Real screenshots reviewed for player portrait/landscape and caption fullscreen. Local evidence is in ignored `build/media-20261009/`.
+
+Device-only validation remains: speech recognition accuracy and timing across long sessions, microphone coexistence with the actual source apps, screen-lock/background operation, calls/route changes, storage exhaustion, protection/backup and battery use. This implementation does not capture internal audio from other apps. Subtitle timing after text changes can be estimated within the original paragraph range. See media-and-subtitles.md.

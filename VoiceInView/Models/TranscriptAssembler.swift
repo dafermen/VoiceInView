@@ -6,6 +6,8 @@ struct TranscriptionUpdate: Sendable {
     let end: Double
     let text: String
     let isFinal: Bool
+    var words: [TimedWord]? = nil
+    var sessionTime: Bool? = nil
 }
 
 struct CaptionSegment: Identifiable, Codable, Equatable, Sendable {
@@ -14,6 +16,8 @@ struct CaptionSegment: Identifiable, Codable, Equatable, Sendable {
     let start: Double
     let end: Double
     let text: String
+    var words: [TimedWord]? = nil
+    var sessionTime: Bool? = nil
 }
 
 struct FinalizedChange {
@@ -41,7 +45,7 @@ struct TranscriptAssembler {
         partial.removeAll(where: overlaps)
         let text = update.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return FinalizedChange(removedIDs: [], upserted: []) }
-        var segment = CaptionSegment(runID: update.runID, start: update.start, end: update.end, text: text)
+        var segment = CaptionSegment(runID: update.runID, start: update.start, end: update.end, text: text, words: update.words, sessionTime: update.sessionTime)
         if let previousPartial { segment.id = previousPartial.id }
         if update.isFinal {
             if runOrder[update.runID] == nil {

@@ -69,6 +69,7 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
         }
         guard generation == startIdentifier, !Task.isCancelled else { throw CancellationError() }
         let identifier = startIdentifier
+        let sessionOffset = (audio as? AudioCaptureService)?.timeline.duration
         terminalError = nil
         let newAnalyzer = SpeechAnalyzer(modules: [transcriber])
         analyzer = newAnalyzer
@@ -91,9 +92,15 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
                 for try await result in transcriber.results {
                     guard !Task.isCancelled, self?.generation == identifier else { return }
                     let update = TranscriptionUpdate(
-                        runID: identifier, start: CMTimeGetSeconds(result.range.start),
-                        end: CMTimeGetSeconds(CMTimeRangeGetEnd(result.range)),
-                        text: String(result.text.characters), isFinal: result.isFinal)
+                        runID: identifier, start: (sessionOffset ?? 0) + CMTimeGetSeconds(result.range.start),
+                        end: (sessionOffset ?? 0) + CMTimeGetSeconds(CMTimeRangeGetEnd(result.range)),
+                        text: String(result.text.characters), isFinal: result.isFinal,
+                        words: result.text.runs.compactMap { run in
+                            guard let range = run.audioTimeRange else { return nil }
+                            return TimedWord(text: String(result.text[run.range].characters),
+                                start: (sessionOffset ?? 0) + CMTimeGetSeconds(range.start),
+                                end: (sessionOffset ?? 0) + CMTimeGetSeconds(CMTimeRangeGetEnd(range)))
+                        }, sessionTime: sessionOffset != nil)
                     if case .dropped = results.continuation.yield(update) {
                         throw TranscriptionFailure.overflow
                     }

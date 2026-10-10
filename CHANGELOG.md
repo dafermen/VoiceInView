@@ -12,6 +12,11 @@ iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation 
 - Kept `com.dafermen.vReader` and the original internal session-storage directory for continuity. Validation/archive scripts also accept their previous environment-variable names.
 
 ### Added
+- Optional per-session microphone recording, protected local audio, M4A export and independent audio deletion.
+- Audio playback with seeking, synchronized captions and fullscreen rotation; transcript editing from the player.
+- SRT/WebVTT and combined audio + corrected text + subtitle sharing, using sample-based timing across pauses and speech request rotations.
+- Explicit per-session background listening and mixing with other apps' speaker audio; no internal other-app audio capture.
+- Additive V4 media metadata that preserves existing sessions and corrections.
 - Transcript editing with paragraph drafts, undo/redo, save/discard and restoration of the original recognition.
 - Literal find/replace with whole-word/case options, previews and one/all replacement.
 - Shared review preview for corrected text and bookmarks, optional metadata, TXT/PDF export, Copy and native sharing.
@@ -31,7 +36,7 @@ iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation 
 - Bounded queues, stale-session/cancellation guards, missing-audio/finalization timeouts and storage monitoring.
 - Privacy manifest, policy/source audit, App Store drafts, icon and release checklist.
 - Windows static validation and Mac Debug/test/Release/archive scripts.
-- 48 compatibility unit tests and 11 UI scenarios passed across full and focused runs on iOS 17.2; one additional modern conversion test requires Xcode 26/iOS 26. Independent macOS assembler validation is also available.
+- 56 compatibility unit tests and 12 UI scenarios passed across full and focused runs on iOS 17.2; one additional modern conversion test requires Xcode 26/iOS 26. Independent macOS assembler validation is also available.
 
 ### Fixed
 - Provisional caption revisions retain their identity; the live text container stays stable and no longer animates every word update.

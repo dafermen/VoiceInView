@@ -1,5 +1,6 @@
 # ADR-005: Local versioned transcript storage
 Status: Implemented; Mac/device verification pending.
+Update 2026-10-09: the user explicitly authorized optional audio recording and background listening. See [media and subtitles](../media-and-subtitles.md); the original decision below is historical.
 ## Context
 Final captions should survive interruption and app relaunch without accounts or cloud storage.
 ## Decision

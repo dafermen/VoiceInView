@@ -10,6 +10,7 @@ enum CaptureFailure: LocalizedError, Equatable, Sendable {
     case noInput
     case invalidFormat
     case engineFailure
+    case recordingFailure
     case sessionFailure
     case interruption
     case routeChanged
@@ -31,6 +32,8 @@ enum CaptureFailure: LocalizedError, Equatable, Sendable {
             "The microphone audio format is unavailable. Reconnect your audio device and try again."
         case .engineFailure:
             "Microphone capture could not start. Close other audio apps and try again."
+        case .recordingFailure:
+            "Audio could not be saved. Stop this session and check storage. The recorded portion and final text are kept."
         case .sessionFailure:
             "The audio session could not be configured or released. Try again."
         case .interruption:

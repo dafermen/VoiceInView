@@ -42,7 +42,7 @@ The script rejects placeholder identifiers, archives for a physical iOS destinat
 All publication inputs and release-checklist.md gates must be resolved before distribution.
 
 ## Store/version rules
-Source version 0.1.0/build 1. Local schema version 1, no CloudKit. No background audio entitlement.
+Source version 0.1.0/build 1. Local schema version 4 with additive V1→V2→V3→V4 migrations, no CloudKit. UIBackgroundModes includes audio; continuation is per-session opt-in.
 Never delete/recreate a failed store automatically. Add a migration plan for future deployed schema changes.
 Use small conventional local commits. The origin remote is https://github.com/dafermen/VoiceInView.git.
 

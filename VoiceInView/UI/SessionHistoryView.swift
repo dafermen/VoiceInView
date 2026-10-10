@@ -32,7 +32,9 @@ struct SessionHistoryView: View {
             ForEach(filtered) { session in
                 NavigationLink {
                     SessionDetailView(session: session, repository: coordinator.repository,
-                        canEdit: coordinator.currentSession?.id != session.id || coordinator.caption.state == .ended)
+                        canEdit: coordinator.currentSession?.id != session.id || coordinator.caption.state == .ended,
+                        canPlay: !coordinator.caption.state.active && !coordinator.caption.state.busy &&
+                            (coordinator.currentSession?.id != session.id || coordinator.caption.state == .ended))
                 } label: {
                     VStack(alignment: .leading) {
                         Text(session.title).font(.headline)
@@ -71,6 +73,8 @@ struct SessionDetailView: View {
     @Bindable var session: ConferenceSession
     let repository: TranscriptRepository
     let canEdit: Bool
+    let canPlay: Bool
+    @State private var showingMedia = false
     @Query private var reviews: [SessionReview]
     @Query private var bookmarks: [CaptionBookmark]
     @State private var showingBookmarks = false
@@ -83,10 +87,11 @@ struct SessionDetailView: View {
     @State private var restored = false
     @State private var savePositionTask: Task<Void, Never>?
 
-    init(session: ConferenceSession, repository: TranscriptRepository, canEdit: Bool) {
+    init(session: ConferenceSession, repository: TranscriptRepository, canEdit: Bool, canPlay: Bool = true) {
         self.session = session
         self.repository = repository
         self.canEdit = canEdit
+        self.canPlay = canPlay
         let identifier = session.id
         _reviews = Query(filter: #Predicate<SessionReview> { $0.sessionID == identifier })
         _bookmarks = Query(filter: #Predicate<CaptionBookmark> { $0.sessionID == identifier }, sort: \.createdAt)
@@ -110,6 +115,9 @@ struct SessionDetailView: View {
                     else if session.endedAt == nil { Text("Saved final captions from an unfinished session.") }
                     if !(corrections ?? [:]).isEmpty { Label("Edited transcript", systemImage: "pencil").font(.caption) }
                 }.font(.subheadline).foregroundStyle(.secondary)
+                Button("Audio & subtitles", systemImage: "waveform") { showingMedia = true }
+                    .disabled(!canPlay || corrections == nil).accessibilityIdentifier("sessionMediaButton")
+                if !canPlay { Text("Stop listening before opening audio and subtitles.").font(.caption) }
                 if corrections == nil {
                     ContentUnavailableView("Corrections unavailable", systemImage: "exclamationmark.triangle",
                         description: Text("Reopen this session. Your original captions have not been changed."))
@@ -143,6 +151,10 @@ struct SessionDetailView: View {
                 Button("Review & share", systemImage: "square.and.arrow.up") { showingShare = true }
                     .disabled(corrections == nil).accessibilityIdentifier("reviewShareButton")
             }
+        }
+        .sheet(isPresented: $showingMedia) {
+            SessionMediaView(session: session, repository: repository, paragraphs: paragraphs,
+                             hasCorrections: !(corrections ?? [:]).isEmpty)
         }
         .sheet(isPresented: $showingEditor) {
             TranscriptEditorView(originals: originals, reviewed: paragraphs) { edited in

@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import AVFoundation
 
 @MainActor
 struct AppRootView: View {
@@ -75,6 +76,21 @@ struct AppRootView: View {
                     var paragraphs = segments.map { ReviewParagraph(id: $0.id, text: $0.text) }
                     paragraphs[0].text = "Acme corrected draft."
                     try repository.saveCorrections(paragraphs, for: sample)
+                }
+                if ProcessInfo.processInfo.arguments.contains("--ui-test-media") {
+                    let timed = segments.map { segment in
+                        CaptionSegment(id: segment.id, runID: segment.runID, start: segment.start,
+                            end: segment.end, text: segment.text, sessionTime: true)
+                    }
+                    try repository.apply(.init(removedIDs: [], upserted: timed), to: sample)
+                    let url = try repository.prepareRecording(for: sample)
+                    let format = AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1)!
+                    let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 16000)!
+                    buffer.frameLength = 16000
+                    buffer.floatChannelData![0].initialize(repeating: 0, count: 16000)
+                    let recorder = SessionAudioRecorder(url: url)
+                    for _ in 0..<85 { recorder.append(CapturedAudio(buffer: buffer)) {} }
+                    try recorder.finish()
                 }
                 coordinator = SessionCoordinator(repository: repository)
                 storageFailure = false

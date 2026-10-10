@@ -12,7 +12,7 @@ final class TranscriptRepository {
     let storageURL: URL?
 
     init(inMemory: Bool = false, directory: URL? = nil) throws {
-        let schema = Schema(versionedSchema: SessionSchemaV3.self)
+        let schema = Schema(versionedSchema: SessionSchemaV4.self)
         let configuration: ModelConfiguration
         if inMemory {
             storageURL = nil
@@ -82,6 +82,18 @@ final class TranscriptRepository {
                 currentCaptions[caption.id] = caption
             }
         }
+        let existingMedia = try media(for: session.id)
+        if change.upserted.contains(where: { $0.sessionTime == true }) ||
+            (!change.removedIDs.isEmpty && existingMedia != nil) {
+            let media = existingMedia ?? SessionMedia(sessionID: session.id)
+            var timing = try media.decodedTimings()
+            for id in change.removedIDs { timing.removeValue(forKey: id.uuidString) }
+            for segment in change.upserted where segment.sessionTime == true {
+                timing[segment.id.uuidString] = CaptionTiming(start: segment.start, end: segment.end, words: segment.words ?? [])
+            }
+            context.insert(media)
+            media.timings = try JSONEncoder().encode(timing)
+        }
         try context.save()
     }
 
@@ -105,6 +117,12 @@ final class TranscriptRepository {
         let identifier = session.id
         let savedBookmarks = try bookmarks(for: identifier)
         let savedReview = try review(for: identifier)
+        let savedMedia = try media(for: identifier)
+        let audioURL = try audioURL(for: identifier)
+        if let audioURL, FileManager.default.fileExists(atPath: audioURL.path) {
+            try FileManager.default.removeItem(at: audioURL)
+        }
+        if let savedMedia { context.delete(savedMedia) }
         // Explicit deletion also covers iOS 17 stores where cascade propagation
         // can leave registered caption objects behind in the context.
         for caption in session.captions { context.delete(caption) }
@@ -167,6 +185,49 @@ final class TranscriptRepository {
         context.insert(record)
         record.lastReadCaptionID = captionID
         do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
+    }
+
+    func media(for sessionID: UUID) throws -> SessionMedia? {
+        var request = FetchDescriptor<SessionMedia>(predicate: #Predicate { $0.sessionID == sessionID })
+        request.fetchLimit = 1
+        return try context.fetch(request).first
+    }
+
+    func audioURL(for sessionID: UUID) throws -> URL? {
+        guard let name = try media(for: sessionID)?.audioName,
+              name == sessionID.uuidString + ".caf" else { return nil }
+        return try audioDirectory().appendingPathComponent(name)
+    }
+
+    private func audioDirectory() throws -> URL {
+        var folder = (storageURL?.deletingLastPathComponent() ?? FileManager.default.temporaryDirectory)
+            .appendingPathComponent("Recordings", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true,
+            attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication])
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try folder.setResourceValues(values)
+        return folder
+    }
+
+    func prepareRecording(for session: ConferenceSession) throws -> URL {
+        let record = try media(for: session.id) ?? SessionMedia(sessionID: session.id)
+        let name = session.id.uuidString + ".caf"
+        let url = try audioDirectory().appendingPathComponent(name)
+        guard !FileManager.default.fileExists(atPath: url.path) else { throw RecordingFailure.unavailable }
+        context.insert(record)
+        record.audioName = name
+        try context.save()
+        return url
+    }
+
+    func deleteAudio(for sessionID: UUID) throws {
+        guard let record = try media(for: sessionID) else { return }
+        if let url = try audioURL(for: sessionID), FileManager.default.fileExists(atPath: url.path) {
+            try FileManager.default.removeItem(at: url)
+        }
+        record.audioName = nil
+        try context.save()
     }
 
     func save() throws { try context.save() }

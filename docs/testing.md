@@ -72,7 +72,7 @@ Inject queue overflow/missing-frame/slow-finalization failures in debug builds a
 
 ## Phases 8–9 production gates
 Inspect built privacy manifest/report, permission wording, store/WAL protection and backup exclusion, logs and actual network behavior after model setup.
-Verify no automatic uploads, no stored audio, deletion and explicit sharing behavior.
+Verify no automatic uploads, no audio saved unless explicitly enabled, independent audio deletion, session deletion, protected recording files and explicit sharing behavior. Follow media-and-subtitles.md for pause/resume, playback, timing and background device tests.
 Run Release simulator validation and signed device archive; check icon/dark/tinted variants, genuine screenshots and all release-checklist.md items.
 
 ## Evidence record

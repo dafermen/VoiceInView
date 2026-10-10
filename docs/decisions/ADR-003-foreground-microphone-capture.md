@@ -1,5 +1,6 @@
 # ADR-003: Foreground microphone capture and lifecycle safety
 Status: Accepted for Phase 1 implementation; Apple build/device verification pending.
+Update 2026-10-09: the user explicitly authorized optional audio recording and background listening. See [media and subtitles](../media-and-subtitles.md); the original decision below is historical.
 ## Context
 Phase 1 proves safe microphone monitoring without recognition or audio storage. The user explicitly authorized proceeding even though Phase 0 Mac validation is pending.
 ## Decision

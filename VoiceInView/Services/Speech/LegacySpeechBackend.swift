@@ -5,6 +5,7 @@ struct LegacySpeechResult: Sendable {
     let text: String
     let end: Double
     let isFinal: Bool
+    var words: [TimedWord] = []
 }
 
 /// The system recognizer is isolated here so lifecycle/offline policy can be tested without a microphone.
@@ -60,7 +61,9 @@ final class LegacySpeechBackend: LegacySpeechRecognizing {
             let snapshot = result.map { result in
                 LegacySpeechResult(text: result.bestTranscription.formattedString,
                     end: result.bestTranscription.segments.map { $0.timestamp + $0.duration }.max() ?? 0,
-                    isFinal: result.isFinal)
+                    isFinal: result.isFinal, words: result.bestTranscription.segments.map {
+                        TimedWord(text: $0.substring, start: $0.timestamp, end: $0.timestamp + $0.duration)
+                    })
             }
             Task { @MainActor in
                 if let snapshot { receive(.success(snapshot)) }
