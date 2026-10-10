@@ -124,4 +124,16 @@ La subida local más reciente apareció como build 1 debajo de los builds 8, 7, 
 
 Se conservó el archivo Cloud original y se preparó una copia con CFBundleVersion=13 en los dos Info.plist pertinentes. El ejecutable archivado permaneció idéntico; SDK iphoneos26.5 y compilador 17F113 se conservaron. Se exportó y firmó con Xcode 15.2 y manageAppVersionAndBuildNumber=false; se verificaron identidad, versión, firma y perfil de distribución. La comprobación codesign requirió acceso al almacén de confianza fuera del sandbox; en ese contexto pasó. La subida 0.1.0 (13) terminó con Upload succeeded y EXPORT SUCCEEDED.
 
-Pendiente: confirmar procesamiento de 13, asignarla a Dev si hace falta e instalarla desde TestFlight. El proyecto conserva ahora build 13; antes de otra entrega elegir un número mayor no utilizado. Cloud sigue teniendo el fallo de exportación documentado; esta subida local no lo resuelve.
+Estado posterior: el usuario confirmó la actualización en iPhone y el funcionamiento de los interruptores de audio/segundo plano. La entrega siguiente usa build 14 en fuente; antes de subir, comprobar que el número elegido siga disponible. Cloud sigue teniendo el fallo de exportación documentado; esta subida local no lo resuelve.
+
+## 11. Preferencias y flujo de sesión: mejora solicitada tras confirmar funcionamiento
+
+El usuario inicialmente informó que Audio/Background no se activaban, pero después confirmó que sí funcionaban. Se retiraron los cambios provisionales de ese diagnóstico; no hubo una corrección publicada como si se hubiera demostrado un fallo.
+
+La petición posterior fue de experiencia de usuario: evitar Captions → New Session → Settings cada vez. Fuente build 14 recuerda las preferencias, añade controles rápidos y circulares, y separa borradores de recuperación de sesiones guardadas. Stop deja una decisión pendiente; Guardar conserva y Descartar elimina. La marca SessionDraft se incorpora por migración aditiva V5 para no convertir las sesiones antiguas en borradores.
+
+Para la próxima compilación: el script de validación debe esperar UIBackgroundModes=[audio], porque el chequeo antiguo que rechazaba todo audio en segundo plano ya no corresponde a la app. Verificar también migración V4/V5, recuperar un borrador al reabrir y confirmar en un iPhone que el cierre de captura y el descarte no afectan otras sesiones. No confundir el build fuente 14 con el número de ejecución de Xcode Cloud ni con una subida aceptada por TestFlight.
+
+### Validación del flujo nuevo
+
+Las pruebas compatibles pasaron (59 unitarias y dos escenarios UI en ejecuciones finales). El primer intento UI excedió la espera al finalizar una ráfaga sintética de 320 párrafos: el fixture del flujo corto usa ahora ocho; los escenarios de lectura larga conservan su fixture original. Otro intento consultaba Stop durante la animación de rotación; se sustituyó la comprobación inmediata por una espera hasta que el control sea interactuable. El recorrido final guardar → nueva sesión → fullscreen horizontal → descartar pasó, conservando la sesión previamente guardada. Estos ajustes del test no prueban rendimiento prolongado con audio real.

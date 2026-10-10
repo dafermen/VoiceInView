@@ -102,7 +102,7 @@ struct AppRootView: View {
                 let defaults = UserDefaults(suiteName: "VoiceInView.ReaderUITests")!
                 defaults.removePersistentDomain(forName: "VoiceInView.ReaderUITests")
                 let settings = AppSettings(defaults: defaults)
-                settings.autoSave = false
+                settings.saveAudio = false
                 coordinator = SessionCoordinator(repository: try TranscriptRepository(inMemory: true),
                     caption: CaptionViewModel(microphone: ReaderPreviewMicrophone(), speech: ReaderPreviewSpeech()),
                     settings: settings)
@@ -125,7 +125,12 @@ private struct LiveCaptionView: View {
     var body: some View {
         CaptionScreen(model: coordinator.caption, settings: coordinator.settings,
                       newSession: { await coordinator.newSession() },
-                      saveSession: { coordinator.saveCurrent(ended: coordinator.caption.state == .ended) },
+                      saveSession: { _ = coordinator.saveCurrent(ended: true) },
+                      saveAndNewSession: {
+                          if coordinator.saveCurrent(ended: true) { await coordinator.newSession() }
+                      },
+                      discardSession: { await coordinator.discardCurrent() },
+                      needsSessionDecision: coordinator.needsSessionDecision,
                       bookmarkSegment: { coordinator.toggleBookmark($0) },
                       showBookmarks: { showingBookmarks = true },
                       bookmarkedIDs: Set(bookmarks.filter { $0.sessionID == coordinator.currentSession?.id }.map(\.segmentID)))
@@ -157,11 +162,13 @@ private final class ReaderPreviewSpeech: SpeechTranscribing {
         let run = UUID()
         let stream = AsyncThrowingStream<TranscriptionUpdate, Error> { continuation = $0 }
         if nextParagraph == 1 {
-            for index in 1...320 {
+            // Long reader tests need a scrollable history; session-flow tests need only a few phrases.
+            let count = ProcessInfo.processInfo.arguments.contains("--ui-test-session-flow") ? 8 : 320
+            for index in 1...count {
                 continuation?.yield(.init(runID: run, start: Double(index), end: Double(index + 1),
                     text: "Paragraph \(index). Clear captions make every conversation easier to follow.", isFinal: true))
             }
-            nextParagraph = 321
+            nextParagraph = count + 1
         }
         producer = Task { @MainActor [weak self] in
             while !Task.isCancelled {

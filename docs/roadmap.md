@@ -17,7 +17,11 @@ The user authorized continuous implementation through Phase 9. Each stage has a 
 
 ## Subsequent delivery status — 2026-10-10
 
-Reader/fullscreen, corrections, bookmarks, optional audio, playback, background opt-in and SRT/WebVTT are implemented. Local validation passed 56 compatible unit tests and 12 UI scenarios across full/focused runs. Basic earlier TestFlight operation was user-confirmed. The Cloud 11 archive was exported and uploaded from the Mac; processing completion and physical validation of the latest features remain unconfirmed.
+Reader/fullscreen, corrections, bookmarks, optional audio, playback, background opt-in and SRT/WebVTT are implemented. Local validation passed 56 compatible unit tests and 12 UI scenarios across full/focused runs. Basic earlier TestFlight operation was user-confirmed. The Cloud 11 archive was exported and uploaded from the Mac. The user subsequently confirmed the iPhone update and working audio/background switches; detailed media/offline acceptance remains pending.
 
 Next work: confirm the latest TestFlight build, perform the device/media/offline/reliability scenarios, address modern concurrency warnings with appropriate testing, and complete public-release inputs. Use [distribution runbook](distribution-runbook.md) for the Cloud export workaround and [incident history](build-incidents.md) before retrying.
 Do not describe this state as App Store ready or offline proven.
+
+## Session workflow — build 14 source
+
+Implemented remembered capture preferences, nearby controls, circular microphone/pause/stop, one-tap new session after saving, explicit Save/Discard and V5 recovery drafts. See [session workflow](session-workflow.md). The current changes passed 59 compatible unit tests and two targeted UI scenarios across final runs; this does not mean the entire older UI suite was rerun. A new modern archive, TestFlight delivery and physical acceptance are still required.

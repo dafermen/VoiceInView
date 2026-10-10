@@ -10,18 +10,22 @@ final class AppSettingsTests: XCTestCase {
         defaults.set(200, forKey: "captionSize")
         defaults.set("invalid", forKey: "appearance")
         let settings = AppSettings(defaults: defaults)
+        XCTAssertFalse(settings.saveAudio)
+        XCTAssertFalse(settings.continueInBackground)
         XCTAssertEqual(settings.captionSize, 44)
         XCTAssertEqual(settings.appearance, .system)
         settings.lineSpacing = 12
         settings.boldCaptions = true
         settings.highContrast = true
-        settings.autoSave = false
+        settings.saveAudio = true
+        settings.continueInBackground = true
         settings.keepAwake = false
         let reloaded = AppSettings(defaults: defaults)
         XCTAssertEqual(reloaded.lineSpacing, 12)
         XCTAssertTrue(reloaded.boldCaptions)
         XCTAssertTrue(reloaded.highContrast)
-        XCTAssertFalse(reloaded.autoSave)
+        XCTAssertTrue(reloaded.saveAudio)
+        XCTAssertTrue(reloaded.continueInBackground)
         XCTAssertFalse(reloaded.keepAwake)
     }
 

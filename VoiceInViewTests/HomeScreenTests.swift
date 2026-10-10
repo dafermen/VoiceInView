@@ -2,6 +2,78 @@ import XCTest
 
 final class HomeScreenTests: XCTestCase {
     @MainActor
+    func testGlobalCapturePreferencesPersistWithoutStartingMicrophone() throws {
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertTrue(app.buttons["quickAudioPreference"].waitForExistence(timeout: 20))
+        let audio = app.buttons["quickAudioPreference"]
+        let background = app.buttons["quickBackgroundPreference"]
+        if audio.value as? String == "Off" { audio.tap() }
+        if background.value as? String == "Off" { background.tap() }
+        XCTAssertEqual(app.buttons["primaryCaptionAction"].label, "Start Recording")
+        app.tabBars.buttons["Settings"].tap()
+        XCTAssertEqual(app.switches["saveAudioToggle"].value as? String, "1")
+        XCTAssertEqual(app.switches["backgroundAudioToggle"].value as? String, "1")
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.buttons["quickAudioPreference"].waitForExistence(timeout: 15))
+        XCTAssertEqual(app.buttons["quickAudioPreference"].value as? String, "On")
+        XCTAssertEqual(app.buttons["quickBackgroundPreference"].value as? String, "On")
+        XCTAssertEqual(app.buttons["primaryCaptionAction"].label, "Start Recording")
+        app.buttons["quickAudioPreference"].tap()
+        app.buttons["quickBackgroundPreference"].tap()
+    }
+
+    @MainActor
+    func testCompactControlsSaveNewSessionAndDiscardDraft() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-reader", "--ui-test-session-flow"]
+        XCUIDevice.shared.orientation = .portrait
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+        let primary = app.buttons["primaryCaptionAction"]
+        XCTAssertTrue(primary.waitForExistence(timeout: 20))
+        XCTAssertEqual(primary.frame.width, 44, accuracy: 1)
+        XCTAssertEqual(app.buttons["stopCaptionAction"].frame.width, 44, accuracy: 1)
+        app.buttons["quickBackgroundPreference"].tap()
+        let startCapture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        startCapture.name = "Compact-capture-controls-portrait"; startCapture.lifetime = .keepAlways; add(startCapture)
+        primary.tap()
+        expectation(for: NSPredicate(format: "label == 'Pause'"), evaluatedWith: primary)
+        waitForExpectations(timeout: 10)
+        app.buttons["stopCaptionAction"].tap()
+        XCTAssertTrue(app.buttons["saveSessionButton"].waitForExistence(timeout: 10))
+        primary.tap()
+        app.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["saveSessionButton"].exists)
+        app.buttons["saveSessionButton"].tap()
+        expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.buttons["saveSessionButton"])
+        waitForExpectations(timeout: 5)
+        primary.tap() // saved session: no second confirmation
+        XCTAssertTrue(app.buttons["quickAudioPreference"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["quickBackgroundPreference"].value as? String, "On")
+        primary.tap()
+        expectation(for: NSPredicate(format: "label == 'Pause'"), evaluatedWith: primary)
+        waitForExpectations(timeout: 10)
+        app.buttons["fullScreenButton"].tap()
+        XCUIDevice.shared.orientation = .landscapeLeft
+        expectation(for: NSPredicate(format: "hittable == true"), evaluatedWith: app.buttons["stopCaptionAction"])
+        waitForExpectations(timeout: 8)
+        app.buttons["stopCaptionAction"].tap()
+        XCTAssertTrue(app.buttons["discardSessionButton"].waitForExistence(timeout: 10))
+        let capture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        capture.name = "Compact-session-decision-landscape"; capture.lifetime = .keepAlways; add(capture)
+        app.buttons["discardSessionButton"].tap()
+        app.buttons["Discard Session"].tap()
+        XCTAssertTrue(app.buttons["quickAudioPreference"].waitForExistence(timeout: 10))
+        app.buttons["fullScreenButton"].tap()
+        XCUIDevice.shared.orientation = .portrait
+        app.tabBars.buttons["Sessions"].tap()
+        XCTAssertEqual(app.staticTexts.matching(identifier: "Conference").count, 1)
+        XCTAssertFalse(app.staticTexts["Recovery drafts"].exists)
+    }
+
+    @MainActor
     func testSavedAudioPlaybackSubtitleExportAndIndependentDeletion() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--ui-test-review", "--ui-test-media"]
@@ -394,6 +466,8 @@ final class HomeScreenTests: XCTestCase {
         XCTAssertTrue(incoming.waitForExistence(timeout: 20))
         let listeningHeight = reader.frame.height
         app.buttons["Stop"].tap()
+        XCTAssertTrue(app.buttons["saveSessionButton"].waitForExistence(timeout: 10))
+        app.buttons["saveSessionButton"].tap()
         let action = app.buttons["primaryCaptionAction"]
         expectation(for: NSPredicate(format: "label == 'New Session'"), evaluatedWith: action)
         waitForExpectations(timeout: 10)
@@ -410,11 +484,7 @@ final class HomeScreenTests: XCTestCase {
         XCUIDevice.shared.orientation = .landscapeLeft
         expectation(for: NSPredicate(format: "hittable == true"), evaluatedWith: action)
         waitForExpectations(timeout: 8)
-        action.tap()
-        app.buttons["Cancel"].tap()
-        XCTAssertEqual(action.label, "New Session")
-        action.tap()
-        app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != %@", "New Session", "primaryCaptionAction")).firstMatch.tap()
+        action.tap() // Already saved: one tap prepares the next session.
         XCTAssertTrue(app.staticTexts["captionPlaceholder"].waitForExistence(timeout: 5))
     }
 
@@ -425,8 +495,8 @@ final class HomeScreenTests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.buttons["primaryCaptionAction"].waitForExistence(timeout: 15))
         app.buttons["primaryCaptionAction"].tap()
-        app.buttons["sessionActionsButton"].tap()
-        app.buttons["Save Session"].tap()
+        expectation(for: NSPredicate(format: "label == 'Pause'"), evaluatedWith: app.buttons["primaryCaptionAction"])
+        waitForExpectations(timeout: 10)
         app.tabBars.buttons["Sessions"].tap()
         app.staticTexts["Conference"].tap()
         XCTAssertFalse(app.buttons["editTranscriptButton"].isEnabled)

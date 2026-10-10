@@ -7,6 +7,9 @@ struct CaptionScreen: View {
     @Bindable var settings: AppSettings
     var newSession: (() async -> Void)? = nil
     var saveSession: (() -> Void)? = nil
+    var saveAndNewSession: (() async -> Void)? = nil
+    var discardSession: (() async -> Void)? = nil
+    var needsSessionDecision = false
     var bookmarkSegment: ((CaptionSegment) -> Void)? = nil
     var showBookmarks: (() -> Void)? = nil
     var bookmarkedIDs: Set<UUID> = []
@@ -18,6 +21,8 @@ struct CaptionScreen: View {
     @State private var followLive = true
     @State private var confirmNewSession = false
     @State private var showingOptions = false
+    @State private var showingCaptureOptions = false
+    @State private var confirmDiscard = false
     @State private var showingStatus = false
     @State private var showingActions = false
     @State private var followScrollTask: Task<Void, Never>?
@@ -49,6 +54,13 @@ struct CaptionScreen: View {
                 }
                 transcript
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                if model.state == .ended && needsSessionDecision {
+                    Divider()
+                    resolutionControls.padding(.horizontal, 16).padding(.vertical, 4)
+                }
+                if model.canChooseCaptureOptions {
+                    quickPreferences.padding(.horizontal, 16)
+                }
                 if isFullScreen || compact || model.state != .ended {
                     Divider()
                     HStack(spacing: 8) {
@@ -57,6 +69,7 @@ struct CaptionScreen: View {
                             Spacer(minLength: 0)
                             primaryButton(iconOnly: true)
                             if model.state != .ended { stopButton(iconOnly: true) }
+                            capturePreferencesButton
                             fullScreenButton
                         } else {
                             if compact { status; Spacer(minLength: 0) }
@@ -74,27 +87,49 @@ struct CaptionScreen: View {
         .toolbar(isFullScreen ? .hidden : .visible, for: .tabBar)
         .statusBarHidden(isFullScreen)
         .sheet(isPresented: $showingOptions) { readingOptions }
+        .sheet(isPresented: $showingCaptureOptions) {
+            NavigationStack {
+                Form { CaptureOptionsView(model: model, settings: settings) }
+                    .navigationTitle("Capture preferences")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { Button("Done") { showingCaptureOptions = false } }
+            }
+            .presentationDetents([.medium, .large])
+        }
         .sheet(isPresented: $showingStatus) { statusDetails }
         .confirmationDialog("Session actions", isPresented: $showingActions, titleVisibility: .visible) {
             Button("Recording options") { showingOptions = true }
             if let saveSession {
                 Button("Save Session", action: saveSession)
-                    .disabled(model.transcript.finalized.isEmpty)
+                    .disabled(model.state != .ended || !needsSessionDecision)
             }
-            Button("New Session", role: .destructive) { Task { await beginNewSession() } }
-                .disabled(model.state.active || model.state.busy || model.preparationPending)
+            if model.state == .ended && needsSessionDecision {
+                Button("Discard Session", role: .destructive) { confirmDiscard = true }
+            }
+            Button("New Session") { Task { await beginNewSession() } }
+                .disabled(model.state.active || model.state.busy || model.preparationPending || needsSessionDecision)
             if let showBookmarks { Button("Bookmarks", action: showBookmarks) }
             Button("Session information") { showingStatus = true }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Starting a new session clears any unsaved captions.")
+            Text("Recovery drafts stay on this iPhone until you save or discard them.")
         }
-        .confirmationDialog("Start a new session? Any captions that have not been saved will be cleared.",
+        .confirmationDialog("Keep this session before starting another?",
                             isPresented: $confirmNewSession, titleVisibility: .visible) {
-            Button("New Session", role: .destructive) {
-                Task { await beginNewSession() }
+            Button("Save and new session") {
+                Task { await saveAndNewSession?(); resetReaderPosition() }
             }
-        }
+            Button("Discard and new session", role: .destructive) {
+                Task { await discardSession?(); resetReaderPosition() }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: { Text("Discard permanently deletes this session's transcript and any recorded audio.") }
+        .confirmationDialog("Discard this session?", isPresented: $confirmDiscard, titleVisibility: .visible) {
+            Button("Discard Session", role: .destructive) {
+                Task { await discardSession?(); resetReaderPosition() }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: { Text("This permanently deletes the transcript and any audio from this session.") }
         .task { await model.checkReadiness() }
         .onChange(of: model.state) { _, _ in applyWakePreference() }
         .onChange(of: settings.keepAwake) { _, _ in applyWakePreference() }
@@ -254,16 +289,69 @@ struct CaptionScreen: View {
         }
     }
 
-    private var captureControls: some View {
-        HStack(spacing: 8) {
-            primaryButton(iconOnly: false)
-            stopButton(iconOnly: false)
+    private var quickPreferences: some View {
+        HStack(spacing: 12) {
+            Button {
+                settings.saveAudio.toggle()
+                model.saveAudio = settings.saveAudio
+            } label: {
+                Label(settings.saveAudio ? "Audio on" : "Audio off", systemImage: settings.saveAudio ? "waveform.circle.fill" : "waveform.circle")
+                    .frame(minHeight: 44)
+            }
+            .accessibilityLabel("Save audio")
+            .accessibilityValue(settings.saveAudio ? "On" : "Off")
+            .accessibilityIdentifier("quickAudioPreference")
+            Spacer(minLength: 0)
+            Button {
+                settings.continueInBackground.toggle()
+                model.continueInBackground = settings.continueInBackground
+            } label: {
+                Label("Background", systemImage: settings.continueInBackground ? "checkmark.circle.fill" : "circle")
+                    .frame(minHeight: 44)
+            }
+            .accessibilityLabel("Continue in background")
+            .accessibilityValue(settings.continueInBackground ? "On" : "Off")
+            .accessibilityIdentifier("quickBackgroundPreference")
         }
-        .font(.body.weight(.semibold))
+        .font(.subheadline)
+    }
+
+    private var resolutionControls: some View {
+        HStack(spacing: 16) {
+            Button { saveSession?() } label: { Label("Save Session", systemImage: "square.and.arrow.down") }
+                .accessibilityIdentifier("saveSessionButton")
+            Spacer(minLength: 0)
+            Button(role: .destructive) { confirmDiscard = true } label: { Label("Discard", systemImage: "trash") }
+                .accessibilityIdentifier("discardSessionButton")
+        }
+        .font(.subheadline).frame(minHeight: 44)
+    }
+
+    private var captureControls: some View {
+        HStack(spacing: 12) {
+            primaryButton(iconOnly: true)
+            stopButton(iconOnly: true)
+            Spacer(minLength: 0)
+            capturePreferencesButton
+        }
+    }
+
+    private var capturePreferencesButton: some View {
+            Button { showingCaptureOptions = true } label: {
+                Image(systemName: model.saveAudio ? "waveform.circle.fill" : "waveform.circle")
+                Image(systemName: model.continueInBackground ? "moon.circle.fill" : "moon.circle")
+            }
+            .frame(minWidth: 44, minHeight: 44)
+            .accessibilityLabel("Capture preferences")
+            .accessibilityValue("Audio " + (model.saveAudio ? "on" : "off") + ", background " + (model.continueInBackground ? "on" : "off"))
+            .accessibilityIdentifier("capturePreferencesButton")
     }
 
     private var newSessionButton: some View {
-        Button { confirmNewSession = true } label: {
+        Button {
+            if needsSessionDecision { confirmNewSession = true }
+            else { Task { await beginNewSession() } }
+        } label: {
             Image(systemName: "plus").font(.title3.weight(.semibold))
                 .frame(width: 44, height: 44).foregroundStyle(.white)
                 .background(Color.accentColor, in: Circle())
@@ -273,19 +361,16 @@ struct CaptionScreen: View {
     }
 
     @ViewBuilder private func primaryButton(iconOnly: Bool) -> some View {
-        if model.state == .ended {
-            newSessionButton
-        } else {
+        if model.state == .ended { newSessionButton }
+        else {
             Button {
                 Task { if model.state == .listening { await model.pause() } else { await model.start() } }
             } label: {
-                Group {
-                    if iconOnly { Image(systemName: primaryIcon).frame(width: 44, height: 44) }
-                    else { Label(primaryTitle, systemImage: primaryIcon).frame(maxWidth: .infinity, minHeight: 44) }
-                }
-                .contentShape(Rectangle())
+                Image(systemName: primaryIcon).font(.title3.weight(.semibold))
+                    .frame(width: 44, height: 44).foregroundStyle(.white)
+                    .background(Color.accentColor, in: Circle())
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.plain)
             .accessibilityLabel(primaryTitle)
             .accessibilityIdentifier("primaryCaptionAction")
             .disabled(model.state.busy || model.preparationPending)
@@ -294,13 +379,13 @@ struct CaptionScreen: View {
 
     private func stopButton(iconOnly: Bool) -> some View {
         Button { Task { await model.stop() } } label: {
-            Group {
-                if iconOnly { Image(systemName: "stop.fill").frame(width: 44, height: 44) }
-                else { Label("Stop", systemImage: "stop.fill").frame(minHeight: 44) }
-            }
+            Image(systemName: "stop.fill").font(.title3)
+                .frame(width: 44, height: 44)
+                .background(Color.secondary.opacity(0.15), in: Circle())
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(.plain)
         .accessibilityLabel("Stop")
+        .accessibilityIdentifier("stopCaptionAction")
         .disabled(model.state == .stopping || (!model.state.active && model.state != .paused && !isProblem))
     }
 
@@ -324,7 +409,7 @@ struct CaptionScreen: View {
                     Toggle("Bold text", isOn: $settings.boldCaptions)
                     Toggle("High contrast", isOn: $settings.highContrast)
                 }
-                CaptureOptionsView(model: model)
+                CaptureOptionsView(model: model, settings: settings)
                 Section {
                     Toggle("Follow live captions", isOn: followBinding)
                     Toggle("Keep screen awake while listening", isOn: $settings.keepAwake)
@@ -332,8 +417,8 @@ struct CaptionScreen: View {
                     Text("Scroll back to reread without interrupting listening. Tap Back to live to follow again.")
                 }
                 Section {
-                    Text(settings.autoSave ? "Final captions save on this iPhone." : "Use Session actions → Save Session to keep your captions.")
-                    Text("Touch and hold a finished paragraph to save a bookmark. Bookmarks also save the current session on this iPhone.")
+                    Text("Final captions are protected in a recovery draft. After Stop, choose Save Session or Discard.")
+                    Text("Touch and hold a finished paragraph to save a bookmark. Bookmarks are kept with the recovery draft until you save or discard it.")
                 }
             }
             .navigationTitle("Reading options").navigationBarTitleDisplayMode(.inline)
@@ -367,7 +452,7 @@ struct CaptionScreen: View {
                     }
                 }
                 Section("Privacy and saving") {
-                    Text(settings.autoSave ? "Final captions save on this iPhone." : "Captions are unsaved until you tap Save Session in Session actions.")
+                    Text("Recovery drafts remain on this iPhone. Save Session keeps them in your library; Discard deletes the transcript and recorded audio.")
                     Text("On-device English captions. Accuracy varies with distance, noise and speech.")
                 }
             }
@@ -391,7 +476,7 @@ struct CaptionScreen: View {
         case .problem: return "Speech recognition needs attention"
         }
         if let notice = model.notice { return notice }
-        if !settings.autoSave && !model.saveAudio && hasCaptions { return "Auto-save is off · Save from Session actions" }
+
         return nil
     }
 
@@ -412,7 +497,7 @@ struct CaptionScreen: View {
         case .preparing: return "Preparing…"
         case .stopping: return "Finishing…"
         case .ended: return "New Session"
-        case .idle: return model.saveAudio ? "Start Recording" : "Start Listening"
+        case .idle: return settings.saveAudio ? "Start Recording" : "Start Listening"
         }
     }
 
@@ -430,6 +515,11 @@ struct CaptionScreen: View {
 
     private func beginNewSession() async {
         if let newSession { await newSession() } else { await model.reset() }
+        resetReaderPosition()
+    }
+
+    private func resetReaderPosition() {
+        guard model.state == .idle else { return }
         readingStartID = nil
         followLive = true
     }

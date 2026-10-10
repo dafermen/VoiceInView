@@ -4,6 +4,51 @@ import SwiftData
 
 @MainActor
 final class TranscriptRepositoryTests: XCTestCase {
+    func testV4MigrationAndDraftRecoveryPublishAndAudioDiscard() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("DraftMigration-\(UUID())")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let oldID = try autoreleasepool { () throws -> UUID in
+            let schema = Schema(versionedSchema: SessionSchemaV4.self)
+            let config = ModelConfiguration("Sessions", schema: schema,
+                url: folder.appendingPathComponent("Sessions.store"), cloudKitDatabase: .none)
+            let container = try ModelContainer(for: schema, configurations: [config])
+            let old = ConferenceSession(title: "Existing library session")
+            container.mainContext.insert(old)
+            try container.mainContext.save()
+            return old.id
+        }
+        let draftID = try autoreleasepool { () throws -> UUID in
+            let repository = try TranscriptRepository(directory: folder)
+            XCTAssertNil(try repository.draft(for: oldID))
+            let draft = try repository.create(title: "Recover me", draft: true)
+            let segment = CaptionSegment(runID: UUID(), start: 0, end: 1, text: "Retain my words")
+            try repository.apply(.init(removedIDs: [], upserted: [segment]), to: draft)
+            let audio = try repository.prepareRecording(for: draft)
+            try Data([1, 2, 3]).write(to: audio)
+            return draft.id
+        }
+        try autoreleasepool {
+            let repository = try TranscriptRepository(directory: folder)
+            let sessions = try repository.container.mainContext.fetch(FetchDescriptor<ConferenceSession>())
+            let recovered = try XCTUnwrap(sessions.first { $0.id == draftID })
+            XCTAssertEqual(recovered.fullTranscript, "Retain my words")
+            XCTAssertNotNil(try repository.draft(for: draftID))
+            let audio = try XCTUnwrap(repository.audioURL(for: draftID))
+            XCTAssertTrue(FileManager.default.fileExists(atPath: audio.path))
+            try repository.publish(recovered)
+            XCTAssertNil(try repository.draft(for: draftID))
+            XCTAssertTrue(FileManager.default.fileExists(atPath: audio.path))
+            try repository.delete(recovered)
+            XCTAssertFalse(FileManager.default.fileExists(atPath: audio.path))
+            XCTAssertNil(try repository.media(for: draftID))
+            XCTAssertEqual(try repository.container.mainContext.fetchCount(FetchDescriptor<ConferenceSession>()), 1)
+            let draft = try repository.create(title: "Discard me", draft: true)
+            let id = draft.id
+            try repository.delete(draft)
+            XCTAssertNil(try repository.draft(for: id))
+        }
+    }
+
     func testOutOfOrderFinalResultsAreStoredInAudioOrder() throws {
         let repository = try TranscriptRepository(inMemory: true)
         let session = try repository.create(title: "Ordering")

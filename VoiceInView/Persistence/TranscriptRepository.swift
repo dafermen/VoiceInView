@@ -15,7 +15,7 @@ final class TranscriptRepository {
     let storageURL: URL?
 
     init(inMemory: Bool = false, directory: URL? = nil) throws {
-        let schema = Schema(versionedSchema: SessionSchemaV4.self)
+        let schema = Schema(versionedSchema: SessionSchemaV5.self)
         let configuration: ModelConfiguration
         if inMemory {
             storageURL = nil
@@ -40,9 +40,10 @@ final class TranscriptRepository {
         context.autosaveEnabled = false
     }
 
-    func create(title: String) throws -> ConferenceSession {
+    func create(title: String, draft: Bool = false) throws -> ConferenceSession {
         let session = ConferenceSession(title: title)
         context.insert(session)
+        if draft { context.insert(SessionDraft(sessionID: session.id)) }
         do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
         currentCaptions = [:]
         nextOrder = 0
@@ -118,16 +119,33 @@ final class TranscriptRepository {
         do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
     }
 
+    func draft(for sessionID: UUID) throws -> SessionDraft? {
+        var request = FetchDescriptor<SessionDraft>(predicate: #Predicate { $0.sessionID == sessionID })
+        request.fetchLimit = 1
+        return try context.fetch(request).first
+    }
+
+    /// Save is a state transition: completed draft → library session, with the same identity.
+    func publish(_ session: ConferenceSession) throws {
+        guard let marker = try draft(for: session.id) else { return }
+        context.delete(marker)
+        if session.endedAt == nil { session.endedAt = Date() }
+        session.transcript = session.fullTranscript
+        do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
+    }
+
     func delete(_ session: ConferenceSession) throws {
         let identifier = session.id
         let savedBookmarks = try bookmarks(for: identifier)
         let savedReview = try review(for: identifier)
         let savedMedia = try media(for: identifier)
+        let savedDraft = try draft(for: identifier)
         let audioURL = try audioURL(for: identifier)
         if let audioURL, FileManager.default.fileExists(atPath: audioURL.path) {
             try FileManager.default.removeItem(at: audioURL)
         }
         if let savedMedia { context.delete(savedMedia) }
+        if let savedDraft { context.delete(savedDraft) }
         // Explicit deletion also covers iOS 17 stores where cascade propagation
         // can leave registered caption objects behind in the context.
         for caption in session.captions { context.delete(caption) }

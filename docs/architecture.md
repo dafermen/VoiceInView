@@ -14,7 +14,7 @@ Audio failures and relevant route/engine/media-service changes are marshaled to 
 ## Caption state
 States: idle, preparing, listening, stopping, paused, ended, problem.
 Start preparations and analyzer runs use separate cancellation generations. Stop/background invalidates outstanding permission/start intent.
-By default, scene background handling stops microphone synchronously, checkpoints finalized state and schedules analyzer cleanup. Per-session Continue in background allows an already-running capture to continue; it never starts capture from background. Foreground never auto-resumes.
+By default, scene background handling stops microphone synchronously, checkpoints finalized state and schedules analyzer cleanup. Remembered Continue in background allows an already-running capture to continue; it never starts capture from background. Foreground never auto-resumes.
 Pause/Stop finalize before ending a run; resume gets a new run identity. Partial results remain provisional and can be discarded on cancellation.
 TranscriptAssembler replaces overlapping revisions by run/range, not text equality, so repeated words remain legitimate. Common chronological final append avoids a full history scan.
 Active-listening duration uses ContinuousClock to avoid wall-clock changes; metadata uses Date.
@@ -35,7 +35,7 @@ Future schema changes require an explicit migration plan.
 
 ## Privacy and distribution
 System language/model preparation can use system download services. The compatibility engine cannot explicitly download models; its readiness screen directs users to English Dictation settings. Speech authorization is requested explicitly for that engine. The modern engine retains explicit AssetInventory installation. Explicit file export/Copy/Share can send text to user-selected destinations.
-Optional local audio storage is per-session opt-in. No developer network client, tracking, ads, analytics, account or embedded secret.
+Optional local audio storage follows a remembered explicit opt-in, snapshotted at Start. No developer network client, tracking, ads, analytics, account or embedded secret.
 Manifest includes app-owned preferences and disk-space reasons. Source review is not a binary privacy/security audit.
 Phase 9 prepared metadata/icon/scripts/checklist. Local unit/UI/build checks and basic TestFlight use have since been recorded. On 2026-10-10, a Cloud archive was exported/uploaded from the Mac; see [distribution runbook](distribution-runbook.md). Detailed device/privacy/reliability validation and public-release inputs remain pending.
 Phase 10 is not implemented.
@@ -56,6 +56,11 @@ CaptureTimeline stamps owned tap buffers from accumulated sample counts. The sam
 
 The writer saves 16-bit PCM CAF in a protected, backup-excluded Recordings directory; keeping the file open over pauses avoids repeated codec padding. Stop closes the writer; explicit export encodes M4A with AVAssetExportSession. Format changes, full queues and write failures stop capture. Partial audio remains for review; a failed writer cannot resume. Export directories are unique, protected and cleaned after share dismissal/cancellation.
 
-AVAudioSession uses playAndRecord + measurement + mixWithOthers + defaultToSpeaker. This allows coexistence but does not provide internal audio from another app. An explicit background preference retains capture under UIBackgroundModes/audio. Defaults reset for each new session. No automatic resume after interruptions. Playback is blocked while capture is active; the playback sheet stops on dismissal and pauses on scene inactivity.
+AVAudioSession uses playAndRecord + measurement + mixWithOthers + defaultToSpeaker. This allows coexistence but does not provide internal audio from another app. An explicit background preference retains capture under UIBackgroundModes/audio. Choices are persisted in AppSettings. Audio is snapshotted before preparation; background preference can change during capture. No automatic resume after interruptions. Playback is blocked while capture is active; the playback sheet stops on dismissal and pauses on scene inactivity.
 
 SubtitleExport groups native timed words into short cues, preserves silence, removes overlap and formats valid millisecond SRT/WebVTT. Corrections are reflected in exported subtitles with estimated timing inside the original paragraph range. Old untimed sessions do not receive invented timestamps. Subtitle time follows the saved microphone recording, not the original video timeline.
+
+## Explicit session decisions and recovery (V5)
+SessionDraft is an additive marker keyed by session UUID. ConferenceSession and previous schema models are unchanged, so a V1–V4 session without a marker remains a saved library entry. Create(draft: true) saves both objects together before capture. onFinalized/onCheckpoint/onEnded checkpoint the draft; none of these publish it. publish removes the marker after an explicit Save. Deletion removes the marker and associated data. The history screen partitions sessions by marker IDs and lets recovered drafts be reviewed, saved or discarded without automatically reopening the microphone.
+
+SessionCoordinator refuses newSession while a decision is pending. Save-and-new resets only after a successful publish; Discard stops/finalizes the recorder before deleting. AppSettings persists two global defaults. CaptionViewModel receives an audio snapshot before preparing and a mutable background choice; recorder timing cannot be changed retrospectively. The old autoSave preference is no longer used: recovery persistence and library publication are separate operations.

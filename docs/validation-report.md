@@ -1,8 +1,24 @@
 # Validation report — updated 2026-10-10
 
-## Latest distribution evidence — 2026-10-10
+## Session preferences and explicit Save/Discard — 2026-10-10
 
-This section is the current summary. Dated sections below preserve the evidence and open gates as they were recorded; earlier statements such as “no upload” or “registration pending” are historical.
+Source build 14 adds persisted Audio/Background defaults, quick controls, circular capture buttons, one-tap new sessions after saving, and explicit Save/Discard. Schema V5 adds a SessionDraft marker without altering previous models. Stop checkpoints a recovery draft; only Save publishes it. Existing sessions remain saved. No bundle ID or storage path change was made.
+
+Validated on Xcode 15.2, iPhone SE (3rd generation), iOS 17.2:
+
+- All 59 compatible unit tests passed. New coverage checks preferences across relaunch, Stop versus Save, protection against starting over with a pending draft, isolated discard, V4→V5 migration, persistent draft recovery/publication and associated audio cleanup. Previous repository migration tests also passed. Modern AudioConversion runtime tests remain excluded by this compiler.
+- Two targeted UI scenarios passed across final runs: global preferences persist without starting the microphone; circular controls, pending-draft cancellation, Save, one-tap new session, fullscreen rotation and confirmed Discard preserve the previous saved session. The full older UI suite was not rerun. Speech is mocked for these flows.
+- Debug and Release simulator builds passed. The Release bundle was checked for version 0.1.0/build 14, unchanged identity, iOS 17 minimum, microphone/speech purpose strings, audio background mode, portrait/both landscape orientations, compiled assets and privacy manifest. Project plist, shell syntax, 106 local documentation links and git diff --check also passed.
+- Portrait and fullscreen-landscape screenshots were inspected: controls remain visible and the reading area is unobstructed. VoiceOver labels and 44-point capture targets are present; full accessibility/device acceptance is still pending.
+- Initial UI attempts exposed a synthetic 320-paragraph burst timeout and an assertion during rotation animation. The short workflow fixture now emits eight paragraphs, and the test waits for the rotated Stop button to become hittable. The final workflow rerun passed; this does not establish long-session performance.
+
+Evidence remains outside Git under `/private/tmp`: `VoiceInView-SessionFlow-14-final-tests.log` and `VoiceInView-SessionFlow-14-FinalTests.xcresult` (59 unit tests and preferences UI passed; pre-fix rotation assertion failed), plus `VoiceInView-SessionFlow-14-ui-check.log` and `VoiceInView-SessionFlow-14-UICheck.xcresult` (final workflow passed). Release output: `VoiceInView-SessionFlow-14-release.log`.
+
+Delivery is pending: a GitHub push or successful simulator build does not update the iPhone. This feature requires a fresh archive built with an eligible modern SDK; do not reuse the previous build 13 archive. The earlier Cloud export failure and local signing workaround remain documented in [the distribution runbook](distribution-runbook.md). The user confirmed the previous iPhone update and working audio/background switches; build 14 is not yet device-validated.
+
+## Earlier distribution evidence — 2026-10-10
+
+This section records the earlier media/subtitle delivery. Dated sections below preserve the evidence and open gates as they were recorded; earlier statements such as “no upload” or “registration pending” are historical.
 
 - Source for the media/subtitle delivery: commit 261b8b4. Local validation for that feature passed 56 compatible unit tests and 12 UI scenarios across final full/focused runs; see the recording section below.
 - Cloud builds 9 and 10 archived with Xcode 27 (27A266a) but failed in export: managed session authentication warning, HTTP 502 on listTeams, then missing-profile errors.

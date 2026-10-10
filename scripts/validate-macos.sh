@@ -58,7 +58,7 @@ assert info.get("CFBundleDisplayName") == "VoiceInView", "Unexpected app name"
 assert info.get("CFBundleIdentifier") == "com.dafermen.vReader", "App identity changed"
 assert info.get("CFBundleExecutable") == "VoiceInView", "Unexpected executable name"
 assert {"UIInterfaceOrientationPortrait", "UIInterfaceOrientationLandscapeLeft", "UIInterfaceOrientationLandscapeRight"}.issubset(set(info.get("UISupportedInterfaceOrientations", []))), "Missing reading orientations"
-assert not info.get("UIBackgroundModes"), "Unexpected background capture"
+assert info.get("UIBackgroundModes") == ["audio"], "Missing or unexpected background modes"
 assert (app / "Assets.car").exists(), "Missing compiled assets"
 with (app / "PrivacyInfo.xcprivacy").open("rb") as f:
     privacy = plistlib.load(f)

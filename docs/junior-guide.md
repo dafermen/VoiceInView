@@ -119,10 +119,11 @@ Los motores suman el desplazamiento de cada ejecución al tiempo de sus resultad
 | CaptionBookmark | Marcador con una copia de la frase |
 | SessionReview | Correcciones y posición de lectura |
 | SessionMedia | Nombre relativo del audio y tiempos de los párrafos |
+| SessionDraft | Marca que distingue un borrador recuperable de una sesión guardada |
 
 Las correcciones son un mapa por UUID. El texto que se muestra se calcula como “corrección si existe; de lo contrario, original”. Así se puede restaurar el reconocimiento original. El editor trabaja sobre un borrador hasta que se guarda; deshacer no requiere reconocer la voz otra vez.
 
-El esquema V4 añade SessionMedia. Las migraciones anteriores conservan sesiones, marcadores y correcciones. Cambiar una estructura persistida no equivale a cambiar una variable temporal: hay usuarios con bases de datos antiguas.
+El esquema V4 añadió SessionMedia y V5 añade SessionDraft, sin modificar los modelos anteriores. Las migraciones anteriores conservan sesiones, marcadores y correcciones. Cambiar una estructura persistida no equivale a cambiar una variable temporal: hay usuarios con bases de datos antiguas.
 
 La carpeta interna sigue llamándose vReader y el bundle ID sigue siendo com.dafermen.vReader. Renombrar esos identificadores para que “se vean más bonitos” puede romper la continuidad de instalaciones y datos.
 
@@ -142,7 +143,7 @@ Eliminar audio conserva texto y tiempos de subtítulos. Las sesiones antiguas si
 
 La app escucha el micrófono. Un video de otra aplicación puede transcribirse si su sonido sale por el altavoz y llega físicamente al micrófono. No existe captura interna del audio de YouTube o de otras apps.
 
-Save audio y Continue in background son opciones diferentes, desactivadas al empezar una sesión nueva. Las llamadas y otras actividades pueden interrumpir la captura incluso con ambas activadas. La app no debe reactivar el micrófono a escondidas después de una interrupción. Con audífonos, el sonido del video normalmente no llega al micrófono como se necesita.
+Save audio y Continue in background son preferencias diferentes: inicialmente apagadas, se recuerdan al cambiarlas. Al iniciar se toma una copia de la preferencia de audio para esa captura. El ajuste de segundo plano puede cambiar durante la escucha. Las llamadas y otras actividades pueden interrumpir la captura incluso con ambas activadas. La app no debe reactivar el micrófono a escondidas después de una interrupción. Con audífonos, el sonido del video normalmente no llega al micrófono como se necesita.
 
 ## 12. Cómo estudiar y practicar
 
@@ -173,3 +174,13 @@ En octubre de 2026 aprendimos esa diferencia: Archive terminó bien, pero Cloud 
 Una prueba unitaria demuestra una regla con entradas controladas. Una prueba de UI demuestra un recorrido con condiciones concretas. Ninguna sustituye una medición real de voz, latencia o batería.
 
 La validación registrada para audio/subtítulos fue de 56 pruebas unitarias compatibles y 12 escenarios de interfaz, pasando estos últimos entre una ejecución completa y una repetición enfocada. La prueba moderna de conversión no se ejecutó con Xcode 15.2. Consulta [testing](testing.md) y [validation-report](validation-report.md) antes de repetir números o afirmar que todo está verificado.
+
+## 15. Ejemplo: guardar no es lo mismo que recuperar
+
+Piensa en un documento en edición: necesitamos recuperarlo tras un cierre inesperado, pero todavía no sabemos si el usuario quiere conservarlo. La transcripción funciona igual. Al iniciar, el repositorio crea ConferenceSession y una marca SessionDraft. Cada resultado final se escribe en disco. Stop cierra el audio y deja la marca; no decide por el usuario.
+
+Save Session elimina solo la marca: el texto, audio, UUID y tiempos siguen siendo los mismos. Discard elimina la sesión y sus archivos después de confirmación. El botón + llama a newSession directamente cuando no hay decisión pendiente; si existe un borrador, ofrece guardar o descartar antes de limpiar la pantalla. Si guardar falla, la pantalla conserva la sesión para reintentar.
+
+La migración es aditiva: una sesión antigua sin marca se considera guardada. Nunca debemos clasificar todas las sesiones antiguas como borradores solo porque añadimos una función. Las pruebas abren una base V4, migran a V5, cierran/reabren un borrador y verifican su texto y su archivo de audio.
+
+Las preferencias pertenecen a AppSettings/UserDefaults; el estado de captura pertenece al ViewModel. Recordar “guardar audio” no significa activar el micrófono al abrir la app. Start sigue siendo una acción explícita. Cambiar esa preferencia a mitad de una sesión afecta a la siguiente: no podemos reconstruir audio pasado ni mover el origen de los subtítulos sin una implementación específica.

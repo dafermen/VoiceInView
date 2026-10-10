@@ -5,16 +5,34 @@ import UniformTypeIdentifiers
 @MainActor
 struct CaptureOptionsView: View {
     @Bindable var model: CaptionViewModel
+    @Bindable var settings: AppSettings
     var body: some View {
         Section {
-            Toggle("Save audio with transcript", isOn: $model.saveAudio)
+            Toggle("Save audio with transcript", isOn: audioBinding)
                 .accessibilityIdentifier("saveAudioToggle")
-            Toggle("Continue in background", isOn: $model.continueInBackground)
+            Toggle("Continue in background", isOn: backgroundBinding)
                 .accessibilityIdentifier("backgroundAudioToggle")
-        } header: { Text("This session") } footer: {
-            Text("Choose before starting. Audio stays on this iPhone and also saves the transcript. Recordings may use hundreds of MB per hour. Background listening keeps the microphone active when switching apps or locking the screen. Both options reset for a new session. Other apps' audio must be audible through the speaker; headphones and internal app audio are not captured.")
+                .disabled(model.state.busy || model.preparationPending)
+            if !model.canChooseCaptureOptions {
+                Text("Audio changes apply to your next session. Background listening can change during this session.")
+                    .font(.caption)
+            }
+        } header: { Text("Capture preferences") } footer: {
+            Text("These choices are remembered for future sessions. Recording starts only when you tap the microphone. Audio stays on this iPhone. Background listening keeps the microphone active when switching apps or locking the screen. Other apps' internal audio is not captured.")
         }
-        .disabled(!model.canChooseCaptureOptions)
+    }
+
+    private var audioBinding: Binding<Bool> {
+        Binding(get: { settings.saveAudio }, set: {
+            settings.saveAudio = $0
+            if model.canChooseCaptureOptions { model.saveAudio = $0 }
+        })
+    }
+    private var backgroundBinding: Binding<Bool> {
+        Binding(get: { settings.continueInBackground }, set: {
+            settings.continueInBackground = $0
+            model.continueInBackground = $0
+        })
     }
 }
 

@@ -14,7 +14,7 @@ struct SettingsView: View {
                 NavigationLink("Microphone Check") { MicrophoneCheckView() }
                     .disabled(coordinator.caption.state.active || coordinator.caption.state.busy)
             }
-            CaptureOptionsView(model: coordinator.caption)
+            CaptureOptionsView(model: coordinator.caption, settings: settings)
             Section("Captions") {
                 LabeledContent("Language", value: "English (United States)")
                 Text("Additional transcription languages are not available yet.").font(.caption)
@@ -27,17 +27,14 @@ struct SettingsView: View {
                 }
             }
             Section("Local sessions") {
-                Toggle("Auto-save final captions", isOn: $settings.autoSave)
-                    .disabled(coordinator.caption.state.active || coordinator.caption.state.busy ||
-                              (coordinator.caption.startedAt != nil && coordinator.caption.state != .ended))
-                Text("Recording audio also saves the session. Otherwise, when off, captions remain in memory until you tap Save Session or save a bookmark. Leaving or closing the app may lose unsaved text.")
+                Text("While listening, a recovery draft saves final captions and optional audio on this iPhone. After Stop, choose Save Session to keep it or Discard to delete it. Unfinished drafts appear separately in Sessions after reopening the app.")
                     .font(.caption)
                 Text("Saved sessions are excluded from device backup. Export anything you need to keep.")
                     .font(.caption)
             }
             Section("Privacy") {
                 NavigationLink("Privacy Policy") { PrivacyPolicyView() }
-                Text("No accounts, analytics or tracking. Audio is saved only when you enable it for a session.")
+                Text("No accounts, analytics or tracking. Audio is recorded only when Save audio is enabled before you start.")
             }
         }
         .navigationTitle("Settings")

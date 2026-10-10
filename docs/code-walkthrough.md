@@ -21,7 +21,7 @@ Esta guía responde “¿dónde está?”, “¿qué recibe?” y “¿qué prod
 | [SessionAudioRecorder](../VoiceInView/Services/Audio/SessionAudioRecorder.swift) | Cola limitada, CAF, errores de escritura y reloj de muestras CaptureTimeline |
 | [TranscriptAssembler](../VoiceInView/Models/TranscriptAssembler.swift) | Convierte revisiones del reconocimiento en cambios de párrafos finales |
 | [TranscriptRepository](../VoiceInView/Persistence/TranscriptRepository.swift) | SwiftData, migraciones, upserts, correcciones, rutas de audio y borrado |
-| [SessionMedia](../VoiceInView/Models/SessionMedia.swift) | Modelo V4 y estructuras de tiempos de palabras/párrafos |
+| [SessionMedia](../VoiceInView/Models/SessionMedia.swift) | SessionMedia V4, marca SessionDraft V5 y estructuras de tiempos |
 | [TranscriptReview](../VoiceInView/Models/TranscriptReview.swift) | Texto corregido, historial Undo/Redo y búsqueda literal |
 | [TranscriptEditorView](../VoiceInView/UI/TranscriptEditorView.swift) | Borrador de edición, confirmación de descarte y guardado explícito |
 | [TranscriptShareView](../VoiceInView/UI/TranscriptShareView.swift) | Vista previa común antes de copiar o exportar TXT/PDF |
@@ -32,7 +32,7 @@ Esta guía responde “¿dónde está?”, “¿qué recibe?” y “¿qué prod
 
 En CaptionViewModel.start, identifica los guard que rechazan estados incompatibles. Después de cada await relevante se vuelve a comprobar la generación. La operación pudo cambiar mientras estaba suspendida.
 
-El coordinador instala onWillStart: crea una sesión persistida si debe guardar y prepara el archivo si se eligió grabación. onFinalized aplica únicamente cambios finales. onCheckpoint guarda duración. onEnded conserva el estado al terminar. Esos callbacks separan reconocimiento y almacenamiento.
+El coordinador instala onWillStart: crea una sesión persistida con marca de borrador y prepara el archivo si se eligió grabación. onFinalized aplica únicamente cambios finales. onCheckpoint guarda duración. onEnded conserva el borrador al terminar. Solo saveCurrent/publicar quita la marca SessionDraft; discardCurrent finaliza y borra. newSession rechaza limpiar un borrador sin decisión. Esos callbacks separan reconocimiento y almacenamiento.
 
 Pause/Stop finalizan el reconocimiento cuando corresponde; cancel sirve para abortar. No son intercambiables: cancelar puede descartar texto provisional. Resume usa una nueva identidad de ejecución. El archivo de audio puede seguir abierto entre pausas, pero Stop lo cierra.
 

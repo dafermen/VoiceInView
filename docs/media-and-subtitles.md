@@ -1,6 +1,6 @@
 # Audio and subtitle workflow
 
-Before Start, open Aa or Settings. Save audio with transcript and Continue in background are independent choices, both off for each new session. Recording automatically saves the associated transcript. A red Recording label appears while audio saving is active, including fullscreen. Stop before reviewing saved audio.
+Before Start, choose Audio and Background in Captions or use Aa/Settings. Both preferences initially default off and are remembered across sessions and app relaunches. Recording follows the audio choice at Start; changes while listening apply to the next session. Background can be changed during capture. A recovery draft always stores final captions and any optional recording; Stop then Save publishes it, while confirmed Discard deletes it. A red Recording label appears while audio saving is active, including fullscreen. Stop before reviewing saved audio.
 
 Sessions > open session > Audio & subtitles provides playback, ±10-second seeking, position slider, captions on/off and fullscreen rotation. M4A can be shared alone or together with corrected TXT and SRT/VTT. Native sharing provides Save to Files. Existing TXT/PDF review/export remains available. Delete audio keeps transcript, edits, bookmarks and subtitle timing; Delete session also deletes its audio.
 

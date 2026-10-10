@@ -10,10 +10,12 @@ This is a gate, not a claim that release is approved.
 - [x] Privacy manifest and policy/metadata drafts.
 - [x] AppIcon asset and Mac validation/archive scripts.
 - [x] Unit/UI tests and physical validation procedures.
+- [x] Persistent capture choices, compact controls and V5 recovery draft lifecycle in build 14 source.
+- [ ] Build 14 delivered through TestFlight and new workflow verified on the iPhone.
 
 ## Must pass on Apple tooling
 - [x] Debug simulator build (Xcode 15.2, iOS 17.2 SDK).
-- [x] Compatibility suite: 56 unit tests and 12 UI scenarios across final full/focused runs, iOS 17.2 simulator.
+- [x] Latest session workflow: 59 compatible unit tests and two targeted UI scenarios, iOS 17.2 simulator. The earlier media delivery passed 56 unit tests and 12 UI scenarios; the full older UI suite was not rerun for build 14.
 - [x] Modern source compiled/archived in Cloud, including Xcode 26.6 Build 11.
 - [ ] Modern AudioConversion test executed on Xcode 26+/iOS 26+.
 - [x] Release simulator build and bundle/plist/privacy/asset checks (Xcode 15.2).
@@ -30,7 +32,7 @@ This is a gate, not a claim that release is approved.
 - [x] Cloud Build 11 archive exported with distribution signing and uploaded from the Mac (2026-10-10).
 - [x] First local upload processed as 0.1.0 (1), assigned to Dev (screenshots 2026-10-10 04:37).
 - [x] Same feature archive re-signed, verified and uploaded as 0.1.0 (13) with explicit numbering.
-- [ ] Build 13 finished processing and is assigned to Dev; confirm installed version/build on iPhone.
+- [x] User confirmed the iPhone update and working audio/background switches after the build 13 delivery; no new screenshot of the installed build number was supplied.
 - [ ] Physical acceptance of the latest recording/subtitle features.
 - [ ] Full public-release archive/privacy review. Successful upload alone does not certify it.
 

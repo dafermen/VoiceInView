@@ -11,9 +11,9 @@ final class SessionCoordinator {
     private(set) var currentSession: ConferenceSession?
     var storageMessage: String?
     let settings: AppSettings
-    /// El audio necesita una sesión persistida para asociar archivo, texto y tiempos.
-    /// Por eso grabar también guarda la transcripción aunque la preferencia general esté apagada.
-    var autoSave: Bool { settings.autoSave || caption.saveAudio }
+    private(set) var currentIsDraft = false
+    var needsSessionDecision: Bool { currentIsDraft }
+    private(set) var resolvingSession = false
     var sessionTitle = "Conference"
     @ObservationIgnored private var monitorTask: Task<Void, Never>?
 
@@ -21,21 +21,25 @@ final class SessionCoordinator {
         self.repository = repository
         self.caption = caption ?? CaptionViewModel()
         self.settings = settings ?? AppSettings()
+        applyCapturePreferences()
+        self.caption.onPrepareCapture = { [weak self] in self?.applyCapturePreferences() }
         self.caption.onWillStart = { [weak self] in
-            guard let self, self.autoSave else { return }
+            guard let self else { return }
+            self.applyCapturePreferences()
             let capacity = StorageReadiness.check(at: self.repository.storageURL)
             if let bytes = capacity.availableBytes, bytes < StorageReadiness.minimumBytes {
                 throw StorageFailure.lowCapacity
             }
             if self.currentSession == nil {
-                self.currentSession = try self.repository.create(title: self.sessionTitle)
+                self.currentSession = try self.repository.create(title: self.sessionTitle, draft: true)
+                self.currentIsDraft = true
             }
             if self.caption.saveAudio, !self.caption.recordingPrepared, let session = self.currentSession {
                 try self.caption.prepareRecording(at: self.repository.prepareRecording(for: session))
             }
         }
         self.caption.onFinalized = { [weak self] change in
-            guard let self, self.autoSave, let session = self.currentSession else { return }
+            guard let self, let session = self.currentSession else { return }
             do { try self.repository.apply(change, to: session) }
             catch {
                 self.storageMessage = "Could not save captions. They remain visible in this session. Free storage and use Save Session before closing the app."
@@ -43,44 +47,88 @@ final class SessionCoordinator {
             }
         }
         self.caption.onCheckpoint = { [weak self] duration in
-            guard let self, self.autoSave, let session = self.currentSession else { return }
+            guard let self, let session = self.currentSession else { return }
             do { try self.repository.checkpoint(session, duration: duration, ended: false) }
             catch { self.storageMessage = "Could not save session time. Retry Save Session." }
         }
         self.caption.onRunStarted = { [weak self] in self?.monitorSession() }
         self.caption.onEnded = { [weak self] in
-            guard let self, self.autoSave else { return }
+            guard let self else { return }
             self.monitorTask?.cancel()
-            self.saveCurrent(ended: true)
+            _ = self.checkpointCurrent(ended: true)
         }
     }
 
-    func saveCurrent(ended: Bool = false) {
-        guard caption.startedAt != nil || !caption.transcript.finalized.isEmpty else { return }
+    /// Preferences choose the next recording. Audio remains fixed once capture has begun.
+    private func applyCapturePreferences() {
+        if caption.canChooseCaptureOptions { caption.saveAudio = settings.saveAudio }
+        caption.continueInBackground = settings.continueInBackground
+    }
+
+    @discardableResult
+    private func checkpointCurrent(ended: Bool = false) -> Bool {
+        guard currentSession != nil || caption.startedAt != nil || !caption.transcript.finalized.isEmpty else { return true }
         do {
             if currentSession == nil {
-                currentSession = try repository.create(title: sessionTitle)
+                currentSession = try repository.create(title: sessionTitle, draft: true)
+                currentIsDraft = true
             }
-            guard let currentSession else { return }
-            // Upserts are idempotent, so retrying after a write failure cannot duplicate captions.
+            guard let currentSession else { return false }
             try repository.apply(.init(removedIDs: [], upserted: caption.transcript.finalized), to: currentSession)
             try repository.checkpoint(currentSession, duration: caption.currentDuration(at: Date()), ended: ended)
             storageMessage = nil
+            return true
         } catch {
-            storageMessage = "Session could not be saved. Keep the app open, free storage, and try Save Session again."
+            storageMessage = "Could not save the recovery draft. Keep the app open, free storage, and retry Save Session."
+            return false
+        }
+    }
+
+    /// Only an explicit Save promotes a draft. Stop and bookmarks merely checkpoint it.
+    @discardableResult
+    func saveCurrent(ended: Bool = false) -> Bool {
+        guard caption.state == .ended, !caption.preparationPending,
+              checkpointCurrent(ended: ended), let currentSession else { return false }
+        do {
+            try repository.publish(currentSession)
+            currentIsDraft = false
+            storageMessage = nil
+            return true
+        } catch {
+            storageMessage = "Could not save this session to the library. The draft is still available."
+            return false
+        }
+    }
+
+    /// Stop closes the recorder before deletion. On failure, keep the draft visible for retry.
+    func discardCurrent() async {
+        guard !resolvingSession, !caption.state.busy, !caption.preparationPending else { return }
+        resolvingSession = true
+        defer { resolvingSession = false }
+        await caption.stop()
+        do {
+            if let currentSession { try repository.delete(currentSession) }
+            currentSession = nil
+            currentIsDraft = false
+            storageMessage = nil
+            await newSession()
+        } catch {
+            storageMessage = "Could not discard this session. The draft remains available; please retry."
         }
     }
 
     func toggleBookmark(_ segment: CaptionSegment) {
-        saveCurrent(ended: caption.state == .ended)
+        _ = checkpointCurrent(ended: caption.state == .ended)
         guard storageMessage == nil, let currentSession else { return }
         do { try repository.toggleBookmark(segment, in: currentSession) }
         catch { storageMessage = "Could not save the bookmark. Please try again." }
     }
 
     func newSession() async {
-        guard !caption.state.active, !caption.state.busy else { return }
+        guard !caption.state.active, !caption.state.busy, !caption.preparationPending, !needsSessionDecision else { return }
+        monitorTask?.cancel()
         await caption.reset()
+        applyCapturePreferences()
         currentSession = nil
         sessionTitle = "Conference"
     }
@@ -97,7 +145,7 @@ final class SessionCoordinator {
                     await self.caption.pause()
                     return
                 }
-                if self.autoSave, let session = self.currentSession {
+                if let session = self.currentSession {
                     do {
                         try self.repository.checkpoint(session, duration: self.caption.currentDuration(at: Date()), ended: false)
                     } catch {

@@ -3,6 +3,14 @@
 ## Unreleased — 0.1.0 development, through Phase 9
 iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation of TestFlight builds 5 and 6 on their iPhone; detailed offline and release verification remain pending. This is not a release-certified binary.
 
+### Session workflow — 2026-10-10, source build 14
+- Persist Audio/Background preferences and expose quick controls before Start.
+- Circular microphone/pause/resume and square Stop controls with accessibility labels.
+- One-tap new session after Save; decision dialog only for a pending recovery draft.
+- Explicit Save/Discard, separate recovery drafts in Sessions, additive V5 migration preserving existing library sessions.
+- Background preference can change during capture; audio changes apply to the next session. Mid-session recording remains deferred.
+- Replace the old auto-save switch with always-on local draft recovery; update privacy/help and validation background-mode checks.
+
 ### Documentation — 2026-10-10
 - Added Spanish student/junior guide, code walkthrough, documentation index, distribution runbook and incident history.
 - Documented Cloud export failures on Xcode 27 and 26.6, and successful local export/upload of the Cloud 11 archive with Xcode 15.2. Apple processing/TestFlight availability of that package still needs confirmation.

@@ -8,6 +8,7 @@ struct SessionHistoryView: View {
     let coordinator: SessionCoordinator
     @Query(sort: \ConferenceSession.createdAt, order: .reverse) private var sessions: [ConferenceSession]
     @Query private var reviews: [SessionReview]
+    @Query private var drafts: [SessionDraft]
     @State private var query = ""
     @State private var deleting: ConferenceSession?
     @State private var failure: String?
@@ -29,24 +30,27 @@ struct SessionHistoryView: View {
                 ContentUnavailableView("No sessions", systemImage: "text.bubble",
                                        description: Text("Saved sessions will appear here."))
             }
-            ForEach(filtered) { session in
-                NavigationLink {
-                    SessionDetailView(session: session, repository: coordinator.repository,
-                        canEdit: coordinator.currentSession?.id != session.id || coordinator.caption.state == .ended,
-                        canPlay: !coordinator.caption.state.active && !coordinator.caption.state.busy &&
-                            (coordinator.currentSession?.id != session.id || coordinator.caption.state == .ended))
-                } label: {
-                    VStack(alignment: .leading) {
-                        Text(session.title).font(.headline)
-                        Text(session.createdAt, style: .date).font(.subheadline)
-                        Text(session.endedAt == nil ? "Unfinished or interrupted session" :
-                             SessionClock.format(session.duration)).font(.caption)
+            let draftIDs = Set(drafts.map(\.sessionID))
+            if filtered.contains(where: { draftIDs.contains($0.id) }) {
+                Section("Recovery drafts") {
+                    Text("Saved automatically for recovery. Choose Save to keep a session or Discard to delete its text and audio.")
+                        .font(.caption).foregroundStyle(.secondary)
+                    ForEach(filtered.filter { draftIDs.contains($0.id) }) { session in
+                        sessionLink(session)
+                        HStack {
+                            Button("Save Session", systemImage: "square.and.arrow.down") { saveDraft(session) }
+                                .accessibilityIdentifier("saveDraft-" + session.id.uuidString)
+                            Spacer()
+                            Button("Discard", systemImage: "trash", role: .destructive) { deleting = session }
+                                .accessibilityIdentifier("discardDraft-" + session.id.uuidString)
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(coordinator.currentSession?.id == session.id && coordinator.caption.state != .ended)
                     }
                 }
-                .swipeActions {
-                    Button("Delete", role: .destructive) { deleting = session }
-                        .disabled(coordinator.currentSession?.id == session.id)
-                }
+            }
+            Section("Saved sessions") {
+                ForEach(filtered.filter { !draftIDs.contains($0.id) }) { session in sessionLink(session) }
             }
         }
         .searchable(text: $query, prompt: "Titles or finished transcripts")
@@ -55,8 +59,12 @@ struct SessionHistoryView: View {
             get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
                 Button("Delete", role: .destructive) {
                     if let deleting {
-                        do { try coordinator.repository.delete(deleting) }
-                        catch { failure = "The session could not be deleted." }
+                        if coordinator.currentSession?.id == deleting.id {
+                            Task { await coordinator.discardCurrent() }
+                        } else {
+                            do { try coordinator.repository.delete(deleting) }
+                            catch { failure = "The session could not be deleted." }
+                        }
                     }
                     deleting = nil
                 }
@@ -66,6 +74,36 @@ struct SessionHistoryView: View {
                 Button("OK") { failure = nil }
             } message: { Text(failure ?? "") }
     }
+
+    private func saveDraft(_ session: ConferenceSession) {
+        if coordinator.currentSession?.id == session.id {
+            _ = coordinator.saveCurrent(ended: true)
+        } else {
+            do { try coordinator.repository.publish(session) }
+            catch { failure = "The draft could not be saved. Please retry." }
+        }
+    }
+
+    private func sessionLink(_ session: ConferenceSession) -> some View {
+        NavigationLink {
+            SessionDetailView(session: session, repository: coordinator.repository,
+                canEdit: coordinator.currentSession?.id != session.id || coordinator.caption.state == .ended,
+                canPlay: !coordinator.caption.state.active && !coordinator.caption.state.busy &&
+                    (coordinator.currentSession?.id != session.id || coordinator.caption.state == .ended))
+        } label: {
+            VStack(alignment: .leading) {
+                Text(session.title).font(.headline)
+                Text(session.createdAt, style: .date).font(.subheadline)
+                Text(session.endedAt == nil ? "Unfinished or interrupted session" :
+                     SessionClock.format(session.duration)).font(.caption)
+            }
+        }
+        .swipeActions {
+            Button("Delete", role: .destructive) { deleting = session }
+                .disabled(coordinator.currentSession?.id == session.id && coordinator.caption.state != .ended)
+        }
+    }
+
 }
 
 @MainActor

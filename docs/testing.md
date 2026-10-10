@@ -30,20 +30,20 @@ Volume monitoring is not speech recognition and cannot prove offline captions.
 6. For the compatibility engine, speak continuously across several 50-second request boundaries; check for missing/repeated words and ensure preceding final chunks remain saved. Stop and inspect finalization. Test unsupported hardware/locale and missing assets without silent download or cloud fallback.
 
 ## Phase 3 reading/accessibility
-Pause/Resume retains earlier final captions and excludes paused time. Stop ends the session; New Session confirms clearing unsaved content.
+Pause/Resume retains earlier final captions and excludes paused time. Stop ends capture and exposes Save/Discard. New Session is one tap after Save; a pending draft requires an explicit decision.
 Use Aa to adjust caption size and following; use (…) Session actions for manual saving, New Session and full status information. Check largest Dynamic Type, light/dark/system appearance, contrast, VoiceOver and Reduce Motion. Rotate while listening, paused and stopped in both directions; verify captions, elapsed time and chosen text size remain intact and controls remain reachable.
 Disable live following, load earlier captions and re-enable follow. Confirm screen wake only while listening/viewing captions and normal sleep on Stop/background.
 Enter/exit fullscreen while listening, paused and rereading; check Pause/Stop/Exit remain accessible and tabs return on exit. Test notched iPhones as well as small screens.
 Scroll back during incoming speech and confirm the same paragraph stays visible, then use Back to live. Load earlier captions in a transcript longer than 300 paragraphs. Check provisional text revisions do not flash or animate repeatedly.
 Change line spacing, bold text and high contrast, then relaunch. Test these with largest Dynamic Type and both color schemes.
-Long-press a finished paragraph > Save bookmark; view it through (…) > Bookmarks and Sessions > session > Bookmarks. With auto-save off, bookmarking explicitly saves the current session. Remove a bookmark and confirm the transcript remains; delete its session and confirm its bookmarks disappear. Update from a V1 store and verify earlier sessions survive.
+Long-press a finished paragraph > Save bookmark; view it through (…) > Bookmarks and Sessions > session > Bookmarks. Bookmarking checkpoints the draft without publishing it. Remove a bookmark and confirm the transcript remains; delete its session and confirm its bookmarks disappear. Update from a V1 store and verify earlier sessions survive.
 Perform a 30-minute read-along.
 
 ## Phase 4 storage and recovery
-Start/speak/stop with auto-save on, force normal app termination/relaunch and open Sessions. Check title/date/duration/language, rename, title/finished-transcript search and confirmed delete.
+Start/speak/stop, choose Save Session, force normal app termination/relaunch and open Sessions. Check title/date/duration/language, rename, title/finished-transcript search and confirmed delete.
 Interrupt/terminate during listening: finalized saved segments should recover as an unfinished session; provisional text is not guaranteed.
 Exercise low storage/write/startup failures. Errors must be visible, saving retry must not duplicate captions, and failed store opening must not destroy data.
-Current session deletion is disabled until New Session.
+Current session deletion is disabled until Stop; discarded drafts must remove text and audio without affecting other sessions.
 
 ## Phase 5 export
 Open a saved session > Review & share; select TXT or PDF and use Save file/Share. Inspect UTF-8 text or rendered PDF and selected metadata. Exercise Copy separately. Audio & subtitles is the separate player/media export flow.
@@ -58,10 +58,10 @@ Review & share must show the same corrections in full text, bookmarks, clipboard
 
 Scroll a long saved session, leave and reopen it. Jump to a bookmark, reopen again and verify the last read paragraph is visible. Existing bookmark snapshots without a current paragraph remain readable. Migrate an existing installation containing sessions/bookmarks without deleting the app.
 
-After Stop, verify New Session is a blue circular + with a comfortable touch target and the portrait footer disappears. Confirm the + works in portrait and both landscape orientations, including fullscreen, and retains confirmation before clearing.
+After Stop, verify Save/Discard appear; after Save, the portrait decision footer disappears. The circular + opens a new session immediately when saved, and requests a decision only for a pending draft. Check portrait, both landscape orientations and fullscreen.
 
 ## Phase 6 readiness/settings
-Change preferences and relaunch. Check auto-save off requires Save Session; changing auto-save is disabled during a started unfinished session.
+Change Audio/Background in Captions and Settings, then relaunch. Choices persist without starting the microphone. During capture, Audio changes affect the next session and Background changes affect the current session. Stop leaves a recovery draft until Save/Discard. Reopen without deciding and recover the draft from Sessions.
 Test all actual readiness states, permission recovery and unknown/low disk space. Test Offline Mode is guidance, not Airplane Mode detection.
 The 64 MB check reserves transcript headroom; initial model download may need much more.
 

@@ -15,7 +15,9 @@ final class AppSettings {
     var boldCaptions: Bool { didSet { defaults.set(boldCaptions, forKey: "boldCaptions") } }
     var highContrast: Bool { didSet { defaults.set(highContrast, forKey: "highContrast") } }
     var keepAwake: Bool { didSet { defaults.set(keepAwake, forKey: "keepAwake") } }
-    var autoSave: Bool { didSet { defaults.set(autoSave, forKey: "autoSave") } }
+    // Global defaults are explicit opt-ins and survive a new session or app relaunch.
+    var saveAudio: Bool { didSet { defaults.set(saveAudio, forKey: "saveAudio") } }
+    var continueInBackground: Bool { didSet { defaults.set(continueInBackground, forKey: "continueInBackground") } }
     var appearance: AppAppearance { didSet { defaults.set(appearance.rawValue, forKey: "appearance") } }
     let transcriptionLanguage = "en-US"
 
@@ -28,7 +30,8 @@ final class AppSettings {
         boldCaptions = defaults.bool(forKey: "boldCaptions")
         highContrast = defaults.bool(forKey: "highContrast")
         keepAwake = defaults.object(forKey: "keepAwake") as? Bool ?? true
-        autoSave = defaults.object(forKey: "autoSave") as? Bool ?? true
+        saveAudio = defaults.bool(forKey: "saveAudio")
+        continueInBackground = defaults.bool(forKey: "continueInBackground")
         appearance = AppAppearance(rawValue: defaults.string(forKey: "appearance") ?? "") ?? .system
     }
 

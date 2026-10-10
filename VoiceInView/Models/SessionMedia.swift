@@ -37,3 +37,19 @@ enum SessionSchemaV4: VersionedSchema {
         [ConferenceSession.self, StoredCaption.self, CaptionBookmark.self, SessionReview.self, SessionMedia.self]
     }
 }
+
+/// A separate marker keeps every pre-update session saved during the additive migration.
+/// Removing this marker publishes the existing data; it does not copy or recreate the audio.
+@Model
+final class SessionDraft {
+    @Attribute(.unique) var sessionID: UUID
+    init(sessionID: UUID) { self.sessionID = sessionID }
+}
+
+enum SessionSchemaV5: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(5, 0, 0) }
+    static var models: [any PersistentModel.Type] {
+        [ConferenceSession.self, StoredCaption.self, CaptionBookmark.self, SessionReview.self,
+         SessionMedia.self, SessionDraft.self]
+    }
+}

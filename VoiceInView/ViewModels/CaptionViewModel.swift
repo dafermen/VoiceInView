@@ -22,11 +22,11 @@ final class CaptionViewModel {
     private(set) var permissionDenied = false
     private(set) var preparationPending = false
     private(set) var notice: String?
-    // Per-session choices: a new session never silently enables recording.
+    // Snapshot of global choices for this capture; the coordinator restores defaults after reset.
     var saveAudio = false
     var continueInBackground = false
     private(set) var recordingPrepared = false
-    var canChooseCaptureOptions: Bool { startedAt == nil && !recordingPrepared && !state.active && !state.busy }
+    var canChooseCaptureOptions: Bool { startedAt == nil && !recordingPrepared && !state.active && !state.busy && !preparationPending && state != .ended }
     func prepareRecording(at url: URL) throws {
         guard let capture = microphone as? AudioCaptureService else { throw RecordingFailure.unavailable }
         guard !recordingPrepared else { return }
@@ -36,6 +36,7 @@ final class CaptionViewModel {
 
     var onFinalized: ((FinalizedChange) -> Void)?
     var onEnded: (() -> Void)?
+    var onPrepareCapture: (() -> Void)?
     var onWillStart: (() throws -> Void)?
     var onRunStarted: (() -> Void)?
     var onCheckpoint: ((TimeInterval) -> Void)?
@@ -85,6 +86,7 @@ final class CaptionViewModel {
     /// antiguas si el usuario canceló, salió de la app o inició otra operación mientras esperaba.
     func start() async {
         guard foreground, !state.active, !state.busy, !preparationPending, state != .ended else { return }
+        onPrepareCapture?()
         preparationPending = true
         defer { preparationPending = false }
         let identifier = UUID()

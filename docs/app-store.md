@@ -17,7 +17,7 @@ Signing uses team `7799N4RYUG` and the existing bundle identifier `com.dafermen.
 iOS 17 minimum. The compatibility engine requires on-device English support and Speech Recognition permission; builds with Xcode 26+ use the modern speech engine on iOS 26+ when available. Establish a real tested device matrix before submission. OS version alone does not guarantee compatibility.
 Prepare English Dictation or install the modern engine's English model while online, then validate Airplane Mode with Wi-Fi off. Initial model preparation is not offline. No cloud fallback or online AI is present.
 Captions can be wrong due to distance, noise, accent, speed, obstruction, simultaneous speakers and device hardware.
-Capture stops on lock/background by default. Continue in background is explicit per-session opt-in. Calls and other interruptions still stop capture; no automatic resume. Optional recording, playback and subtitle export work entirely on-device. Other-app audio must reach the microphone acoustically; do not claim internal system-audio capture.
+Capture stops on lock/background by default. Continue in background is explicit remembered opt-in. Calls and other interruptions still stop capture; no automatic resume. Optional recording, playback and subtitle export work entirely on-device. Other-app audio must reach the microphone acoustically; do not claim internal system-audio capture.
 
 ## Screenshots and icon
 Prepared 1024x1024 opaque caption-bubble icon in the AppIcon asset catalog; design approval and Xcode asset validation pending. Check system-generated dark/tinted appearance.
@@ -42,7 +42,7 @@ Complete the current age-rating questionnaire for actual features; no public fee
 No custom cryptography implementation is included; storage protection uses OS facilities. Review the actual encryption questionnaire and applicable requirements before setting export-compliance declarations. No automatic exemption statement is added to Info.plist.
 
 ## App Review notes draft
-No login. On a supported iPhone, Settings > Offline Readiness checks microphone, English model and storage. Install the model with Internet, then use Captions > Start Listening. Audio stays local. Pause/Resume retains earlier captions; Stop saves finalized segments when auto-save is on. Sessions supports rename/delete/export. Locking or leaving stops capture by default; explicit per-session Continue in background can retain an active capture. Interruptions still stop it.
+No login. On a supported iPhone, Settings > Offline Readiness checks microphone, English model and storage. Install the model with Internet, then use Captions > Start Listening. Audio stays local. Pause/Resume retains earlier captions; Stop finishes a recovery draft; explicit Save Session adds it to the library, and Discard removes it. Sessions supports rename/delete/export. Locking or leaving stops capture by default; remembered Continue in background can retain an active capture. Interruptions still stop it.
 Provide exact tested device/OS details, permission setup instructions and known limitations after validation.
 
 ## Validation

@@ -1,8 +1,57 @@
 import XCTest
+import SwiftData
 @testable import VoiceInView
 
 @MainActor
 final class CaptionViewModelTests: XCTestCase {
+    func testDraftRequiresExplicitSaveAndPreferencesSurviveNewSession() async throws {
+        let name = "FlowTests." + UUID().uuidString
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removePersistentDomain(forName: name) }
+        let settings = AppSettings(defaults: defaults)
+        settings.continueInBackground = true
+        let repository = try TranscriptRepository(inMemory: true)
+        let model = CaptionViewModel(microphone: CaptionMicrophone(), speech: MockSpeech())
+        let coordinator = SessionCoordinator(repository: repository, caption: model, settings: settings)
+        await model.start()
+        let session = try XCTUnwrap(coordinator.currentSession)
+        XCTAssertNotNil(try repository.draft(for: session.id))
+        await model.stop()
+        XCTAssertTrue(coordinator.needsSessionDecision)
+        await coordinator.newSession()
+        XCTAssertEqual(model.state, .ended, "A pending draft cannot be silently replaced")
+        XCTAssertEqual(session.fullTranscript, "Final sentence.")
+        settings.saveAudio = true // next session only
+        XCTAssertFalse(model.saveAudio)
+        XCTAssertTrue(coordinator.saveCurrent(ended: true))
+        XCTAssertNil(try repository.draft(for: session.id))
+        await coordinator.newSession()
+        XCTAssertEqual(model.state, .idle)
+        XCTAssertTrue(model.saveAudio)
+        XCTAssertTrue(model.continueInBackground)
+        XCTAssertEqual(try repository.container.mainContext.fetchCount(FetchDescriptor<ConferenceSession>()), 1)
+    }
+
+    func testDiscardRemovesDraftAndKeepsPreviouslySavedSession() async throws {
+        let repository = try TranscriptRepository(inMemory: true)
+        let previous = try repository.create(title: "Keep me")
+        let settingsName = "DiscardTests." + UUID().uuidString
+        let defaults = UserDefaults(suiteName: settingsName)!
+        defer { defaults.removePersistentDomain(forName: settingsName) }
+        let model = CaptionViewModel(microphone: CaptionMicrophone(), speech: MockSpeech())
+        let coordinator = SessionCoordinator(repository: repository, caption: model, settings: AppSettings(defaults: defaults))
+        await model.start()
+        await model.stop()
+        let id = try XCTUnwrap(coordinator.currentSession?.id)
+        await coordinator.discardCurrent()
+        XCTAssertNil(coordinator.storageMessage)
+        XCTAssertEqual(model.state, .idle)
+        XCTAssertFalse(coordinator.needsSessionDecision)
+        XCTAssertNil(try repository.draft(for: id))
+        let sessions = try repository.container.mainContext.fetch(FetchDescriptor<ConferenceSession>())
+        XCTAssertEqual(sessions.map(\.id), [previous.id])
+    }
+
     func testBackgroundListeningRequiresOptInAndNewSessionResetsChoices() async {
         let speech = MockSpeech()
         let model = CaptionViewModel(microphone: CaptionMicrophone(), speech: speech)

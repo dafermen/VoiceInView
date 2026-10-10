@@ -18,6 +18,8 @@ Actualizada el 10 de octubre de 2026. Los documentos de aprendizaje están en es
 | Preparar una publicación pública | [Lista de publicación](release-checklist.md) y [App Store](app-store.md) |
 | Entender el tratamiento de los datos | [Privacidad](privacy.md) |
 
+Consulta también [el nuevo flujo de sesiones](session-workflow.md): preferencias recordadas, controles compactos, recuperación y Guardar/Descartar.
+
 ## Estado al cerrar esta actualización
 
 - Las versiones TestFlight 0.1.0 (5) y (6) tuvieron confirmación del usuario de funcionamiento básico en su iPhone.
@@ -25,7 +27,8 @@ Actualizada el 10 de octubre de 2026. Los documentos de aprendizaje están en es
 - La compilación Cloud 11 produjo el archivo con Xcode 26.6. Su exportación automática falló.
 - Ese mismo archivo se exportó y subió desde el Mac con Xcode 15.2 el 10 de octubre. Apple confirmó la subida y el inicio del procesamiento.
 - Las capturas confirman que esa subida terminó como 0.1.0 (1), asignada a Dev. La gestión automática no incrementó el número.
-- Se volvió a firmar y subir una copia como 0.1.0 (13), con numeración explícita. Falta confirmar procesamiento/asignación de 13 e instalación y pruebas físicas de las últimas mejoras.
+- Se volvió a firmar y subir una copia como 0.1.0 (13), con numeración explícita. El usuario confirmó posteriormente que la actualización llegó al iPhone y que ambas opciones de captura funcionan. Las pruebas físicas completas de audio/subtítulos siguen pendientes.
+- Fuente build 14 añade preferencias persistentes y el flujo de borradores/Guardar/Descartar. Su distribución es un paso separado.
 - La exportación automática de Cloud continúa sin solución confirmada. Existe una alternativa comprobada para este archivo; no una garantía de compatibilidad futura.
 
 ## Cómo interpretar el historial
