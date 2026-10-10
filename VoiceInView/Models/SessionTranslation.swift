@@ -100,3 +100,115 @@ enum TranslatedSubtitles {
         return result.sorted { $0.start < $1.start }
     }
 }
+
+
+/// Plan puro: solo solicita párrafos nuevos/modificados; UUID + texto identifican lo reutilizable.
+/// Las correcciones españolas se conservan únicamente si su fuente inglesa sigue siendo idéntica.
+struct IncrementalTranslation {
+    let source: [ReviewParagraph]
+    let previous: TranslationSnapshot?
+    var pending: [ReviewParagraph] {
+        source.filter { paragraph in
+            previous?.source.contains(paragraph) != true
+        }
+    }
+    func merging(_ responses: [ReviewParagraph]) throws -> TranslationSnapshot {
+        guard responses.map(\.id) == pending.map(\.id) else { throw TranslationFailure.incomplete }
+        let fresh = Dictionary(uniqueKeysWithValues: responses.map { ($0.id, $0) })
+        let retained = Set(source.filter { previous?.source.contains($0) == true }.map { $0.id.uuidString })
+        let generated = try source.map { paragraph -> ReviewParagraph in
+            if let response = fresh[paragraph.id] { return response }
+            guard let old = previous?.generated.first(where: { $0.id == paragraph.id }) else {
+                throw TranslationFailure.incomplete
+            }
+            return old
+        }
+        let result = TranslationSnapshot(source: source, generated: generated,
+            edits: previous?.edits.filter { retained.contains($0.key) } ?? [:])
+        try result.validate()
+        return result
+    }
+}
+
+/// Diccionario sencillo editable: una entrada por línea, «English = español» o solo un nombre.
+/// Máximo 100 frases breves. No sustituye partes de palabras ni interpreta expresiones regulares.
+enum PersonalVocabulary {
+    static let key = "personalVocabulary"
+    struct Term: Equatable, Sendable { let source: String; let target: String }
+    struct Part: Equatable, Sendable { let text: String; let literal: Bool }
+    static func terms(_ raw: String) -> [Term] {
+        var seen = Set<String>()
+        return Array(raw.components(separatedBy: .newlines).compactMap { line -> Term? in
+            let pieces = line.split(separator: "=", maxSplits: 1, omittingEmptySubsequences: false)
+            guard let first = pieces.first else { return nil }
+            let source = first.trimmingCharacters(in: .whitespacesAndNewlines)
+            let target = pieces.count == 2 ? pieces[1].trimmingCharacters(in: .whitespacesAndNewlines) : source
+            guard !source.isEmpty, !target.isEmpty, source.count <= 80, target.count <= 120,
+                  seen.insert(source.lowercased()).inserted else { return nil }
+            return Term(source: source, target: target)
+        }.prefix(100))
+    }
+    static func saved(defaults: UserDefaults = .standard) -> [Term] {
+        terms(defaults.string(forKey: key) ?? "")
+    }
+    static func parts(_ text: String, terms: [Term]) -> [Part] {
+        guard !terms.isEmpty else { return [Part(text: text, literal: false)] }
+        let ordered = terms.sorted { $0.source.count > $1.source.count }
+        let alternatives = ordered.map { NSRegularExpression.escapedPattern(for: $0.source) }.joined(separator: "|")
+        guard let regex = try? NSRegularExpression(pattern: "(?<![\\p{L}\\p{N}_])(?:" + alternatives + ")(?![\\p{L}\\p{N}_])", options: [.caseInsensitive]) else {
+            return [Part(text: text, literal: false)]
+        }
+        let ns = text as NSString
+        var offset = 0
+        var result: [Part] = []
+        for match in regex.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
+            if match.range.location > offset {
+                result.append(Part(text: ns.substring(with: NSRange(location: offset, length: match.range.location - offset)), literal: false))
+            }
+            let found = ns.substring(with: match.range)
+            let term = ordered.first { $0.source.caseInsensitiveCompare(found) == .orderedSame }
+            result.append(Part(text: term?.target ?? found, literal: true))
+            offset = NSMaxRange(match.range)
+        }
+        if offset < ns.length { result.append(Part(text: ns.substring(from: offset), literal: false)) }
+        return result
+    }
+    /// Traduce fragmentos libres y conserva literalmente los términos preferidos y espacios externos.
+    /// Es determinista; la concordancia alrededor del término requiere revisión humana.
+    static func translate(_ text: String, terms: [Term], using translate: (String) async throws -> String) async throws -> String {
+        var result = ""
+        for part in parts(text, terms: terms) {
+            try Task.checkCancellation()
+            let core = part.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            if part.literal || core.isEmpty || !core.unicodeScalars.contains(where: CharacterSet.letters.contains) {
+                result += part.text
+            } else {
+                let prefix = String(part.text.prefix(while: \.isWhitespace))
+                let suffix = String(part.text.reversed().prefix(while: \.isWhitespace).reversed())
+                result += prefix + (try await translate(core)) + suffix
+            }
+        }
+        return result
+    }
+}
+
+
+/// Cola acotada para lectura en directo. Los resultados tardíos nunca sustituyen texto actualizado.
+/// Solo vive en memoria: cerrar la vista no modifica ni borra la transcripción inglesa guardada.
+struct LiveTranslationBuffer {
+    private(set) var source: [ReviewParagraph] = []
+    private(set) var translated: [UUID: String] = [:]
+    mutating func synchronize(_ paragraphs: [ReviewParagraph]) {
+        let next = Array(paragraphs.suffix(40))
+        let unchanged = Set(next.filter { source.contains($0) }.map(\.id))
+        translated = translated.filter { unchanged.contains($0.key) }
+        source = next
+    }
+    var pending: [ReviewParagraph] { Array(source.filter { translated[$0.id] == nil }.prefix(4)) }
+    mutating func accept(_ values: [ReviewParagraph], for requested: [ReviewParagraph]) throws {
+        try TranslationSnapshot(source: requested, generated: values).validate()
+        for (original, response) in zip(requested, values) where source.contains(original) {
+            translated[original.id] = response.text
+        }
+    }
+}

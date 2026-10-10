@@ -53,3 +53,6 @@ The live level indicator reuses the microphone's local RMS-derived level; it is 
 ## Optional saved-text translation
 
 English source snapshots, machine Spanish and Spanish edits live in the local V6 store. Apple Translation prepares/downloads language models with system consent; downloaded models enable on-device translation. No third-party translation service or app HTTP client is added. Apple may collect API usage/performance metrics, including languages and bundle ID, but not the original or translated content according to [TranslationSession documentation](https://developer.apple.com/documentation/translation/translationsession). Text export obeys the selected language. Session deletion removes its translation; exported copies remain under the destination's control.
+
+
+Build 17 adds temporary foreground live translation of confirmed captions. It is cleared when the reader closes and never alters saved English. The personal vocabulary lives in UserDefaults, separately from the backup-excluded session database; preferences can follow iOS backup settings. Clear and save the vocabulary to remove its entries. No vocabulary content is logged or sent to a new third-party service.

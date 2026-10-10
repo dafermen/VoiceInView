@@ -15,6 +15,9 @@ struct SettingsView: View {
                     .disabled(coordinator.caption.state.active || coordinator.caption.state.busy)
             }
             CaptureOptionsView(model: coordinator.caption, settings: settings)
+            Section("Personal vocabulary") {
+                NavigationLink("Names & translation terms") { PersonalVocabularyView() }
+            }
             Section("Captions") {
                 LabeledContent("Language", value: "English (United States)")
                 Text("Additional transcription languages are not available yet.").font(.caption)
@@ -130,5 +133,32 @@ struct OfflineReadinessView: View {
         refreshPermission()
         storage = StorageReadiness.check(at: coordinator.repository.storageURL)
         await coordinator.caption.checkReadiness()
+    }
+}
+
+
+struct PersonalVocabularyView: View {
+    @AppStorage(PersonalVocabulary.key) private var saved = ""
+    @State private var draft = ""
+    @State private var applied = false
+    var body: some View {
+        Form {
+            Section {
+                Text("One short name or term per line. Add = and your preferred Spanish wording when needed.")
+                Text("VoiceInView\nmeeting = reunión\nOpenAI").font(.callout.monospaced()).foregroundStyle(.secondary)
+                TextEditor(text: $draft).frame(minHeight: 200).autocorrectionDisabled()
+                    .accessibilityLabel("Personal vocabulary").accessibilityIdentifier("vocabularyEditor")
+                Text("\(PersonalVocabulary.terms(draft).count)/100 valid terms. Duplicate or empty terms and overlong entries are ignored.").font(.caption)
+                Button(applied ? "Saved" : "Save vocabulary") {
+                    saved = PersonalVocabulary.terms(draft).map { $0.source + " = " + $0.target }.joined(separator: "\n")
+                    draft = saved; applied = true
+                }.accessibilityIdentifier("saveVocabularyButton")
+            } footer: {
+                Text("Stored on this iPhone. Recognition hints apply on the next recognition start. New translations use your preferred terms; saved translations stay unchanged until you replace them. Review grammar around translated terms.")
+            }
+        }
+        .navigationTitle("Personal vocabulary")
+        .onAppear { draft = saved }
+        .onChange(of: draft) { _, _ in applied = draft == saved }
     }
 }

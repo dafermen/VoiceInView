@@ -10,13 +10,15 @@ Start with the [documentation index](docs/README.md). Spanish learning material:
 
 ## Spanish translation
 
-Source build **16** adds translation of saved English transcripts: Spanish or bilingual reading, independent Spanish corrections, TXT/PDF/SRT/WebVTT sharing and English audio playback with translated captions. Translation generation requires iOS 18+ and Apple's downloaded language models; iOS 17 retains the rest of the app. See [the translation guide](docs/translation.md) and [validation evidence](docs/validation-report.md). A source update is not confirmation of TestFlight availability.
+Source build **17** extends Spanish translation with paragraph audio replay, a personal vocabulary, incremental updates preserving unaffected edits, bilingual library search, export preview and optional live Spanish preview. See the [resumable implementation record](docs/implementation-checkpoint.md).
+
+Build **16** introduced translation of saved English transcripts: Spanish or bilingual reading, independent Spanish corrections, TXT/PDF/SRT/WebVTT sharing and English audio playback with translated captions. Translation generation requires iOS 18+ and Apple's downloaded language models; iOS 17 retains the rest of the app. See [the translation guide](docs/translation.md) and [validation evidence](docs/validation-report.md). A source update is not confirmation of TestFlight availability.
 
 ## Current status
 Implementation and release-preparation source through Phase 9 are present. This is a DEVELOPMENT BUILD, not a certified release candidate.
 The project now targets iOS 17 and builds with Xcode 15.2 on macOS Ventura. A compatibility speech engine uses SFSpeechRecognizer with on-device recognition required. The modern iOS 26 engine is retained behind compiler/OS availability checks. See [validation results](docs/validation-report.md) for executed checks; real-device accuracy and offline behavior remain unverified.
 On 2026-10-09, the user confirmed successful installation and basic operation of TestFlight builds 0.1.0 (5) and (6) on their iPhone. This does not establish offline accuracy or extended reliability.
-On 2026-10-10, the Cloud Build 11 archive (Xcode 26.6 / iOS SDK 26.5) was successfully exported and uploaded from the Mac using Xcode 15.2. Screenshots confirm the first local upload processed as 0.1.0 (1), assigned to Dev. It appeared below older builds 5–8. The same feature archive was subsequently re-signed and uploaded as 0.1.0 (13) with explicit numbering; the user subsequently confirmed the update on the iPhone and that the audio/background switches work. Extended audio/subtitle and offline acceptance tests remain pending. Cloud export still fails with HTTP 502; changing Xcode 27 to 26.6 did not fix it. See the distribution runbook before retrying.
+On 2026-10-10, the Cloud Build 11 archive (Xcode 26.6 / iOS SDK 26.5) was successfully exported and uploaded from the Mac using Xcode 15.2. Screenshots confirm the first local upload processed as 0.1.0 (1), assigned to Dev. It appeared below older builds 5–8. The same feature archive was subsequently re-signed and uploaded as 0.1.0 (13) with explicit numbering; the user subsequently confirmed the update on the iPhone and that the audio/background switches work. Extended audio/subtitle and offline acceptance tests remain pending. At that time Cloud export failed with HTTP 502; changing Xcode 27 to 26.6 did not fix it. See the distribution runbook before retrying.
 Phase 10 online AI is not implemented.
 
 ## Capture and audio review (build 15 source)

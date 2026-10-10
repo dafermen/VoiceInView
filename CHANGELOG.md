@@ -1,3 +1,12 @@
+## 2026-10-10 — Translation review and live preview (source build 17)
+- Listen to English audio from a translated paragraph; keep approximate existing subtitle timing.
+- Add a local personal dictionary with recognition hints and preferred Spanish terms.
+- Update only changed English paragraphs; preserve Spanish edits for unchanged paragraphs, including reordering/deletion.
+- Search current English and Spanish across sessions and open the matching language/paragraph.
+- Preview language, freshness, format and content before translated exports.
+- Add opt-in live Spanish preview of confirmed captions; bounded queue, cancellation and foreground-only translation. No change to saved English or microphone lifecycle. Live preview is temporary, not an automatically saved translation.
+- Keep schema V6, bundle identity, audio clock and user-controlled sharing unchanged. Physical-device language downloads, latency, battery and grammar validation remain required.
+
 # Changelog
 
 ## 2026-10-10 — Saved-session Spanish translation (source build 16)

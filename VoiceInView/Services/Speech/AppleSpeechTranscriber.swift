@@ -134,6 +134,12 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
             }
         }
         do {
+            let vocabulary = PersonalVocabulary.saved().map(\.source)
+            if !vocabulary.isEmpty {
+                let context = AnalysisContext()
+                context.contextualStrings[.general] = vocabulary
+                try await newAnalyzer.setContext(context)
+            }
             try await newAnalyzer.prepareToAnalyze(in: format)
             guard generation == identifier, !Task.isCancelled else { throw CancellationError() }
             try await newAnalyzer.start(inputSequence: inputs.stream)

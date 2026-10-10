@@ -109,3 +109,17 @@ El [plan de pruebas](testing.md) distingue los escenarios automatizados de los q
 ## Traducción guardada (build 16)
 
 `Models/SessionTranslation.swift` contiene el snapshot, la tabla V6 y la transformación pura de subtítulos. `TranscriptRepository.saveTranslation` rechaza IDs incompletos y texto de origen cambiado. `UI/SessionTranslationView.swift` adapta Translation de Apple a la pantalla de lectura y mantiene la cancelación por UUID de intento. `TranscriptEditorView` se reutiliza con etiquetas españolas de edición, sin guardar sobre las correcciones inglesas. [Guía completa](translation.md).
+
+
+## Build 17: revisar traducciones sin perder trabajo
+
+Consulta [la guía funcional](translation.md) y [el punto de reanudación](implementation-checkpoint.md).
+Un UUID identifica un párrafo, pero no garantiza que sus palabras sigan iguales. Por eso
+`IncrementalTranslation` compara UUID y texto: reutiliza traducción/correcciones solo cuando ambos coinciden.
+Construye el resultado completo en memoria y lo guarda al final; cancelar nunca guarda «media traducción».
+La búsqueda incluye solo español vigente, para no enviar al usuario a un texto obsoleto.
+`PersonalVocabulary` separa frases libres y términos literales: traduce las primeras y conserva los últimos;
+por eso es importante revisar la gramática. El diccionario es una preferencia, no una nueva tabla de la base.
+`LiveTranslationBuffer` separa captura de presentación: limita memoria, evita peticiones paralelas y comprueba
+que cada respuesta siga correspondiendo al texto solicitado. Volver al inglés elimina únicamente la vista previa.
+La exportación espera a que cierre la hoja de revisión antes de abrir la hoja de compartir del sistema.

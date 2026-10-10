@@ -1,3 +1,14 @@
+## Build 17 — revisión de traducciones y vista en directo (2026-10-10)
+
+- Debug y Release de simulador compilados con Xcode 15.2. Bundle Release verificado: build 17, identidad anterior, mínimo iOS 17, orientaciones, audio en background, assets y privacidad.
+- **71 pruebas unitarias pasaron**, incluidas 10 de traducción: nuevas pruebas de actualización incremental, términos/espacios/persistencia del diccionario y cola acotada con respuestas tardías.
+- Búsqueda española y bloqueo de traducción obsoleta pasaron en `/private/tmp/VoiceInView-17-Tests.xcresult`. El conjunto inicial no pasó completo: el recorrido de compartir tenía dos expectativas antiguas (buscar «Hola» después de que el audio ya avanzó y localizar el selector por una etiqueta incompleta).
+- La prueba se ajustó para comprobar inicio automático/Pause; esto detectó un fallo real de inicio del reproductor que motivó una selección identificable y una nueva verificación. El formato ahora usa segmentos visibles; resultado final en el [punto de reanudación](implementation-checkpoint.md).
+- Evidencias: `/private/tmp/VoiceInView-17-build.log`, `VoiceInView-17-tests.log`, `VoiceInView-17-ui-final.log`, `VoiceInView-17-release.log`; resultados UI finales en `/private/tmp/VoiceInView-17-UI-Final.xcresult`.
+- 118 enlaces locales comprobados; proyecto plist y `git diff --check` correctos.
+- Verificación final: **TEST SUCCEEDED**, recorrido de edición/audio/pausa/preview/SRT en 51,509 s (`VoiceInView-17-UI-Verified.xcresult`). Release final **BUILD SUCCEEDED** (`VoiceInView-17-release-final.log`). Las otras dos pruebas UI pasaron en la ejecución inicial.
+- La ejecución real de Translation, las sugerencias del motor moderno, calidad, descarga de idiomas, latencia/batería y entrega TestFlight necesitan validación aparte. La vista en directo es temporal y experimental, no una traducción guardada automáticamente.
+
 # Validation report — updated 2026-10-10
 
 ## Saved-session Spanish translation — 2026-10-10, source build 16

@@ -44,6 +44,7 @@ final class LegacySpeechBackend: LegacySpeechRecognizing {
         request.shouldReportPartialResults = true
         request.addsPunctuation = true
         request.taskHint = .dictation
+        request.contextualStrings = PersonalVocabulary.saved().map(\.source)
         return request
     }
 

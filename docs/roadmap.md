@@ -31,4 +31,4 @@ Timed paragraph/phrase playback, explicit capture and playback pause/resume, lev
 
 ## Source build 16
 
-Saved-session Spanish translation, bilingual review and translated subtitle sharing are implemented. Live translation and synthesized Spanish audio remain outside this delivery. Real translation quality, on-device downloads/offline behavior and TestFlight delivery are separate acceptance steps.
+Saved-session Spanish translation, bilingual review and translated subtitle sharing are implemented. Build 17 adds optional experimental foreground live Spanish preview; synthesized Spanish audio remains outside this delivery. See [translation limits](translation.md) and [the implementation checkpoint](implementation-checkpoint.md). Real translation quality, on-device downloads/offline behavior and TestFlight delivery are separate acceptance steps.

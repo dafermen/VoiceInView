@@ -202,3 +202,17 @@ SwiftUI describe vistas mediante tipos genéricos. Una cadena muy larga de modif
 ## 17. Traducir sin destruir el original
 
 Lee [el recorrido de traducción](translation.md). La idea central es separar datos originales de datos derivados: cada párrafo conserva su UUID; la traducción guarda una copia del inglés usado, un resultado automático y las correcciones españolas. Si el inglés cambia, conservar el mismo UUID no basta: comparar el contenido detecta que hay que retraducir. Un lote se guarda solo cuando todas las respuestas son válidas. Cancelar evita publicar resultados parciales. La migración V6 añade una tabla en lugar de modificar los modelos anteriores.
+
+
+## Build 17: revisar traducciones sin perder trabajo
+
+Consulta [la guía funcional](translation.md) y [el punto de reanudación](implementation-checkpoint.md).
+Un UUID identifica un párrafo, pero no garantiza que sus palabras sigan iguales. Por eso
+`IncrementalTranslation` compara UUID y texto: reutiliza traducción/correcciones solo cuando ambos coinciden.
+Construye el resultado completo en memoria y lo guarda al final; cancelar nunca guarda «media traducción».
+La búsqueda incluye solo español vigente, para no enviar al usuario a un texto obsoleto.
+`PersonalVocabulary` separa frases libres y términos literales: traduce las primeras y conserva los últimos;
+por eso es importante revisar la gramática. El diccionario es una preferencia, no una nueva tabla de la base.
+`LiveTranslationBuffer` separa captura de presentación: limita memoria, evita peticiones paralelas y comprueba
+que cada respuesta siga correspondiendo al texto solicitado. Volver al inglés elimina únicamente la vista previa.
+La exportación espera a que cierre la hoja de revisión antes de abrir la hoja de compartir del sistema.

@@ -40,3 +40,5 @@ Al documentar un resultado, distinguir: implementado, compilado, probado en simu
 Build 15 añade revisión por frase, feedback de captura, reanudación manual, nombres y ampliación por gesto. Su validación y entrega se registran por separado en el informe de pruebas.
 
 Build 16 incorpora [traducción al español](translation.md) de sesiones guardadas, edición independiente y exportación bilingüe. La validación local y la prueba real del traductor se distinguen en el informe.
+
+- [Build 17: punto de reanudación y validación](implementation-checkpoint.md) — seis mejoras de traducción, estado verificable y pruebas pendientes.

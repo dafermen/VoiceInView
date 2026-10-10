@@ -1,4 +1,4 @@
-# Traducción de sesiones guardadas — build 16
+# Traducción y revisión — build 17
 
 ## Uso
 
@@ -6,11 +6,27 @@
 2. Pulsa **Translate to Spanish**. La primera vez, Apple puede solicitar permiso para descargar inglés y español. Se requiere iOS 18 o posterior y una compilación con el SDK de Translation.
 3. La vista abre en **Español** al finalizar. El selector permite **English**, **Español** o **Both**.
 4. **Edit Spanish** permite corregir, buscar/reemplazar y deshacer. Guardar modifica solo el español. **Restore translation** restaura la traducción automática dentro del borrador de edición.
-5. Compartir ofrece copiar, TXT, PDF, SRT y WebVTT del idioma seleccionado. **Audio & subtitles** reproduce el audio inglés con esos subtítulos; no genera voz española.
+5. Compartir abre **Review & share**: comprueba idioma, vigencia y formato; revisa los primeros 800 caracteres antes de **Share file**. Puedes copiar, TXT, PDF, SRT o WebVTT. Los formatos sincronizados se ofrecen solo con tiempos disponibles.
+6. **Listen to original** bajo un párrafo traducido abre el audio desde ese párrafo. **Audio & subtitles** abre el reproductor completo; no genera voz española.
+7. Busca en **Sessions** por título o texto inglés/español. Un resultado español vigente abre Translation; uno inglés abre el párrafo original. El español obsoleto no se indexa.
 
 La traducción se inicia explícitamente sobre el texto inglés ya corregido. No requiere grabar audio. Puede cancelarse; un intento incompleto no reemplaza una traducción anterior. Traducir otra vez solicita confirmación porque reemplaza también las correcciones españolas.
 
-Si editas el inglés, el snapshot español queda desactualizado: se muestra un aviso y se oculta su lectura/exportación hasta traducir otra vez. El inglés y la copia española anterior permanecen guardados. El idioma de escucha sigue siendo inglés; esta entrega no incluye traducción durante la captura.
+Si editas el inglés, el snapshot español queda desactualizado: se muestra un aviso y se oculta su lectura/exportación. **Update changed paragraphs** traduce solo párrafos nuevos o modificados: conserva las correcciones españolas de párrafos cuyo UUID y texto inglés no cambiaron. Las correcciones del párrafo modificado se reemplazan. La operación completa se guarda de forma atómica; cancelarla o fallar conserva la copia anterior. Si solo se eliminaron/reordenaron párrafos, se reutiliza la traducción sin llamar a Apple. **Translate again** sobre una traducción vigente continúa siendo un reemplazo completo con confirmación.
+
+## Diccionario personal
+
+En **Settings → Names & translation terms**, escribe una entrada por línea: `meeting = reunión` o solo `OpenAI` para conservar un nombre. **Save vocabulary** guarda hasta 100 entradas breves y únicas en este iPhone. Se ignoran líneas vacías, destinos vacíos, fuentes de más de 80 caracteres y destinos de más de 120. Los cambios orientan nuevas solicitudes de reconocimiento; no reescriben transcripciones existentes ni garantizan que el motor reconozca cada nombre.
+
+Al traducir, coincidencias literales de términos completos se sustituyen por el español preferido; los fragmentos restantes se traducen mediante Apple. No hay sustituciones dentro de palabras. Se priorizan términos largos cuando coinciden al mismo inicio. Esto asegura términos consistentes, pero puede afectar la concordancia o el contexto de la frase: revisa el resultado. Cambiar el diccionario no invalida automáticamente traducciones anteriores; usa **Translate again** para aplicarlo a todo el texto.
+
+## Español durante la captura (experimental)
+
+En Captions, el icono de bocadillo con caracteres alterna inglés/español en iOS 18+ con SDK compatible. Traduce únicamente párrafos confirmados; el texto parcial no se envía. Mientras espera, muestra el inglés con estilo secundario. **Following / Follow latest** activa o desactiva el desplazamiento automático.
+
+La ventana conserva los últimos 40 párrafos y procesa lotes de hasta cuatro; en conversaciones largas se prioriza la ventana reciente. Los anteriores permanecen en la transcripción original. Es una vista previa temporal: se pierde al volver a inglés/cerrar la pantalla; para guardar/exportar español, guarda la sesión y tradúcela desde Sessions. No se traduce el audio interno de YouTube ni de otras apps.
+
+Cambiar a segundo plano cancela la traducción en curso. La captura obedece su preferencia de Background, independiente de esta vista. Al volver se reanudan las traducciones pendientes. Un error muestra Retry sin detener el micrófono ni modificar la transcripción. Se requiere descargar idiomas inicialmente; probar latencia, batería y modo avión en un iPhone antes de depender de esta función durante una conferencia.
 
 ## Subtítulos y sincronización
 
@@ -24,9 +40,12 @@ Las sesiones antiguas sin tiempos pueden traducirse y exportarse como texto/PDF,
 - `TranslationSnapshot.source`: copia exacta de los párrafos ingleses corregidos al iniciar. Compararla con el texto actual detecta traducciones obsoletas, incluso si los UUID siguen siendo iguales.
 - `generated`: español automático con los mismos UUID y orden. `edits`: diccionario de cambios del usuario. Así se puede restaurar el resultado automático sin tocar el inglés.
 - `saveTranslation`: valida IDs, respuestas completas y vigencia antes de codificar JSON y guardar de forma atómica. Fallos de idioma, cancelación o descarga no producen una traducción parcialmente guardada.
+- `IncrementalTranslation`: calcula diferencias por UUID + texto y mezcla resultados manteniendo solo ediciones vigentes.
+- `LiveTranslationBuffer`: cola pura limitada a 40 párrafos/cuatro por lote; descarta respuestas de fuentes modificadas.
+- `PersonalVocabulary`: valida entradas, escapa expresiones literales y conserva términos/espacios al traducir fragmentos. El reconocimiento usa contextualStrings (compatibilidad) o AnalysisContext (motor moderno).
 - `AppleTranslationRunner`: usa `TranslationSession` de Apple, prepara idiomas y procesa párrafos completos. Reporta progreso y comprueba cancelación. El UUID del intento impide guardar una respuesta tardía después de cancelar.
 - `TranslatedSubtitles`: función pura y comprobable; no llama al traductor ni al disco. Reutiliza tiempos originales y escapa texto al renderizar SRT/WebVTT.
-- `SessionTranslationView`: concentra selección de idioma, edición, exportación y reproducción. La pantalla de captura permanece libre de controles adicionales.
+- `SessionTranslationView`: concentra selección de idioma, edición, exportación y reproducción. La captura ofrece un único icono opcional para alternar la vista previa española.
 
 ## Compatibilidad y privacidad
 
@@ -39,5 +58,7 @@ El contenido y las traducciones se guardan localmente, sin CloudKit y excluidos 
 Consultar [el informe de validación](validation-report.md). Las pruebas con español prefijado en DEBUG verifican interfaz/persistencia/exportación, **no** la calidad ni el funcionamiento real del traductor de Apple. Es necesario probar en un iPhone iOS 18+: descarga, rechazo de descarga, cancelación, modo avión con idiomas instalados, texto extenso, cierre/reapertura y calidad inglés→español.
 
 Fuentes oficiales:
+- [Vocabulario contextual](https://developer.apple.com/documentation/speech/sfspeechrecognitionrequest/contextualstrings)
+- [AnalysisContext](https://developer.apple.com/documentation/speech/analysiscontext)
 - [TranslationSession](https://developer.apple.com/documentation/translation/translationsession)
 - [Traducción dentro de una app](https://developer.apple.com/documentation/translation/translating-text-within-your-app)

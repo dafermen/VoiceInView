@@ -21,6 +21,7 @@ struct CaptionScreen: View {
     @GestureState private var pinchScale: CGFloat = 1
     @State private var readingStartID: UUID?
     @State private var isFullScreen = false
+    @State private var liveSpanish = false
     @State private var followLive = true
     @State private var confirmNewSession = false
     @State private var showingOptions = false
@@ -43,7 +44,13 @@ struct CaptionScreen: View {
                     .padding(.horizontal, 16)
                 }
                 if let message = statusMessage { captureNotice(message) }
-                transcript
+                Group {
+                    if liveSpanish {
+                        LiveSpanishView(paragraphs: model.transcript.finalized.suffix(40).map {
+                            ReviewParagraph(id: $0.id, text: $0.text)
+                        }, fontSize: settings.captionSize)
+                    } else { transcript }
+                }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 if model.state == .ended && needsSessionDecision {
                     Divider()
@@ -60,6 +67,7 @@ struct CaptionScreen: View {
                             Spacer(minLength: 0)
                             primaryButton(iconOnly: true)
                             if model.state != .ended { stopButton(iconOnly: true) }
+                            translationButton
                             capturePreferencesButton
                             fullScreenButton
                         } else {
@@ -193,6 +201,7 @@ struct CaptionScreen: View {
     private var utilities: some View {
         HStack(spacing: 0) {
             if model.state == .ended { newSessionButton }
+            translationButton
             fullScreenButton
             Button { showingOptions = true } label: {
                 Image(systemName: "textformat.size").frame(width: 44, height: 44)
@@ -205,6 +214,20 @@ struct CaptionScreen: View {
             .accessibilityLabel("Session actions")
             .accessibilityIdentifier("sessionActionsButton")
         }
+    }
+
+    @ViewBuilder private var translationButton: some View {
+        #if canImport(Translation)
+        if #available(iOS 18.0, *) {
+            Button { liveSpanish.toggle() } label: {
+                Image(systemName: "character.bubble").frame(width: 44, height: 44)
+                    .foregroundStyle(liveSpanish ? Color.accentColor : Color.primary)
+            }
+            .accessibilityLabel(liveSpanish ? "Show original English" : "Show live Spanish")
+            .accessibilityValue(liveSpanish ? "Spanish" : "English")
+            .accessibilityIdentifier("liveSpanishButton")
+        }
+        #endif
     }
 
     private var fullScreenButton: some View {

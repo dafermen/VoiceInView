@@ -1,3 +1,13 @@
+## Build 17 — nuevas comprobaciones
+- [ ] Compilación moderna en Xcode Cloud del commit de esta entrega.
+- [ ] iPhone: traducción directa, descarga/rechazo de idiomas, volver a inglés, interrupción y segundo plano.
+- [ ] Conferencia prolongada: latencia, batería y ventana de 40 párrafos.
+- [ ] Diccionario: nombres, siglas, términos compuestos y concordancia española.
+- [ ] Corrección inglesa parcial conserva las otras correcciones españolas.
+- [ ] Actualización TestFlight instalada y número de build comprobado.
+
+La implementación y pruebas locales se registran en [el punto de reanudación](implementation-checkpoint.md).
+
 # Release checklist
 This is a gate, not a claim that release is approved.
 

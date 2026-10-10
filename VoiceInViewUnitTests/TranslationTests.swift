@@ -4,6 +4,74 @@ import SwiftData
 
 @MainActor
 final class TranslationTests: XCTestCase {
+
+    func testIncrementalTranslationRetainsOnlyUnchangedEdits() throws {
+        let a = ReviewParagraph(id: UUID(), text: "First")
+        let b = ReviewParagraph(id: UUID(), text: "Second")
+        let c = ReviewParagraph(id: UUID(), text: "Third")
+        let previous = TranslationSnapshot(source: [a, b], generated: [
+            .init(id: a.id, text: "Primero"), .init(id: b.id, text: "Segundo")],
+            edits: [a.id.uuidString: "Primera corrección", b.id.uuidString: "Vieja corrección"])
+        let changed = ReviewParagraph(id: b.id, text: "New second")
+        let plan = IncrementalTranslation(source: [c, a, changed], previous: previous)
+        XCTAssertEqual(plan.pending, [c, changed])
+        let result = try plan.merging([.init(id: c.id, text: "Tercero"), .init(id: b.id, text: "Nuevo segundo")])
+        XCTAssertEqual(result.spanish.map(\.text), ["Tercero", "Primera corrección", "Nuevo segundo"])
+        XCTAssertEqual(result.edits.count, 1)
+        XCTAssertThrowsError(try plan.merging([]))
+        XCTAssertThrowsError(try plan.merging([.init(id: c.id, text: "")] ))
+        let removed = try IncrementalTranslation(source: [a], previous: previous).merging([])
+        XCTAssertEqual(removed.spanish.first?.text, "Primera corrección")
+        XCTAssertEqual(removed.edits.count, 1)
+    }
+
+    func testVocabularyValidatesLimitsAndLiteralBoundaries() {
+        let terms = PersonalVocabulary.terms("OpenAI\nmeeting = reunión\nMEETING = otro\n = invalid\nempty = \nC++ = Cplusplus")
+        XCTAssertEqual(terms.count, 3)
+        XCTAssertEqual(terms[0].target, "OpenAI")
+        let parts = PersonalVocabulary.parts("OpenAI meeting, meetings and C++!", terms: terms)
+        XCTAssertEqual(parts.filter(\.literal).map(\.text), ["OpenAI", "reunión", "Cplusplus"])
+        XCTAssertEqual(parts.map(\.text).joined(), "OpenAI reunión, meetings and Cplusplus!")
+        XCTAssertEqual(PersonalVocabulary.terms((0..<105).map { "Term\($0)" }.joined(separator: "\n")).count, 100)
+        XCTAssertTrue(PersonalVocabulary.terms(String(repeating: "a", count: 81)).isEmpty)
+    }
+
+    func testVocabularyPreservesSpacingAndDoesNotSendTermsToTranslator() async throws {
+        var sent: [String] = []
+        let result = try await PersonalVocabulary.translate("  Hello OpenAI!  ", terms: PersonalVocabulary.terms("OpenAI")) {
+            sent.append($0); return "Hola"
+        }
+        XCTAssertEqual(sent, ["Hello"])
+        XCTAssertEqual(result, "  Hola OpenAI!  ")
+        let suite = "vocabulary-tests-" + UUID().uuidString
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set("meeting = reunión", forKey: PersonalVocabulary.key)
+        XCTAssertEqual(PersonalVocabulary.saved(defaults: defaults).first?.target, "reunión")
+    }
+
+    func testLiveTranslationRejectsLateChangedResultsAndBoundsQueue() throws {
+        let a = ReviewParagraph(id: UUID(), text: "Original")
+        var buffer = LiveTranslationBuffer()
+        buffer.synchronize([a])
+        let changed = ReviewParagraph(id: a.id, text: "Changed")
+        buffer.synchronize([changed])
+        try buffer.accept([.init(id: a.id, text: "Anterior")], for: [a])
+        XCTAssertTrue(buffer.translated.isEmpty)
+        try buffer.accept([.init(id: a.id, text: "Cambiado")], for: [changed])
+        XCTAssertEqual(buffer.translated[a.id], "Cambiado")
+        buffer.synchronize([changed])
+        XCTAssertTrue(buffer.pending.isEmpty)
+        let many = (0..<100).map { ReviewParagraph(id: UUID(), text: "\($0)") }
+        buffer.synchronize(many)
+        XCTAssertEqual(buffer.source.count, 40)
+        XCTAssertEqual(buffer.pending.count, 4)
+        XCTAssertTrue(buffer.translated.isEmpty)
+        XCTAssertThrowsError(try buffer.accept([], for: buffer.pending))
+        buffer.synchronize([])
+        XCTAssertTrue(buffer.source.isEmpty)
+    }
+
     private func sample(_ repository: TranscriptRepository) throws -> (ConferenceSession, TranslationSnapshot) {
         let session = try repository.create(title: "Conference")
         let segment = CaptionSegment(runID: UUID(), start: 1, end: 8,

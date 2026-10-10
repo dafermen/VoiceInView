@@ -10,6 +10,7 @@ import Translation
 struct SessionTranslationView: View {
     let session: ConferenceSession
     let repository: TranscriptRepository
+    var searchQuery = ""
     @Environment(\.dismiss) private var dismiss
     @State private var source: [ReviewParagraph] = []
     @State private var snapshot: TranslationSnapshot?
@@ -22,7 +23,9 @@ struct SessionTranslationView: View {
     @State private var audioDuration: Double?
     @State private var failure: String?
     @State private var editing = false
-    @State private var media = false
+    @State private var playback: TranslationPlayback?
+    @State private var previewKind = "txt"
+    @State private var pendingExport: String?
     @State private var replacing = false
     @State private var exportMenu = false
     @State private var share: MediaShare?
@@ -57,14 +60,29 @@ struct SessionTranslationView: View {
                     ForEach(TranscriptLanguage.allCases) { Text($0.rawValue).tag($0) }
                 }.pickerStyle(.segmented).padding().accessibilityIdentifier("translationLanguagePicker")
                 status.padding(.horizontal)
+                ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 20) {
                         ForEach(Array(displayed.enumerated()), id: \.element.id) { index, paragraph in
-                            Text(paragraph.text).font(.title2).textSelection(.enabled)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .accessibilityIdentifier("translatedParagraph-\(index)")
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(paragraph.text).font(.title2).textSelection(.enabled)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .accessibilityIdentifier("translatedParagraph-\(index)")
+                                if audioDuration != nil && cues.contains(where: { $0.paragraphID == paragraph.id }) {
+                                    Button("Listen to original", systemImage: "play.circle") {
+                                        playback = TranslationPlayback(paragraphID: paragraph.id)
+                                    }.font(.caption).disabled(job != nil || preparing)
+                                        .accessibilityIdentifier("listenTranslated-\(index)")
+                                }
+                            }.id(paragraph.id)
                         }
                     }.padding()
+                }
+                .onChange(of: displayed) { _, values in
+                    if !searchQuery.isEmpty, let match = values.first(where: { $0.text.localizedStandardContains(searchQuery) }) {
+                        proxy.scrollTo(match.id, anchor: .top)
+                    }
+                }
                 }
                 Divider()
                 controls.padding(.horizontal).frame(minHeight: 54)
@@ -88,7 +106,7 @@ struct SessionTranslationView: View {
                         self.job = nil
                         do {
                             let generated = try result.get()
-                            let updated = TranslationSnapshot(source: job.source, generated: generated)
+                            let updated = try job.plan.merging(generated)
                             try repository.saveTranslation(updated, for: session)
                             snapshot = updated; mode = .spanish
                         } catch is CancellationError { }
@@ -111,24 +129,17 @@ struct SessionTranslationView: View {
                     }
                 }
             }
-            .sheet(isPresented: $media) {
+            .sheet(item: $playback) { selection in
                 SessionMediaView(session: session, repository: repository, paragraphs: displayed,
-                    hasCorrections: true, translatedCues: cues, translationLanguage: mode.rawValue)
+                    hasCorrections: true, initialParagraphID: selection.paragraphID, translatedCues: cues, translationLanguage: mode.rawValue)
             }
             .sheet(item: $share, onDismiss: cleanup) { item in MediaActivityView(urls: item.urls) }
-            .confirmationDialog("Share \(mode.rawValue)", isPresented: $exportMenu, titleVisibility: .visible) {
-                Button("Copy text") { UIPasteboard.general.string = TranscriptReview.text(displayed) }
-                Button("Text (TXT)") { export(kind: "txt") }
-                Button("PDF") { export(kind: "pdf") }
-                if !cues.isEmpty {
-                    Button("Subtitles (SRT)") { export(kind: "srt") }
-                    Button("Subtitles (WebVTT)") { export(kind: "vtt") }
-                }
-                Button("Cancel", role: .cancel) {}
-            }
+            .sheet(isPresented: $exportMenu, onDismiss: {
+                if let kind = pendingExport { pendingExport = nil; export(kind: kind) }
+            }) { exportPreview }
             .confirmationDialog("Translate again? This replaces the saved Spanish translation and its edits.",
                                 isPresented: $replacing, titleVisibility: .visible) {
-                Button("Replace translation", role: .destructive) { start() }
+                Button("Replace translation", role: .destructive) { start(replaceAll: true) }
                 Button("Cancel", role: .cancel) {}
             }
             .alert("Translation", isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) {
@@ -148,7 +159,7 @@ struct SessionTranslationView: View {
             }
             Text("Preparing languages or translating…").font(.caption).foregroundStyle(.secondary)
         } else if snapshot != nil && !current {
-            Text("The English text changed. Translate again to update Spanish before reading or sharing it.")
+            Text("The English text changed. Update changed paragraphs to keep Spanish edits in unchanged paragraphs. Changed paragraphs will receive new Spanish text.")
                 .font(.callout).foregroundStyle(.secondary).accessibilityIdentifier("translationOutdated")
         } else if !current {
             Text("Translate your saved English transcript into Spanish. English and the original audio are kept.")
@@ -165,13 +176,13 @@ struct SessionTranslationView: View {
 
     private var controls: some View {
         HStack {
-            Button(current ? "Translate again" : "Translate to Spanish", systemImage: "character.bubble") {
-                if snapshot != nil { replacing = true } else { start() }
+            Button(current ? "Translate again" : snapshot == nil ? "Translate to Spanish" : "Update changed paragraphs", systemImage: "character.bubble") {
+                if current { replacing = true } else { start() }
             }.disabled(!canTranslate || !loaded || source.allSatisfy { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } || job != nil || preparing)
                 .accessibilityIdentifier("translateSpanishButton")
             Spacer()
             if current {
-                Button("Audio & subtitles", systemImage: "captions.bubble") { media = true }
+                Button("Audio & subtitles", systemImage: "captions.bubble") { playback = TranslationPlayback(paragraphID: nil) }
                     .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
                     .disabled(job != nil || preparing).accessibilityIdentifier("translatedMediaButton")
             }
@@ -183,10 +194,50 @@ struct SessionTranslationView: View {
         }.font(.subheadline)
     }
 
-    private func start() {
+    private var exportPreview: some View {
+        NavigationStack {
+            Form {
+                Section("Before sharing") {
+                    LabeledContent("Language", value: mode.rawValue)
+                    LabeledContent("Translation", value: mode == .english ? "Original English" : current ? "Up to date" : "Needs update")
+                    Picker("Format", selection: $previewKind) {
+                        Text("TXT").tag("txt")
+                        Text("PDF").tag("pdf")
+                        if !cues.isEmpty {
+                            Text("SRT").tag("srt")
+                            Text("VTT").tag("vtt")
+                        }
+                    }.pickerStyle(.segmented).accessibilityIdentifier("translationExportFormat")
+                    if previewKind == "srt" || previewKind == "vtt" {
+                        Text("Timing is approximate. Audio remains in English.").font(.caption)
+                    }
+                }
+                Section("Preview (first 800 characters)") {
+                    Text(String((previewKind == "srt" || previewKind == "vtt"
+                        ? SubtitleExport.render(cues, format: previewKind == "srt" ? .srt : .vtt)
+                        : TranscriptReview.text(displayed)).prefix(800))).textSelection(.enabled)
+                }
+                Button("Share file", systemImage: "square.and.arrow.up") {
+                    pendingExport = previewKind; exportMenu = false
+                }.accessibilityIdentifier("confirmTranslationShare")
+                Button("Copy text") { UIPasteboard.general.string = TranscriptReview.text(displayed); exportMenu = false }
+            }
+            .navigationTitle("Review & share").navigationBarTitleDisplayMode(.inline)
+            .toolbar { Button("Cancel") { exportMenu = false } }
+            .onAppear { if cues.isEmpty { previewKind = "txt" } }
+        }
+    }
+
+    private func start(replaceAll: Bool = false) {
         guard canTranslate, job == nil else { return }
         progress = 0
-        job = TranslationJob(source: source)
+        let plan = IncrementalTranslation(source: source, previous: replaceAll ? nil : snapshot)
+        if plan.pending.isEmpty {
+            do {
+                let updated = try plan.merging([])
+                try repository.saveTranslation(updated, for: session); snapshot = updated
+            } catch { failure = error.localizedDescription }
+        } else { job = TranslationJob(plan: plan) }
     }
     private func load() {
         do {
@@ -194,8 +245,9 @@ struct SessionTranslationView: View {
             snapshot = try repository.translation(for: session.id)?.decoded()
             timings = try repository.media(for: session.id)?.decodedTimings() ?? [:]
             if let url = try repository.audioURL(for: session.id), FileManager.default.fileExists(atPath: url.path) {
-                let audio = try AVAudioFile(forReading: url)
-                audioDuration = Double(audio.length) / audio.processingFormat.sampleRate
+                if let audio = try? AVAudioFile(forReading: url) {
+                    audioDuration = Double(audio.length) / audio.processingFormat.sampleRate
+                }
             }
             loaded = true
         } catch { failure = "Could not load the saved text or translation. Reopen this session before trying again." }
@@ -239,13 +291,20 @@ struct SessionTranslationView: View {
 
 }
 
-private struct TranslationJob: Identifiable {
+private struct TranslationPlayback: Identifiable {
     let id = UUID()
-    let source: [ReviewParagraph]
+    let paragraphID: UUID?
+}
+
+struct TranslationJob: Identifiable {
+    let id = UUID()
+    let plan: IncrementalTranslation
+    let vocabulary = PersonalVocabulary.saved()
+    var source: [ReviewParagraph] { plan.pending }
 }
 
 @MainActor
-private struct TranslationRunner: View {
+struct TranslationRunner: View {
     let job: TranslationJob
     let progress: (Int) -> Void
     let finish: (Result<[ReviewParagraph], Error>) -> Void
@@ -277,7 +336,9 @@ private struct AppleTranslationRunner: View {
                     try Task.checkCancellation()
                     let text: String
                     if paragraph.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { text = "" }
-                    else { text = try await translator.translate(paragraph.text).targetText }
+                    else { text = try await PersonalVocabulary.translate(paragraph.text, terms: job.vocabulary) {
+                        try await translator.translate($0).targetText
+                    } }
                     translated.append(ReviewParagraph(id: paragraph.id, text: text))
                     progress(translated.count)
                 }
@@ -288,3 +349,73 @@ private struct AppleTranslationRunner: View {
     }
 }
 #endif
+
+
+/// Panel experimental: captura y traducción tienen ciclos independientes. Un fallo de traducción
+/// se muestra aquí sin detener el micrófono. Se procesa como máximo un lote de cuatro párrafos.
+@MainActor
+struct LiveSpanishView: View {
+    let paragraphs: [ReviewParagraph]
+    let fontSize: Double
+    @Environment(\.scenePhase) private var phase
+    @State private var buffer = LiveTranslationBuffer()
+    @State private var job: TranslationJob?
+    @State private var failure: String?
+    @State private var follow = true
+    var body: some View {
+        VStack(spacing: 4) {
+            HStack {
+                Text("Live Spanish · preview").font(.caption)
+                Spacer()
+                Button(follow ? "Following" : "Follow latest") { follow.toggle() }.font(.caption)
+            }.padding(.horizontal)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 18) {
+                        ForEach(buffer.source) { paragraph in
+                            Text(buffer.translated[paragraph.id] ?? paragraph.text)
+                                .font(.system(size: fontSize))
+                                .foregroundStyle(buffer.translated[paragraph.id] == nil ? .secondary : .primary)
+                                .frame(maxWidth: .infinity, alignment: .leading).id(paragraph.id)
+                        }
+                    }.padding()
+                }
+                .onChange(of: buffer.translated) { _, _ in
+                    if follow, let id = buffer.source.last?.id { proxy.scrollTo(id, anchor: .bottom) }
+                }
+            }
+            if let failure {
+                Text(failure).font(.caption).padding(.horizontal)
+                Button("Retry translation") { self.failure = nil; schedule() }
+            } else {
+                Text(job == nil ? "Waiting for confirmed English. Preview is not saved; translate the saved session to export." : "Translating confirmed text… English is shown while waiting.")
+                    .font(.caption).foregroundStyle(.secondary).padding(.horizontal)
+            }
+        }
+        .background {
+            if let job {
+                TranslationRunner(job: job, progress: { _ in }) { result in
+                    guard self.job?.id == job.id else { return }
+                    self.job = nil
+                    do { try buffer.accept(result.get(), for: job.source); schedule() }
+                    catch is CancellationError { }
+                    catch { failure = error.localizedDescription }
+                }.id(job.id)
+            }
+        }
+        .onAppear { buffer.synchronize(paragraphs); schedule() }
+        .onChange(of: paragraphs) { _, values in
+            buffer.synchronize(values)
+            if values.isEmpty { job = nil; failure = nil }
+            schedule()
+        }
+        .onChange(of: phase) { _, state in
+            if state == .active { schedule() } else { job = nil }
+        }
+        .onDisappear { job = nil }
+    }
+    private func schedule() {
+        guard phase == .active, job == nil, failure == nil, !buffer.pending.isEmpty else { return }
+        job = TranslationJob(plan: IncrementalTranslation(source: buffer.pending, previous: nil))
+    }
+}

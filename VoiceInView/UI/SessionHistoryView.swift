@@ -9,19 +9,22 @@ struct SessionHistoryView: View {
     @Query(sort: \ConferenceSession.createdAt, order: .reverse) private var sessions: [ConferenceSession]
     @Query private var reviews: [SessionReview]
     @Query private var drafts: [SessionDraft]
+    @Query private var translations: [SessionTranslation]
     @State private var query = ""
     @State private var deleting: ConferenceSession?
     @State private var failure: String?
 
+    private func matches(_ session: ConferenceSession) -> [ReviewParagraph] {
+        let changes = (try? reviews.first(where: { $0.sessionID == session.id })?.decodedCorrections()) ?? [:]
+        let originals = session.orderedCaptions.map { ReviewParagraph(id: $0.id, text: $0.text) }
+        let english = TranscriptReview.paragraphs(originals: originals, corrections: changes)
+        let snapshot = try? translations.first(where: { $0.sessionID == session.id })?.decoded()
+        let spanish = snapshot?.isCurrent(english) == true ? snapshot?.spanish ?? [] : []
+        return (english + spanish).filter { $0.text.localizedStandardContains(query) }
+    }
     private var filtered: [ConferenceSession] {
-        guard !query.isEmpty else { return sessions }
-        return sessions.filter { session in
-            if session.title.localizedCaseInsensitiveContains(query) { return true }
-            let changes = (try? reviews.first(where: { $0.sessionID == session.id })?.decodedCorrections()) ?? [:]
-            let originals = session.orderedCaptions.map { ReviewParagraph(id: $0.id, text: $0.text) }
-            return TranscriptReview.text(TranscriptReview.paragraphs(originals: originals, corrections: changes))
-                .localizedCaseInsensitiveContains(query)
-        }
+        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return sessions }
+        return sessions.filter { $0.title.localizedStandardContains(query) || !matches($0).isEmpty }
     }
 
     var body: some View {
@@ -53,7 +56,7 @@ struct SessionHistoryView: View {
                 ForEach(filtered.filter { !draftIDs.contains($0.id) }) { session in sessionLink(session) }
             }
         }
-        .searchable(text: $query, prompt: "Titles or finished transcripts")
+        .searchable(text: $query, prompt: "Titles, English or Spanish")
         .navigationTitle("Sessions")
         .confirmationDialog("Delete this session permanently?", isPresented: Binding(
             get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
@@ -89,10 +92,14 @@ struct SessionHistoryView: View {
             SessionDetailView(session: session, repository: coordinator.repository,
                 canEdit: coordinator.currentSession?.id != session.id || coordinator.caption.state == .ended,
                 canPlay: !coordinator.caption.state.active && !coordinator.caption.state.busy &&
-                    (coordinator.currentSession?.id != session.id || coordinator.caption.state == .ended))
+                    (coordinator.currentSession?.id != session.id || coordinator.caption.state == .ended),
+                initialSearch: query)
         } label: {
             VStack(alignment: .leading) {
                 Text(session.title).font(.headline)
+                if !query.isEmpty, let match = matches(session).first {
+                    Text(match.text).font(.subheadline).lineLimit(3)
+                }
                 Text(session.createdAt, style: .date).font(.subheadline)
                 Text(session.endedAt == nil ? "Unfinished or interrupted session" :
                      SessionClock.format(session.duration)).font(.caption)
@@ -112,6 +119,7 @@ struct SessionDetailView: View {
     let repository: TranscriptRepository
     let canEdit: Bool
     let canPlay: Bool
+    var initialSearch: String
     @State private var showingMedia = false
     @State private var playbackParagraphID: UUID?
     @State private var playableParagraphIDs: Set<UUID> = []
@@ -128,11 +136,12 @@ struct SessionDetailView: View {
     @State private var restored = false
     @State private var savePositionTask: Task<Void, Never>?
 
-    init(session: ConferenceSession, repository: TranscriptRepository, canEdit: Bool, canPlay: Bool = true) {
+    init(session: ConferenceSession, repository: TranscriptRepository, canEdit: Bool, canPlay: Bool = true, initialSearch: String = "") {
         self.session = session
         self.repository = repository
         self.canEdit = canEdit
         self.canPlay = canPlay
+        self.initialSearch = initialSearch
         let identifier = session.id
         _reviews = Query(filter: #Predicate<SessionReview> { $0.sessionID == identifier })
         _bookmarks = Query(filter: #Predicate<CaptionBookmark> { $0.sessionID == identifier }, sort: \.createdAt)
@@ -228,7 +237,7 @@ struct SessionDetailView: View {
                              hasCorrections: !(corrections ?? [:]).isEmpty, initialParagraphID: playbackParagraphID)
         }
         .sheet(isPresented: $showingTranslation) {
-            SessionTranslationView(session: session, repository: repository)
+            SessionTranslationView(session: session, repository: repository, searchQuery: initialSearch)
         }
         .sheet(isPresented: $showingEditor) {
             TranscriptEditorView(originals: originals, reviewed: paragraphs) { edited in
@@ -257,7 +266,18 @@ struct SessionDetailView: View {
             } message: { Text(failure ?? "") }
         .task {
             guard !restored else { return }
-            do { position = try repository.review(for: session.id)?.lastReadCaptionID }
+            do {
+                position = try repository.review(for: session.id)?.lastReadCaptionID
+                if !initialSearch.isEmpty {
+                    if let match = paragraphs.first(where: { $0.text.localizedStandardContains(initialSearch) }) {
+                        position = match.id
+                    } else if canPlay, let translation = try repository.translation(for: session.id)?.decoded(),
+                              translation.isCurrent(paragraphs),
+                              translation.spanish.contains(where: { $0.text.localizedStandardContains(initialSearch) }) {
+                        showingTranslation = true
+                    }
+                }
+            }
             catch { failure = "Could not restore your reading position." }
             restored = true
         }
