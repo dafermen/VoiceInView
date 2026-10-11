@@ -4,6 +4,76 @@ import AVFoundation
 @testable import VoiceInView
 
 @MainActor final class LearningTests: XCTestCase {
+    func testPracticeRecognitionMatchesWordsNotSubstringsOrEmptyAudio() {
+        XCTAssertTrue(PracticeRecognition.matches("Hello, WORLD!", target: "hello world"))
+        XCTAssertTrue(PracticeRecognition.matches("I’m here.", target: "I'm here"))
+        XCTAssertFalse(PracticeRecognition.matches("", target: ""))
+        XCTAssertFalse(PracticeRecognition.matches("think", target: "thing"))
+        XCTAssertFalse(PracticeRecognition.matches("hello", target: "hello world"))
+        XCTAssertFalse(PracticeRecognition.matches("hello world again", target: "hello world"))
+    }
+    func testPracticeBreaksLongTextAndOffersIndividualWords() {
+        let prompts = PracticeRecognition.prompts("One two three four five six seven eight nine ten.")
+        XCTAssertEqual(prompts.first, "One two three four five six seven eight")
+        XCTAssertTrue(prompts.contains("nine ten."))
+        XCTAssertTrue(prompts.contains("ten"))
+        XCTAssertEqual(PracticeRecognition.prompts("hello hello").filter { $0 == "hello" }.count, 1)
+        XCTAssertTrue(PracticeRecognition.prompts("   ").isEmpty)
+        XCTAssertTrue(prompts.allSatisfy { $0.split(separator: " ").count <= 8 })
+    }
+    func testPracticeRequestRequiresOfflineAndDoesNotHintExpectedAnswer() {
+        let request = PracticeRecognition.request(url: URL(fileURLWithPath: "/tmp/test.wav"))
+        XCTAssertTrue(request.requiresOnDeviceRecognition)
+        XCTAssertFalse(request.shouldReportPartialResults)
+        XCTAssertTrue(request.contextualStrings.isEmpty)
+    }
+    func testPracticeDirectoryIsSeparateProtectedAndExcludedFromBackup() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let directory = try PracticeFiles.createDirectory(in: root)
+        XCTAssertEqual(directory.deletingLastPathComponent().path, root.path)
+        XCTAssertEqual(try directory.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup, true)
+        // The macOS simulator does not expose iPhone Data Protection attributes.
+        #if !targetEnvironment(simulator)
+        let attributes = try FileManager.default.attributesOfItem(atPath: directory.path)
+        XCTAssertEqual(attributes[.protectionKey] as? FileProtectionType, .complete)
+        #endif
+    }
+    func testPracticeCleanupDoesNotRemoveSiblingSessionFiles() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let practiceRoot = root.appendingPathComponent("practice")
+        let directory = try PracticeFiles.createDirectory(in: practiceRoot)
+        let session = root.appendingPathComponent("session.caf")
+        try Data([1, 2, 3]).write(to: session)
+        try Data([4, 5]).write(to: directory.appendingPathComponent("attempt.wav"))
+        PracticeFiles.removeAbandonedAttempts(in: practiceRoot)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.path))
+        XCTAssertEqual(try Data(contentsOf: session), Data([1, 2, 3]))
+    }
+    func testPracticeDeniedPermissionLeavesListeningAvailable() async {
+        let practice = PronunciationPractice(microphonePermission: { false })
+        defer { practice.close() }
+        await practice.startRecording()
+        XCTAssertEqual(practice.activity, .idle)
+        XCTAssertNil(practice.take)
+        XCTAssertNotNil(practice.message)
+    }
+    func testPracticeLatePermissionCannotStartRecordingAfterExit() async {
+        let practice = PronunciationPractice(microphonePermission: {
+            try? await Task.sleep(for: .milliseconds(100))
+            return true
+        })
+        let pending = Task { await practice.startRecording() }
+        await Task.yield()
+        XCTAssertEqual(practice.activity, .permission)
+        practice.close()
+        await pending.value
+        XCTAssertEqual(practice.activity, .idle)
+        XCTAssertNil(practice.take)
+        XCTAssertNil(practice.heard)
+    }
+
     func testUnitsExcludeStaleSpanishAndRetainUntimedText() {
         let paragraph = ReviewParagraph(id: UUID(), text: "Hello world")
         let translation = TranslationSnapshot(source: [paragraph], generated: [.init(id: paragraph.id, text: "Hola mundo")])

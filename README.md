@@ -4,6 +4,10 @@
 
 Native iPhone app designed to caption English speech on device during conferences, classes, meetings and presentations, without sending recognition audio to a server, when on-device English support is available.
 
+## Pronunciation practice (source build 19)
+
+Inside **Aprender inglés → Practicar pronunciación**, listen to an English example, record a short temporary take and compare your voice. Choose a word or short phrase and slow the example down. Optional on-device recognition shows what the iPhone understood; it does **not** grade pronunciation. No cloud service or account is required. See the [practice guide](docs/pronunciation.md) and [delivery checkpoint](docs/pronunciation-checkpoint.md).
+
 ## Documentation / documentación
 
 Start with the [documentation index](docs/README.md). Spanish learning material: [junior/student guide](docs/junior-guide.md) and [code walkthrough](docs/code-walkthrough.md). Before the next delivery, read the [distribution runbook](docs/distribution-runbook.md) and [incident history](docs/build-incidents.md).

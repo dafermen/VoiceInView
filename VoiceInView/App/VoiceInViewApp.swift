@@ -4,6 +4,8 @@ import SwiftUI
 @main
 @MainActor
 struct VoiceInViewApp: App {
+    init() { PracticeFiles.removeAbandonedAttempts() }
+
     var body: some Scene {
         WindowGroup { AppRootView() }
     }

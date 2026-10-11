@@ -169,3 +169,10 @@ La primera prueba usaba un selector Format incompleto y una expectativa sobre la
 
 ## Build 18 — aprendizaje
 El primer Debug detectó una referencia a PlaybackButtonStyle, privado en SessionMediaView. Se sustituyó por un estilo SwiftUI estándar. Después pasaron 76 pruebas unitarias, el recorrido UI de aprendizaje y Release. Para reanudar con poco cupo, leer [el checkpoint](learning-checkpoint.md); no volver a implementar modelos ni migración V7.
+
+
+## 2026-10-11 — build 19
+
+Práctica local autorizada sin cuenta Azure: no crear dependencia de un servicio ausente ni presentar reconocimiento como evaluación de pronunciación. Mantener numeración fuente 19 y comprobar Cloud/TestFlight por separado; no reutilizar una compilación anterior como evidencia de entrega. La primera compilación Debug local terminó bien; resultados posteriores en el [checkpoint](pronunciation-checkpoint.md).
+
+Las pruebas iniciales UI de build 19 pasaron; una prueba unitaria falló por URL con barra final y atributo de protección no expuesto en el simulador. La comparación de rutas y condición de dispositivo fueron corregidas; las 83 pruebas unitarias finales y Release pasaron. Comprobar protección con bloqueo real en iPhone. Se compactó el selector tras inspección visual.

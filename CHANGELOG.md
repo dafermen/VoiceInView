@@ -1,3 +1,9 @@
+## 2026-10-11 — Local pronunciation practice (source build 19)
+- Add an explicit listen/record/compare flow with synthetic English examples, slow speech and selectable words/short phrases.
+- Record protected temporary takes for up to 15 seconds, replay and delete on retry/exit/background; clean abandoned files on launch.
+- Offer optional offline-only word recognition, without scores, phoneme claims or expected-answer hints.
+- Document future hosted assessment; no Azure account, keys, cloud upload or service costs added. Schema V7 and app identity unchanged.
+
 ## 2026-10-10 — English learning (source build 18)
 - Replace the two-symbol Capture Preferences button with one sliders icon.
 - Add session-based English practice: phrase playback, slow speed, repeat, hidden Spanish and saved expressions with context/audio.

@@ -1,3 +1,13 @@
+## 2026-10-11 — Pronunciación local, source build 19
+
+- Debug y Release final **BUILD SUCCEEDED** en Xcode 15.2/iOS 17.2, arm64/x86_64 de simulador. Metadatos revisados: build 19, identidad, iOS mínimo, permisos actualizados, orientaciones, background audio, assets y privacidad.
+- Suite unitaria final: **83 pruebas aprobadas, cero fallos** (`/private/tmp/VoiceInView-19-Unit-Final.xcresult`, `VoiceInView-19-unit-final.log`). Incluye segmentación/comparación de texto, petición estrictamente local sin pistas, directorio separado/excluido de backup, limpieza sin tocar archivos vecinos, permiso denegado y permiso tardío tras cerrar.
+- Primera ejecución UI: ambos escenarios de aprendizaje y pronunciación aprobados. Grabación real de simulador, reproducción, cierre y reapertura sin el intento anterior. El audio de prueba no valida calidad de voz, pronunciación ni reconocimiento real. Resultado: `VoiceInView-19-Tests.xcresult`.
+- En esa primera ejecución fallaron dos aserciones de una prueba unitaria: diferencias de barra final en URL y atributo de protección no expuesto por macOS/simulador. Corregidas comparando rutas y limitando la aserción de Data Protection a dispositivo. La protección sigue configurada en código; su comportamiento con bloqueo requiere iPhone físico. No se presenta como comprobada en simulador.
+- Tras revisar las capturas se redujo el título y se evitó duplicar la frase en el selector. La UI final de pronunciación pasó en 39,348 s (`VoiceInView-19-UI-Final.xcresult`, `VoiceInView-19-ui-final.log`, **TEST SUCCEEDED**): grabación, reproducción, cambio de orientación, cierre, descarte del intento y selección de una palabra. Capturas de vertical revisadas; la captura horizontal coincidió con la animación de giro, por lo que la revisión visual completa de landscape queda para iPhone. Ver [checkpoint](pronunciation-checkpoint.md).
+- Evidencia Release final: `/private/tmp/VoiceInView-19-release-final.log`. Enlaces locales revisados, plist y diff correctos.
+- No se implementa evaluación especializada, backend, Azure ni puntuación. El usuario confirmó continuar localmente. Cloud/TestFlight y aceptación física se verifican aparte.
+
 ## Build 18 — Aprender inglés y Capture Preferences (2026-10-10)
 
 **TEST SUCCEEDED**: 76 pruebas unitarias y un recorrido UI dirigidos al aprendizaje. Verificadas V6→V7, expresiones tras reapertura/borrado, independencia de transcripciones, límites de audio, velocidad/repetición, español oculto/revelado y acceso por icono único de preferencias. Xcode 15.2, simulador iOS 17.2; la suite UI completa anterior no se repitió.

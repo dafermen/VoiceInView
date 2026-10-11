@@ -221,3 +221,8 @@ La exportación espera a que cierre la hoja de revisión antes de abrir la hoja 
 ## Aprender inglés — build 18
 
 Escucha/repite fragmentos a 0.75× o 1×, revela el español y conserva expresiones con contexto/audio. Capture Preferences ahora tiene un solo icono. Consulta [la guía de aprendizaje](learning.md) para uso, arquitectura V7 y límites.
+
+
+## Práctica de pronunciación (build 19)
+
+Lee [cómo se conectan voz sintética, grabador, reproductor y reconocimiento local](pronunciation.md). Presta atención a generation: protege contra respuestas asíncronas que llegan después de cerrar la pantalla. Comparar texto reconocido no evalúa pronunciación.

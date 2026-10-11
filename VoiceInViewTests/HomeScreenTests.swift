@@ -2,6 +2,60 @@ import XCTest
 
 final class HomeScreenTests: XCTestCase {
     @MainActor
+    func testPronunciationPracticeRecordsReplaysAndDiscards() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-review", "--ui-test-media", "--ui-test-translation"]
+        app.launch()
+        XCTAssertTrue(app.tabBars.buttons["Sessions"].waitForExistence(timeout: 20))
+        app.tabBars.buttons["Sessions"].tap()
+        app.staticTexts["Review sample"].tap()
+        app.buttons["learnEnglishButton"].tap()
+        let entry = app.buttons["practicePronunciation"]
+        XCTAssertTrue(entry.waitForExistence(timeout: 5))
+        if !entry.isHittable { app.swipeUp() }
+        entry.tap()
+        XCTAssertTrue(app.staticTexts["pronunciationTarget"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["pronunciationReplay"].exists)
+        XCTAssertFalse(app.alerts.firstMatch.exists) // Opening does not request microphone access.
+        app.switches["pronunciationSlow"].tap()
+        let before = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        before.name = "Pronunciation-ready"; before.lifetime = .keepAlways; add(before)
+        app.buttons["pronunciationRecord"].tap()
+        let system = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        if system.alerts.firstMatch.waitForExistence(timeout: 3) {
+            let allow = system.alerts.buttons["Allow"]
+            if allow.exists { allow.tap() } else { system.alerts.buttons["OK"].tap() }
+        }
+        expectation(for: NSPredicate(format: "label == 'Terminar'"), evaluatedWith: app.buttons["pronunciationRecord"])
+        waitForExpectations(timeout: 10)
+        // UI actions consume enough time to produce a valid (possibly silent) test take.
+        let recording = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        recording.name = "Pronunciation-recording"; recording.lifetime = .keepAlways; add(recording)
+        app.buttons["pronunciationRecord"].tap()
+        let replay = app.buttons["pronunciationReplay"]
+        XCTAssertTrue(replay.waitForExistence(timeout: 5))
+        if !replay.isHittable { app.swipeUp() }
+        replay.tap()
+        let result = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        result.name = "Pronunciation-compare"; result.lifetime = .keepAlways; add(result)
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        let landscape = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        landscape.name = "Pronunciation-landscape"; landscape.lifetime = .keepAlways; add(landscape)
+        app.navigationBars["Pronunciación"].buttons["Listo"].tap()
+        XCUIDevice.shared.orientation = .portrait
+        if !entry.isHittable { app.swipeUp() }
+        entry.tap()
+        XCTAssertTrue(app.staticTexts["pronunciationTarget"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["pronunciationReplay"].exists)
+        XCTAssertFalse(app.staticTexts["pronunciationHeard"].exists)
+        app.buttons["pronunciationPrompt"].tap()
+        app.buttons["useful"].tap()
+        XCTAssertEqual(app.staticTexts["pronunciationTarget"].label, "useful")
+        app.navigationBars["Pronunciación"].buttons["Listo"].tap()
+    }
+
+    @MainActor
     func testEnglishLearningRevealSaveAndReplay() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--ui-test-review", "--ui-test-media", "--ui-test-translation"]

@@ -73,6 +73,7 @@ struct EnglishLearningView: View {
     @State private var player = PracticePlayer()
     @State private var editing: LearningUnit?
     @State private var translation = false
+    @State private var pronunciation: LearningUnit?
     @State private var failure: String?
     private var choices: [LearningUnit] { savedOnly ? expressions.map(\.unit) : units }
     private var current: LearningUnit? { choices.indices.contains(selected) ? choices[selected] : nil }
@@ -118,6 +119,9 @@ struct EnglishLearningView: View {
                             Text("No recorded audio for this phrase. You can still read, reveal Spanish and save expressions.")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
+                        Button("Practicar pronunciación", systemImage: "mic.badge.plus") {
+                            player.stop(); pronunciation = unit
+                        }.buttonStyle(.bordered).accessibilityIdentifier("practicePronunciation")
                         if let spanish = unit.spanish, !spanish.isEmpty {
                             Button(revealed ? "Hide translation" : "Reveal Spanish", systemImage: "eye") { revealed.toggle() }
                                 .accessibilityIdentifier("revealLearningSpanish")
@@ -148,6 +152,9 @@ struct EnglishLearningView: View {
             .navigationTitle("Aprender inglés").navigationBarTitleDisplayMode(.inline)
             .toolbar { Button("Done") { dismiss() } }
             .task { load() }
+            .sheet(item: $pronunciation) { unit in
+                PronunciationPracticeView(text: unit.english)
+            }
             .sheet(item: $editing) { unit in
                 LearningExpressionEditor(unit: unit) { english, spanish in
                     try repository.saveLearningExpression(unit: unit, english: english, spanish: spanish, for: session)

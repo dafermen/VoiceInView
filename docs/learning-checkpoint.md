@@ -23,3 +23,7 @@ Si se interrumpe: abrir este archivo, git diff y los logs /private/tmp/VoiceInVi
 
 ## Siguiente paso, sin repetir implementación
 Consultar `git status --short`, `git log -3 --oneline` y comparar HEAD/origin/main. Verificar check-runs del commit en GitHub y su entrega TestFlight. Compilación local no confirma instalación en el iPhone. Pruebas físicas pendientes: Bluetooth/interrupciones, accesibilidad, calidad del audio a 0.75× y sesiones reales. No falta implementar ninguna de las tres funciones aprobadas de esta primera etapa; dictado/repaso programado/pronunciación siguen fuera de alcance.
+
+
+## Actualización 2026-10-11
+La etapa siguiente de práctica local ya está autorizada e implementada en build 19; consultar [su checkpoint](pronunciation-checkpoint.md). La evaluación especializada de sonidos sigue pendiente de un servicio externo. Este archivo conserva la evidencia histórica de build 18.

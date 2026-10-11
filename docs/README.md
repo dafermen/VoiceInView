@@ -47,3 +47,8 @@ Build 16 incorpora [traducción al español](translation.md) de sesiones guardad
 ## Aprender inglés — build 18
 
 Escucha/repite fragmentos a 0.75× o 1×, revela el español y conserva expresiones con contexto/audio. Capture Preferences ahora tiene un solo icono. Consulta [la guía de aprendizaje](learning.md) para uso, arquitectura V7 y límites.
+
+
+## Práctica de pronunciación
+
+[Guía de uso y explicación para estudiantes](pronunciation.md) · [Punto de reanudación build 19](pronunciation-checkpoint.md).

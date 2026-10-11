@@ -1,11 +1,11 @@
-# Aprender inglés — build 18
+# Aprender inglés — builds 18–19
 
 ## Cómo usarlo
 
 Guarda una sesión y abre **Sessions → sesión → Aprender inglés**. No ocupa espacio extra en el lector de Captions.
 
 1. Lee el fragmento inglés e intenta comprenderlo. Las flechas pasan al anterior/siguiente.
-2. Si guardaste audio y existen tiempos, pulsa Play. El audio se detiene al terminar el fragmento. **Repeat** lo repite hasta que pulses Stop, cambies de fragmento o cierres la pantalla. Puedes elegir **0.75×** o **1×**. No se graba tu voz ni se evalúa tu pronunciación.
+2. Si guardaste audio y existen tiempos, pulsa Play. El audio se detiene al terminar el fragmento. **Repeat** lo repite hasta que pulses Stop, cambies de fragmento o cierres la pantalla. Puedes elegir **0.75×** o **1×**. Este control reproduce la sesión. La nueva opción **Practicar pronunciación** abre [una práctica temporal separada](pronunciation.md), con ejemplo sintético, grabación de tu voz y comparación; no califica pronunciación.
 3. **Reveal Spanish** muestra la traducción; vuelve a ocultarse al cambiar de fragmento o colección. Si falta una traducción vigente, **Translate session** abre la función existente. Generarla requiere iOS 18+ y los idiomas de Apple; leer traducciones ya guardadas funciona en iOS 17.
 4. **Save expression** permite guardar todo el fragmento o una palabra/expresión contenida en él, con una nota española opcional. Si acortas el inglés, ajusta también la nota. Límite: 500 caracteres ingleses y 1000 de nota española.
 5. **Saved expressions** reúne las expresiones de esta sesión, con contexto y acceso al audio del fragmento original. Cerrar/reabrir conserva la colección. **Remove from learning** retira únicamente esa expresión.
@@ -26,13 +26,13 @@ Un único icono de deslizadores abre las preferencias de audio y segundo plano. 
 - `LearningExpression`: modelo SwiftData separado. Guarda expresión inglesa, nota española, contexto, referencia a sesión/párrafo y tiempos opcionales. Es una copia para estudiar, no una corrección de la transcripción.
 - Esquema **V7**, migración aditiva V6→V7. V1–V6 permanecen intactos. El repositorio valida contenido/fuente antes de insertar, evita duplicados del mismo contexto y guarda con rollback ante errores.
 - `PracticePlayer`: AVAudioPlayer independiente del reproductor general y del micrófono. Activa `enableRate` antes de preparar audio. Un Task comprueba el límite del fragmento; cancelar, cambiar de pantalla, pasar a background o recibir una interrupción detiene el bucle sin reinicio automático.
-- `EnglishLearningView`: estado local para selección, español oculto, velocidad y repetición; la colección persistente vive en el repositorio. La pantalla nunca inicia captura ni modifica el audio original.
+- `EnglishLearningView`: estado local para selección, español oculto, velocidad y repetición; la colección persistente vive en el repositorio. La pantalla no modifica el audio original; el botón de pronunciación abre un controlador separado que pide permiso y solo graba al tocar Pronunciar.
 - Las pruebas verifican V6→V7, conservación tras reapertura, borrado independiente, rechazo de fuentes cambiadas, límites de audio, repetición y el recorrido visible. Véase [el punto de reanudación](learning-checkpoint.md) para resultados efectivos.
 
 ## Privacidad y alcance
 
-Las expresiones usan la misma base local protegida y excluida de backup; no hay nuevas cuentas, servicios remotos ni permisos. Se reutiliza la traducción de Apple existente. Las copias exportadas previamente no se eliminan al borrar una sesión.
+Las expresiones usan la misma base local protegida y excluida de backup; no hay nuevas cuentas ni servicios remotos. La práctica de pronunciación solicita explícitamente los permisos existentes de micrófono y, opcionalmente, reconocimiento. Se reutiliza la traducción de Apple existente. Las copias exportadas previamente no se eliminan al borrar una sesión.
 
-Esta primera etapa incluye escucha/repetición, traducción oculta y expresiones. Dictado, repaso programado y evaluación de pronunciación quedan pendientes de una etapa posterior. Requiere comprobar en iPhone calidad del audio lento, interrupciones, accesibilidad y disponibilidad TestFlight; compilación local no confirma entrega al teléfono.
+Esta primera etapa incluye escucha/repetición, traducción oculta y expresiones. La práctica local se añadió en build 19; dictado, repaso programado y evaluación especializada de sonidos quedan pendientes. Requiere comprobar en iPhone calidad del audio lento, interrupciones, accesibilidad y disponibilidad TestFlight; compilación local no confirma entrega al teléfono.
 
 Referencia: [velocidad de AVAudioPlayer](https://developer.apple.com/documentation/avfaudio/avaudioplayer/rate).

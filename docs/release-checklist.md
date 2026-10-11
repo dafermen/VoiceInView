@@ -79,3 +79,8 @@ Phase 10 online AI is excluded and remains unimplemented.
 - [ ] Verify V6 upgrade on an existing physical installation and review bilingual subtitle readability.
 - [x] Archive the new implementation source in Xcode Cloud; do not relabel an earlier archive as build 16.
 - [ ] Confirm TestFlight processing, tester availability and actual iPhone installation.
+
+
+## Build 19 — práctica local
+
+Validar permiso denegado y respuesta tardía tras cerrar; silencio y límite de 15 s; voz normal/lenta; comparar/regrabar; interrupciones, Bluetooth y background; limpieza temporal tras salir/reiniciar; VoiceOver/letra grande/landscape. Sin evaluación fonética ni servicio remoto. Ver [punto de reanudación](pronunciation-checkpoint.md).

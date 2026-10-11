@@ -128,3 +128,8 @@ La exportación espera a que cierre la hoja de revisión antes de abrir la hoja 
 ## Aprender inglés — build 18
 
 Escucha/repite fragmentos a 0.75× o 1×, revela el español y conserva expresiones con contexto/audio. Capture Preferences ahora tiene un solo icono. Consulta [la guía de aprendizaje](learning.md) para uso, arquitectura V7 y límites.
+
+
+## Pronunciación local (build 19)
+
+`PronunciationPracticeView.swift` contiene PracticeRecognition (texto y peticiones locales), PracticeFiles (temporales protegidos), PronunciationPractice (estado y audio) y la vista de tres pasos. Consulta [el recorrido explicado](pronunciation.md). VoiceInViewApp limpia intentos abandonados al iniciar; EnglishLearningView detiene su reproducción antes de abrir la práctica.
