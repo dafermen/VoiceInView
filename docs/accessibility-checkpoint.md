@@ -7,13 +7,13 @@
 - Preferencias persistentes; inglés inicial; idioma inmutable por sesión; reconocimiento, traducción y práctica en ambos sentidos; payloads antiguos interpretados como inglés.
 - Pausa con aviso persistente, Reanudar y anuncio accesible; no reinicio automático del micrófono.
 - Colores claros con texto oscuro; guías CoreGraphics decorativas; alto contraste tiene prioridad.
-- Paquete Release 0.1.0 (20) compilado, familia `[1,2]`, icono iPad y cuatro orientaciones. La fuente local usa Xcode 15.2; Cloud debe validar las ramas modernas.
+- Paquete Release 0.1.0 (20) compilado, familia `[1,2]`, icono iPad y cuatro orientaciones. La fuente local usa Xcode 15.2; la compilación moderna también quedó aprobada (ver entrega abajo).
 
 ## Evidencia y límites
 
 88 unitarias aprobadas en `VoiceInView-20-Unit.xcresult`, antes del ajuste final de dibujo y snapshot de diccionario. El log final `VoiceInView-20-confirmed.log` registra dos recorridos UI aprobados: lectura con renglones/pausa/giro/Reanudar y práctica española. Su tercer recorrido falló al abrir Sessions; después el runner unitario quedó esperando. Al cancelar Xcode no finalizó el bundle. No declarar toda esa suite aprobada.
 
-La traducción guardada con edición/audio/exportación pasó en la ejecución anterior `VoiceInView-20-UI.xcresult`. La repetición aislada final (`VoiceInView-20-regression-final.log`) abrió Sessions, corrigió/guardó traducción y reprodujo audio, pero quedó esperando la jerarquía de la hoja nativa de compartir durante varios minutos. Se canceló; no cuenta como aprobación final integral. Revisar compartir en el dispositivo.
+La traducción guardada con edición/audio/exportación pasó en la ejecución anterior `VoiceInView-20-UI.xcresult`. La repetición aislada final (`VoiceInView-20-regression-final.log`) abrió Sessions, corrigió/guardó traducción y reprodujo audio, pero quedó esperando la jerarquía de la hoja nativa de compartir durante varios minutos. Se canceló; no cuenta como aprobación final integral. Una captura tardía mostró «Preparing file…», sin confirmar la presentación de la hoja. Revisar compartir en el dispositivo.
 
 iPad: configuración y Release universales comprobados; capturas anteriores de vertical y fullscreen horizontal revisadas con fondo amarillo y pausa. La última ejecución `VoiceInView-20-ipad-final.log` no consiguió iniciar XCTest y fue cancelada. Queda pendiente el recorrido final de renglones en iPad y la aceptación física. No reinstalar ni borrar datos del iPhone para resolver problemas del simulador.
 
@@ -25,3 +25,9 @@ Más detalle: [informe de validación](validation-report.md), [incidentes](build
 2. En iPhone/iPad: preparar ambos modelos, transcribir voz real, traducir en ambos sentidos y conservar idioma al reanudar.
 3. Probar alarma real, segundo plano, VoiceOver, tamaños accesibles, ventana dividida y compartir en iPad.
 4. No repetir la compilación o cambiar firma por un error de exportación sin consultar los logs detallados y el historial de incidentes.
+
+## Entrega de código y compilación moderna
+
+Código publicado en `main`: `25d24ac1308e0581830d2741c45ce76b6138e307`. [Archive – iOS](https://appstoreconnect.apple.com/teams/6f8417db-fcfe-4f6e-99af-3d19a8ed6ceb/apps/6820599198/ci/builds/7f691627-d5b2-475b-8785-d0a5bb10b680/action/e1d52b02-2769-44fe-ace8-32efcaaa8756) aprobado el 2026-10-11 a las 17:46:15 UTC; check `114533808792`, conclusión `success`, cero errores y cuatro advertencias (concurrencia de AVAssetExportSession/AVAudioPCMBuffer, import AVFAudio y nombre obsoleto allowBluetooth). Son advertencias en código de audio existente; no impidieron Archive. No declarar migración a modo Swift 6 completa.
+
+Esto valida compilación moderna, no voz/traducción real, prueba física ni instalación TestFlight. Comprobar procesamiento, asignación al grupo Dev y actualización en el dispositivo. El commit posterior de documentación no cambia Swift ni configuración de la app.
