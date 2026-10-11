@@ -32,9 +32,10 @@ struct SessionTranslationView: View {
     @State private var folder: URL?
     @State private var timings: [String: CaptionTiming] = [:]
 
-    private var current: Bool { loaded && snapshot?.isCurrent(source) == true }
+    private var language: CaptureLanguage { CaptureLanguage(rawValue: session.language) ?? .english }
+    private var current: Bool { loaded && snapshot?.language == language && snapshot?.isCurrent(source) == true }
     private var displayed: [ReviewParagraph] {
-        mode == .english ? source : current ? snapshot?.paragraphs(mode: mode) ?? [] : []
+        mode == language.mode ? source : current ? snapshot?.paragraphs(mode: mode) ?? [] : []
     }
     private var cues: [SubtitleCue] {
         guard let snapshot, current else { return [] }
@@ -94,7 +95,7 @@ struct SessionTranslationView: View {
                 }
                 ToolbarItem(placement: .primaryAction) {
                     if current {
-                        Button("Edit Spanish", systemImage: "pencil") { editing = true }
+                        Button("Edit \(language.opposite.name)", systemImage: "pencil") { editing = true }
                             .disabled(job != nil || preparing).accessibilityIdentifier("editSpanishButton")
                     }
                 }
@@ -108,7 +109,7 @@ struct SessionTranslationView: View {
                             let generated = try result.get()
                             let updated = try job.plan.merging(generated)
                             try repository.saveTranslation(updated, for: session)
-                            snapshot = updated; mode = .spanish
+                            snapshot = updated; mode = language.opposite.mode
                         } catch is CancellationError { }
                         catch { failure = error.localizedDescription }
                     }.id(job.id)
@@ -117,7 +118,7 @@ struct SessionTranslationView: View {
             .task { load() }
             .sheet(isPresented: $editing) {
                 if let snapshot {
-                    TranscriptEditorView(originals: snapshot.generated, reviewed: snapshot.spanish,
+                    TranscriptEditorView(originals: snapshot.generated, reviewed: snapshot.translated,
                                          translation: true) { edited in
                         var updated = snapshot
                         guard edited.map(\.id) == snapshot.generated.map(\.id) else { throw TranslationFailure.incomplete }
@@ -137,7 +138,7 @@ struct SessionTranslationView: View {
             .sheet(isPresented: $exportMenu, onDismiss: {
                 if let kind = pendingExport { pendingExport = nil; export(kind: kind) }
             }) { exportPreview }
-            .confirmationDialog("Translate again? This replaces the saved Spanish translation and its edits.",
+            .confirmationDialog("Translate again? This replaces the saved translation and its edits.",
                                 isPresented: $replacing, titleVisibility: .visible) {
                 Button("Replace translation", role: .destructive) { start(replaceAll: true) }
                 Button("Cancel", role: .cancel) {}
@@ -159,10 +160,10 @@ struct SessionTranslationView: View {
             }
             Text("Preparing languages or translating…").font(.caption).foregroundStyle(.secondary)
         } else if snapshot != nil && !current {
-            Text("The English text changed. Update changed paragraphs to keep Spanish edits in unchanged paragraphs. Changed paragraphs will receive new Spanish text.")
+            Text("The source text changed. Update changed paragraphs to keep edits in unchanged paragraphs.")
                 .font(.callout).foregroundStyle(.secondary).accessibilityIdentifier("translationOutdated")
         } else if !current {
-            Text("Translate your saved English transcript into Spanish. English and the original audio are kept.")
+            Text("Translate \(language.name) into \(language.opposite.name). The original text and audio are kept.")
                 .font(.callout).foregroundStyle(.secondary)
         }
         if !canTranslate {
@@ -176,7 +177,7 @@ struct SessionTranslationView: View {
 
     private var controls: some View {
         HStack {
-            Button(current ? "Translate again" : snapshot == nil ? "Translate to Spanish" : "Update changed paragraphs", systemImage: "character.bubble") {
+            Button(current ? "Translate again" : snapshot == nil ? "Translate to \(language.opposite.name)" : "Update changed paragraphs", systemImage: "character.bubble") {
                 if current { replacing = true } else { start() }
             }.disabled(!canTranslate || !loaded || source.allSatisfy { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } || job != nil || preparing)
                 .accessibilityIdentifier("translateSpanishButton")
@@ -199,7 +200,7 @@ struct SessionTranslationView: View {
             Form {
                 Section("Before sharing") {
                     LabeledContent("Language", value: mode.rawValue)
-                    LabeledContent("Translation", value: mode == .english ? "Original English" : current ? "Up to date" : "Needs update")
+                    LabeledContent("Translation", value: mode == language.mode ? "Original \(language.name)" : current ? "Up to date" : "Needs update")
                     Picker("Format", selection: $previewKind) {
                         Text("TXT").tag("txt")
                         Text("PDF").tag("pdf")
@@ -209,7 +210,7 @@ struct SessionTranslationView: View {
                         }
                     }.pickerStyle(.segmented).accessibilityIdentifier("translationExportFormat")
                     if previewKind == "srt" || previewKind == "vtt" {
-                        Text("Timing is approximate. Audio remains in English.").font(.caption)
+                        Text("Timing is approximate. Audio remains in \(language.name).").font(.caption)
                     }
                 }
                 Section("Preview (first 800 characters)") {
@@ -231,7 +232,7 @@ struct SessionTranslationView: View {
     private func start(replaceAll: Bool = false) {
         guard canTranslate, job == nil else { return }
         progress = 0
-        let plan = IncrementalTranslation(source: source, previous: replaceAll ? nil : snapshot)
+        let plan = IncrementalTranslation(source: source, previous: replaceAll ? nil : snapshot, language: language)
         if plan.pending.isEmpty {
             do {
                 let updated = try plan.merging([])
@@ -249,6 +250,7 @@ struct SessionTranslationView: View {
                     audioDuration = Double(audio.length) / audio.processingFormat.sampleRate
                 }
             }
+            if !loaded { mode = language.opposite.mode }
             loaded = true
         } catch { failure = "Could not load the saved text or translation. Reopen this session before trying again." }
     }
@@ -299,7 +301,12 @@ private struct TranslationPlayback: Identifiable {
 struct TranslationJob: Identifiable {
     let id = UUID()
     let plan: IncrementalTranslation
-    let vocabulary = PersonalVocabulary.saved()
+    let vocabulary: [PersonalVocabulary.Term]
+    // Snapshot preferences once: a job must not mix dictionaries if settings change mid-translation.
+    init(plan: IncrementalTranslation) {
+        self.plan = plan
+        vocabulary = PersonalVocabulary.saved(for: plan.language)
+    }
     var source: [ReviewParagraph] { plan.pending }
 }
 
@@ -327,7 +334,7 @@ private struct AppleTranslationRunner: View {
     let progress: (Int) -> Void
     let finish: (Result<[ReviewParagraph], Error>) -> Void
     var body: some View {
-        Color.clear.translationTask(source: Locale.Language(identifier: "en"), target: Locale.Language(identifier: "es")) { @MainActor translator in
+        Color.clear.translationTask(source: Locale.Language(identifier: job.plan.language.code), target: Locale.Language(identifier: job.plan.language.opposite.code)) { @MainActor translator in
             do {
                 try await translator.prepareTranslation()
                 var translated: [ReviewParagraph] = []
@@ -357,6 +364,9 @@ private struct AppleTranslationRunner: View {
 struct LiveSpanishView: View {
     let paragraphs: [ReviewParagraph]
     let fontSize: Double
+    var language: CaptureLanguage = .english
+    var lineSpacing: Double = 4
+    var bold = false
     @Environment(\.scenePhase) private var phase
     @State private var buffer = LiveTranslationBuffer()
     @State private var job: TranslationJob?
@@ -365,7 +375,7 @@ struct LiveSpanishView: View {
     var body: some View {
         VStack(spacing: 4) {
             HStack {
-                Text("Live Spanish · preview").font(.caption)
+                Text("Live \(language.opposite.name) · preview").font(.caption)
                 Spacer()
                 Button(follow ? "Following" : "Follow latest") { follow.toggle() }.font(.caption)
             }.padding(.horizontal)
@@ -374,7 +384,7 @@ struct LiveSpanishView: View {
                     LazyVStack(alignment: .leading, spacing: 18) {
                         ForEach(buffer.source) { paragraph in
                             Text(buffer.translated[paragraph.id] ?? paragraph.text)
-                                .font(.system(size: fontSize))
+                                .font(.system(size: fontSize, weight: bold ? .semibold : .regular)).lineSpacing(lineSpacing)
                                 .foregroundStyle(buffer.translated[paragraph.id] == nil ? .secondary : .primary)
                                 .frame(maxWidth: .infinity, alignment: .leading).id(paragraph.id)
                         }
@@ -388,7 +398,7 @@ struct LiveSpanishView: View {
                 Text(failure).font(.caption).padding(.horizontal)
                 Button("Retry translation") { self.failure = nil; schedule() }
             } else {
-                Text(job == nil ? "Waiting for confirmed English. Preview is not saved; translate the saved session to export." : "Translating confirmed text… English is shown while waiting.")
+                Text(job == nil ? "Waiting for confirmed text. Preview is not saved; translate the saved session to export." : "Translating… The original is shown while waiting.")
                     .font(.caption).foregroundStyle(.secondary).padding(.horizontal)
             }
         }
@@ -416,6 +426,6 @@ struct LiveSpanishView: View {
     }
     private func schedule() {
         guard phase == .active, job == nil, failure == nil, !buffer.pending.isEmpty else { return }
-        job = TranslationJob(plan: IncrementalTranslation(source: buffer.pending, previous: nil))
+        job = TranslationJob(plan: IncrementalTranslation(source: buffer.pending, previous: nil, language: language))
     }
 }

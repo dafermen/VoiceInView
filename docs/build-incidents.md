@@ -1,5 +1,36 @@
 # Incidentes de desarrollo y distribución
 
+## 2026-10-11 — renglones y compilador gráfico del simulador
+
+La prueba con el runner correcto llegó a activar renglones y bloqueó la interfaz. La muestra de `VoiceInView` (`voiceinview20-app.sample`) situó el hilo principal en RenderBox → Metal → `XPCCompilerConnection::setupConnection`, esperando al servicio del compilador gráfico. No era evidencia de un bucle infinito de nuestros párrafos ni de un problema del reconocimiento.
+
+Se sustituyó Canvas por una pequeña `UIViewRepresentable` que dibuja guías con CoreGraphics, sin introducir una canalización de shaders para líneas horizontales. Se calculan preferencias antes de dibujar, se limitan a 1000 guías y se rechazan dimensiones no finitas. La capa se redibuja al cambiar tamaño, ignora gestos y no añade elementos de accesibilidad. El recorrido final de iPhone activó el interruptor, giró a horizontal y reanudó sin bloqueo: aprobado en 86,863 s (`VoiceInView-20-confirmed.log`). La muestra del bloqueo original no demuestra un fallo en dispositivos físicos.
+
+
+## 2026-10-11 — XCTest ejecutaba un runner antiguo
+
+Al repetir UI con `CODE_SIGNING_ALLOWED=NO` y el mismo DerivedData, los errores señalaban líneas que ya no contenían esas aserciones. Se comprobó que el runner instalado en iPad conservaba UUID x86_64 `108B9B7C-CEE9-3F45-BFAE-CC266509A385`, mientras el compilado era `62F25D16-F3A6-3227-93CF-257E6A3AAC42`. Ambos eran binarios universales, así que no era simple reducción de arquitectura. No interpretar esos resultados como validación del código nuevo.
+
+Se detuvo solamente nuestra ejecución de pruebas y se retiró `com.dafermen.vReaderTests.xctrunner` de los simuladores antes de repetir. No se borró la app del iPhone ni se reiniciaron servicios de energía del Mac. Al iniciar iPad hubo un error transitorio de launchd_sim; `simctl bootstatus -b` completó después el arranque. Registrar el resultado del nuevo xcresult por separado. Las siguientes ejecuciones usaron firma ad hoc de simulador (`CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-`), sin credenciales de distribución.
+
+Para investigar: comparar `dwarfdump --uuid` del ejecutable de tests compilado y del instalado (localizarlo con `xcrun simctl get_app_container <simulator-id> com.dafermen.vReaderTests.xctrunner app`). Detener la prueba antes de retirar únicamente su runner. En ejecuciones con varios destinos, stdout puede estar en `xcresult/Staging/.../StandardOutputAndStandardError.txt`, no en el log exterior mientras se ejecuta. Esperar la finalización del xcresult para emitir un resultado definitivo.
+
+La prueba también necesitaba desplazamientos cortos para no saltarse filas de Settings y tocar el interruptor visible de renglones, no el centro de toda su fila. El idioma pasó a la primera sección de Settings como mejora real de acceso.
+
+
+## 2026-10-11 — infraestructura local de pruebas
+
+Un DerivedData nuevo quedó esperando `actool` mientras el Release final compiló correctamente. Se canceló solo esa ejecución y se reutilizó la caché de iconos sin cambios, recompilando Swift. El siguiente recorrido UI pasó para renglones/pausa y práctica española, pero una navegación a Sessions falló y el runner unitario no inició. La cancelación con SIGINT produjo un fallo interno de Xcode al finalizar logs: el stdout conserva los resultados individuales, pero no hay un xcresult final válido para esa ejecución. No confundir pruebas individuales aprobadas con suite completa aprobada. La suite unitaria anterior sí tiene 88 aprobaciones y bundle terminado. El rerun aislado de edición/audio llegó a confirmar compartir SRT, pero las consultas de accesibilidad de la hoja nativa quedaron esperando con reintentos de 30 s. Se canceló y se conserva como verificación incompleta, sin atribuirle una causa no demostrada.
+
+## 2026-10-11 — pausa poco visible y nueva distribución universal
+
+El usuario informó que una alarma pausó la captura sin que lo notara. Build 20 añade un aviso persistente de micrófono apagado y Reanudar destacado, también en fullscreen. No reactiva el micrófono automáticamente. La prueba con interrupción simulada se registra separada de una alarma real en dispositivo.
+
+Para esta compilación verificar UIDeviceFamily `[1,2]`, las cuatro orientaciones iPad y un número de build superior al último entregado. El cambio de preferencias no debe reinterpretar sesiones antiguas: `ConferenceSession.language` ya existe y snapshots sin sourceLocale son inglés. La fuente pasa a build 20; Cloud puede usar su propio número. Inspeccionar el archivo exportado antes de subir.
+
+Persisten las advertencias de herramienta: Xcode 15.2 local no compila las ramas modernas SpeechAnalyzer/Translation; una prueba local verde no certifica esos caminos. Los incidentes de firma/HTTP 502 descritos abajo no se declaran resueltos por este cambio de UX. Validar por separado archive, export, upload, procesamiento y asignación al grupo Dev.
+
+
 Registro actualizado el 10 de octubre de 2026. Las horas del relato usan America/New_York; los logs pueden incluir UTC o la hora del worker. “Resuelto” solo se aplica al paso para el que existe evidencia.
 
 ## 1. Ruta y nombre del proyecto

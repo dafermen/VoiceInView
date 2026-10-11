@@ -1,5 +1,10 @@
 # Aprender inglés — builds 18–19
 
+## Actualización build 20 — Practicar idioma
+
+El acceso visible ahora se llama **Practicar idioma**. Usa el idioma original de la sesión (inglés o español); revelar muestra el otro idioma. Ejemplos de voz y reconocimiento opcional usan la locale de esa sesión. Las expresiones antiguas siguen disponibles sin migración V7. Para niños, preferir frases breves elegidas y acompañadas por un adulto, sin puntuaciones de pronunciación. [Guía de uso inclusivo](inclusive-use.md).
+
+
 ## Cómo usarlo
 
 Guarda una sesión y abre **Sessions → sesión → Aprender inglés**. No ocupa espacio extra en el lector de Captions.

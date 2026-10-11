@@ -1,5 +1,10 @@
 # Práctica de pronunciación — build 19
 
+## Actualización build 20
+
+Entrar desde **Practicar idioma → Practicar pronunciación**. El ejemplo, los intentos y el reconocimiento local opcional siguen el idioma de la sesión: en-US o es-ES. La comprobación se mantiene como reconocimiento de palabras, no evaluación fonética. El plan de evaluación en línea sigue pendiente. [Uso acompañado y accesible](inclusive-use.md).
+
+
 ## Experiencia de uso
 
 Abre **Sessions → sesión guardada → Aprender inglés → Practicar pronunciación**. Funciona incluso si esa sesión no tiene audio guardado. La pantalla tiene tres pasos, controles con texto y símbolos, áreas táctiles cómodas y desplazamiento para letra grande u orientación horizontal.

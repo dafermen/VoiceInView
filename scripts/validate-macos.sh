@@ -58,6 +58,8 @@ assert info.get("CFBundleDisplayName") == "VoiceInView", "Unexpected app name"
 assert info.get("CFBundleIdentifier") == "com.dafermen.vReader", "App identity changed"
 assert info.get("CFBundleExecutable") == "VoiceInView", "Unexpected executable name"
 assert {"UIInterfaceOrientationPortrait", "UIInterfaceOrientationLandscapeLeft", "UIInterfaceOrientationLandscapeRight"}.issubset(set(info.get("UISupportedInterfaceOrientations", []))), "Missing reading orientations"
+assert set(info.get("UIDeviceFamily", [])) == {1, 2}, "iPhone/iPad support missing"
+assert {"UIInterfaceOrientationPortrait", "UIInterfaceOrientationPortraitUpsideDown", "UIInterfaceOrientationLandscapeLeft", "UIInterfaceOrientationLandscapeRight"} == set(info.get("UISupportedInterfaceOrientations~ipad", [])), "Missing iPad orientations"
 assert info.get("UIBackgroundModes") == ["audio"], "Missing or unexpected background modes"
 assert (app / "Assets.car").exists(), "Missing compiled assets"
 with (app / "PrivacyInfo.xcprivacy").open("rb") as f:
@@ -66,4 +68,4 @@ assert privacy.get("NSPrivacyTracking") is False, "Unexpected tracking"
 print("Release simulator bundle checks passed.")
 PY
 echo "Validation artifacts: $run_dir"
-echo "Physical iPhone, Airplane Mode, accessibility, privacy and extended-session gates still require manual checks."
+echo "Physical iPhone/iPad, Airplane Mode, accessibility, privacy and extended-session gates still require manual checks."

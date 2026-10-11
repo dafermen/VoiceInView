@@ -36,6 +36,8 @@ final class LegacySpeechTranscriber: SpeechTranscribing {
         self.init(audio: audio, backend: LegacySpeechBackend())
     }
 
+    func configure(language: CaptureLanguage) { backend.configure(language: language) }
+
     func readiness() async -> SpeechReadiness {
         switch backend.authorization {
         case .notDetermined: return .authorizationRequired

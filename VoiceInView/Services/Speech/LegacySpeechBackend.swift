@@ -15,6 +15,7 @@ protocol LegacySpeechRecognizing: AnyObject {
     var supportsLocale: Bool { get }
     var supportsOnDeviceRecognition: Bool { get }
     var isAvailable: Bool { get }
+    func configure(language: CaptureLanguage)
     func requestAuthorization() async
     func start(receive: @escaping @MainActor (Result<LegacySpeechResult, Error>) -> Void) throws
     func append(_ audio: CapturedAudio)
@@ -24,7 +25,13 @@ protocol LegacySpeechRecognizing: AnyObject {
 
 @MainActor
 final class LegacySpeechBackend: LegacySpeechRecognizing {
-    private lazy var recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    private var language: CaptureLanguage = .english
+    private var recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    func configure(language: CaptureLanguage) {
+        guard language != self.language else { return }
+        cancel(); self.language = language
+        recognizer = SFSpeechRecognizer(locale: Locale(identifier: language.rawValue))
+    }
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
     var authorization: SFSpeechRecognizerAuthorizationStatus { SFSpeechRecognizer.authorizationStatus() }
@@ -38,13 +45,13 @@ final class LegacySpeechBackend: LegacySpeechRecognizing {
         }
     }
 
-    static func offlineRequest() -> SFSpeechAudioBufferRecognitionRequest {
+    static func offlineRequest(language: CaptureLanguage = .english) -> SFSpeechAudioBufferRecognitionRequest {
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.requiresOnDeviceRecognition = true
         request.shouldReportPartialResults = true
         request.addsPunctuation = true
         request.taskHint = .dictation
-        request.contextualStrings = PersonalVocabulary.saved().map(\.source)
+        request.contextualStrings = PersonalVocabulary.saved(for: language).map(\.source)
         return request
     }
 
@@ -55,7 +62,7 @@ final class LegacySpeechBackend: LegacySpeechRecognizing {
               recognizer.supportsOnDeviceRecognition, recognizer.isAvailable else {
             throw TranscriptionFailure.notReady
         }
-        let request = Self.offlineRequest()
+        let request = Self.offlineRequest(language: language)
         self.request = request
         task = recognizer.recognitionTask(with: request) { result, error in
             // Copy framework results before crossing to the presentation executor.
@@ -81,3 +88,5 @@ final class LegacySpeechBackend: LegacySpeechRecognizing {
         request = nil
     }
 }
+
+extension LegacySpeechRecognizing { func configure(language: CaptureLanguage) {} }

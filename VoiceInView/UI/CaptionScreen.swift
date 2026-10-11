@@ -43,15 +43,20 @@ struct CaptionScreen: View {
                     }
                     .padding(.horizontal, 16)
                 }
-                if let message = statusMessage { captureNotice(message) }
+                if model.canResume { resumePanel }
+                else if let message = statusMessage { captureNotice(message) }
                 Group {
                     if liveSpanish {
                         LiveSpanishView(paragraphs: model.transcript.finalized.suffix(40).map {
                             ReviewParagraph(id: $0.id, text: $0.text)
-                        }, fontSize: settings.captionSize)
+                        }, fontSize: Double(scaledSize) * settings.captionSize / 28,
+                           language: model.language, lineSpacing: settings.lineSpacing, bold: settings.boldCaptions)
+                            .id(model.language)
                     } else { transcript }
                 }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(ReaderSurface(settings: settings))
+                    .environment(\.colorScheme, settings.readerPaper != .system && !settings.highContrast ? .light : colorScheme)
                 if model.state == .ended && needsSessionDecision {
                     Divider()
                     resolutionControls.padding(.horizontal, 16).padding(.vertical, 4)
@@ -119,7 +124,7 @@ struct CaptionScreen: View {
             Button("Session information") { showingStatus = true }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Recovery drafts stay on this iPhone until you save or discard them.")
+            Text("Recovery drafts stay on this device until you save or discard them.")
         }
         .confirmationDialog("Keep this session before starting another?",
                             isPresented: $confirmNewSession, titleVisibility: .visible) {
@@ -139,9 +144,35 @@ struct CaptionScreen: View {
         } message: { Text("This permanently deletes the transcript and any audio from this session.") }
         .task { await model.checkReadiness() }
         .onChange(of: model.state) { _, _ in applyWakePreference() }
+        .onChange(of: model.canResume) { wasPaused, paused in
+            if paused && !wasPaused {
+                UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                UIAccessibility.post(notification: .announcement,
+                    argument: "Listening paused. Microphone is off. Tap Resume to continue.")
+            }
+        }
         .onChange(of: settings.keepAwake) { _, _ in applyWakePreference() }
         .onAppear { applyWakePreference() }
         .onDisappear { followScrollTask?.cancel(); UIApplication.shared.isIdleTimerDisabled = false }
+    }
+
+    private var resumePanel: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label("Escucha en pausa · Micrófono apagado", systemImage: "pause.circle.fill")
+                .font(.headline).accessibilityIdentifier("pausedCaptureBanner")
+            Text("No se están capturando nuevas palabras. Pulsa Resume para continuar.")
+                .font(.subheadline)
+            HStack {
+                Button { Task { await model.start() } } label: {
+                    Label("Resume / Reanudar", systemImage: "play.fill")
+                        .font(.headline).frame(maxWidth: .infinity, minHeight: 44)
+                }.buttonStyle(.borderedProminent).accessibilityIdentifier("resumeCaptureButton")
+                Button("Detalles", systemImage: "info.circle") { showingStatus = true }
+                    .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
+            }
+        }.padding(12).frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.orange.opacity(0.15))
+            .accessibilityElement(children: .contain)
     }
 
     private func captureNotice(_ message: String) -> some View {
@@ -223,8 +254,8 @@ struct CaptionScreen: View {
                 Image(systemName: "character.bubble").frame(width: 44, height: 44)
                     .foregroundStyle(liveSpanish ? Color.accentColor : Color.primary)
             }
-            .accessibilityLabel(liveSpanish ? "Show original English" : "Show live Spanish")
-            .accessibilityValue(liveSpanish ? "Spanish" : "English")
+            .accessibilityLabel(liveSpanish ? "Show original \(model.language.name)" : "Show live \(model.language.opposite.name)")
+            .accessibilityValue(liveSpanish ? model.language.opposite.name : model.language.name)
             .accessibilityIdentifier("liveSpanishButton")
         }
         #endif
@@ -277,7 +308,7 @@ struct CaptionScreen: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 20) {
                 if !hasCaptions {
-                    Text("Live English captions will appear here.")
+                    Text("Live \(model.language.name) captions will appear here.")
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("captionPlaceholder")
                 }
@@ -329,8 +360,7 @@ struct CaptionScreen: View {
     private func styledCaptionContent(height: CGFloat) -> some View {
         captionContent(height: height)
         .defaultScrollAnchor(followLive ? .bottom : nil)
-        .foregroundStyle(settings.highContrast ? (colorScheme == .dark ? Color.white : Color.black) : Color.primary)
-        .background(settings.highContrast ? (colorScheme == .dark ? Color.black : Color.white) : Color(uiColor: .systemBackground))
+        .foregroundStyle(settings.highContrast ? (colorScheme == .dark ? Color.white : Color.black) : settings.readerPaper != .system ? Color.black : Color.primary)
         .accessibilityIdentifier("captionScrollView")
         .accessibilityValue("\(model.transcript.finalized.count) finished paragraphs. " +
                             (followLive ? "Following live captions" : "Reading earlier captions"))
@@ -510,6 +540,7 @@ struct CaptionScreen: View {
                     Toggle("Bold text", isOn: $settings.boldCaptions)
                     Toggle("High contrast", isOn: $settings.highContrast)
                 }
+                ReaderPaperOptions(settings: settings)
                 CaptureOptionsView(model: model, settings: settings)
                 Section {
                     Toggle("Follow live captions", isOn: followBinding)
@@ -543,7 +574,7 @@ struct CaptionScreen: View {
                             .disabled(model.state.active || model.state.busy || model.preparationPending)
                     }
                     if model.readiness == .missingAssets {
-                        Button("Install English Model (Internet required)") { Task { await model.installAssets() } }
+                        Button("Install Selected Language Model (Internet required)") { Task { await model.installAssets() } }
                             .disabled(model.state.active || model.state.busy || model.preparationPending)
                     }
                     if model.permissionDenied || model.readiness == .authorizationDenied {
@@ -553,8 +584,8 @@ struct CaptionScreen: View {
                     }
                 }
                 Section("Privacy and saving") {
-                    Text("Recovery drafts remain on this iPhone. Save Session keeps them in your library; Discard deletes the transcript and recorded audio.")
-                    Text("On-device English captions. Accuracy varies with distance, noise and speech.")
+                    Text("Recovery drafts remain on this device. Save Session keeps them in your library; Discard deletes the transcript and recorded audio.")
+                    Text("On-device captions in the selected language. Accuracy varies with distance, noise and speech.")
                 }
             }
             .navigationTitle("Session information").navigationBarTitleDisplayMode(.inline)
@@ -574,9 +605,9 @@ struct CaptionScreen: View {
         case .authorizationRequired: return "Enable speech recognition"
         case .authorizationDenied: return "Speech recognition access needed"
         case .authorizationRestricted: return "Speech recognition is restricted"
-        case .missingAssets, .systemModelUnavailable: return "English speech model needed"
-        case .downloading: return "Installing English speech model…"
-        case .unsupportedDevice, .unsupportedLanguage: return "On-device English unavailable"
+        case .missingAssets, .systemModelUnavailable: return "Selected speech model needed"
+        case .downloading: return "Installing Selected speech model…"
+        case .unsupportedDevice, .unsupportedLanguage: return "Selected language unavailable"
         case .problem: return "Speech recognition needs attention"
         }
         if let notice = model.notice { return notice }

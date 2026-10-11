@@ -67,9 +67,11 @@ final class PronunciationPractice {
     private var generation = UUID()
     private var directory: URL?
     private var observers: [NSObjectProtocol] = []
+    let language: CaptureLanguage
     private let microphonePermission: () async -> Bool
 
-    init(microphonePermission: @escaping () async -> Bool = { await AVAudioApplication.requestRecordPermission() }) {
+    init(language: CaptureLanguage = .english, microphonePermission: @escaping () async -> Bool = { await AVAudioApplication.requestRecordPermission() }) {
+        self.language = language
         self.microphonePermission = microphonePermission
     }
     func observeInterruptions() {
@@ -119,8 +121,8 @@ final class PronunciationPractice {
 
     func listen(_ text: String, slow: Bool) {
         stopActivity(); message = nil
-        guard let voice = AVSpeechSynthesisVoice(language: "en-US") else {
-            message = "No hay una voz inglesa disponible. Revisa las voces de inglés en Ajustes del iPhone."; return
+        guard let voice = AVSpeechSynthesisVoice(language: language.rawValue) else {
+            message = "No hay una voz para este idioma disponible. Revisa las voces del idioma elegido en Ajustes del dispositivo."; return
         }
         do {
             try activate(.playback, mode: .spokenAudio)
@@ -145,7 +147,7 @@ final class PronunciationPractice {
         guard generation == token, !Task.isCancelled else { return }
         guard allowed else {
             activity = .idle
-            message = "Permite el micrófono en Ajustes del iPhone → VoiceInView para practicar. Puedes seguir escuchando ejemplos."
+            message = "Permite el micrófono en Ajustes del dispositivo → VoiceInView para practicar. Puedes seguir escuchando ejemplos."
             return
         }
         do {
@@ -212,11 +214,11 @@ final class PronunciationPractice {
         }
         guard generation == token, !Task.isCancelled else { return }
         guard SFSpeechRecognizer.authorizationStatus() == .authorized else {
-            stopActivity(); message = "Para mostrar qué entendió el iPhone, permite reconocimiento de voz en Ajustes. Aún puedes escuchar y comparar."; return
+            stopActivity(); message = "Para mostrar qué entendió el dispositivo, permite reconocimiento de voz en Ajustes. Aún puedes escuchar y comparar."; return
         }
-        guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US")),
+        guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: language.rawValue)),
               recognizer.supportsOnDeviceRecognition, recognizer.isAvailable else {
-            stopActivity(); message = "El reconocimiento local de inglés no está disponible. Puedes escuchar tu voz y compararla con el ejemplo."; return
+            stopActivity(); message = "El reconocimiento local del idioma elegido no está disponible. Puedes escuchar tu voz y compararla con el ejemplo."; return
         }
         self.recognizer = recognizer
         recognition = recognizer.recognitionTask(with: PracticeRecognition.request(url: take)) { [weak self] result, error in
@@ -242,13 +244,18 @@ final class PronunciationPractice {
 @MainActor
 struct PronunciationPracticeView: View {
     let text: String
+    let language: CaptureLanguage
+    init(text: String, language: CaptureLanguage = .english) {
+        self.text = text; self.language = language
+        _practice = State(initialValue: PronunciationPractice(language: language))
+    }
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var phase
-    @State private var practice = PronunciationPractice()
+    @State private var practice: PronunciationPractice
     @State private var selection = 0
     @State private var slow = false
     private var prompts: [String] { PracticeRecognition.prompts(text) }
-    private var target: String { prompts.indices.contains(selection) ? prompts[selection] : "Hello" }
+    private var target: String { prompts.indices.contains(selection) ? prompts[selection] : (language == .english ? "Hello" : "Hola") }
     private var busy: Bool { practice.activity == .recording || practice.activity == .permission || practice.activity == .checking }
     var body: some View {
         NavigationStack {
@@ -296,24 +303,24 @@ struct PronunciationPracticeView: View {
                                 if practice.activity == .playback { practice.stopPlayback() } else { practice.listenToTake() }
                             }.buttonStyle(.bordered).disabled(busy).accessibilityIdentifier("pronunciationReplay")
                             Text("Alterna entre el ejemplo y tu voz. Prueba despacio y luego a tu ritmo.").font(.subheadline)
-                            if practice.activity == .checking { ProgressView("Reconociendo en el iPhone…") }
+                            if practice.activity == .checking { ProgressView("Reconociendo en el dispositivo…") }
                             else {
-                                Button("¿Qué entendió el iPhone?", systemImage: "text.bubble") {
+                                Button("¿Qué entendió el dispositivo?", systemImage: "text.bubble") {
                                     Task { await practice.checkWords() }
                                 }.disabled(busy).accessibilityIdentifier("pronunciationCheck")
                             }
                             if let heard = practice.heard {
                                 Text(heard).font(.title3).accessibilityIdentifier("pronunciationHeard")
                                 Text(PracticeRecognition.matches(heard, target: target)
-                                     ? "El iPhone reconoció el texto esperado. Escucha ambos audios para seguir practicando."
-                                     : "El iPhone entendió algo distinto. Puede influir el ruido o el reconocimiento; escucha ambos audios y prueba otra vez.")
+                                     ? "El dispositivo reconoció el texto esperado. Escucha ambos audios para seguir practicando."
+                                     : "El dispositivo entendió algo distinto. Puede influir el ruido o el reconocimiento; escucha ambos audios y prueba otra vez.")
                             }
                             Text("Esto comprueba palabras reconocidas, no evalúa sonidos ni califica tu pronunciación.")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
                     if let message = practice.message { Text(message).foregroundStyle(.secondary).accessibilityIdentifier("pronunciationNotice") }
-                    Text("Tu práctica queda en este iPhone y se borra al salir, cambiar de palabra o volver a grabar.")
+                    Text("Tu práctica queda en este dispositivo y se borra al salir, cambiar de palabra o volver a grabar.")
                         .font(.caption).foregroundStyle(.secondary)
                 }.padding()
             }

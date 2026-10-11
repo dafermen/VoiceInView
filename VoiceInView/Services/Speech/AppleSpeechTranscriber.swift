@@ -8,6 +8,8 @@ import Speech
 @available(iOS 26.0, *)
 @MainActor
 final class AppleSpeechTranscriber: SpeechTranscribing {
+    private var language: CaptureLanguage = .english
+    func configure(language: CaptureLanguage) { self.language = language }
     private let audio: any SpeechAudioCapturing
     private var analyzer: SpeechAnalyzer?
     private var inputTask: Task<Void, Never>?
@@ -30,7 +32,7 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
 
     func readiness() async -> SpeechReadiness {
         guard SpeechTranscriber.isAvailable else { return .unsupportedDevice }
-        guard let locale = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: "en-US")) else {
+        guard let locale = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: language.rawValue)) else {
             return .unsupportedLanguage
         }
         switch await AssetInventory.status(forModules: [module(locale: locale)]) {
@@ -44,7 +46,7 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
 
     func installAssets() async throws {
         guard SpeechTranscriber.isAvailable,
-              let locale = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: "en-US")) else {
+              let locale = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: language.rawValue)) else {
             throw TranscriptionFailure.notReady
         }
         try await AssetInventory.reserve(locale: locale)
@@ -59,7 +61,7 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
         let startIdentifier = UUID()
         generation = startIdentifier
         guard await readiness() == .ready,
-              let locale = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: "en-US")) else {
+              let locale = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: language.rawValue)) else {
             throw TranscriptionFailure.notReady
         }
         guard generation == startIdentifier, !Task.isCancelled else { throw CancellationError() }
@@ -134,7 +136,7 @@ final class AppleSpeechTranscriber: SpeechTranscribing {
             }
         }
         do {
-            let vocabulary = PersonalVocabulary.saved().map(\.source)
+            let vocabulary = PersonalVocabulary.saved(for: language).map(\.source)
             if !vocabulary.isEmpty {
                 let context = AnalysisContext()
                 context.contextualStrings[.general] = vocabulary

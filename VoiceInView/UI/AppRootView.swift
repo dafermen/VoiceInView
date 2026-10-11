@@ -61,14 +61,15 @@ struct AppRootView: View {
             #if DEBUG
             if ProcessInfo.processInfo.arguments.contains("--ui-test-review") {
                 let repository = try TranscriptRepository(inMemory: true)
-                let sample = try repository.create(title: "Review sample")
+                let spanishSample = ProcessInfo.processInfo.arguments.contains("--ui-test-spanish")
+                let sample = try repository.create(title: "Review sample", language: spanishSample ? .spanish : .english)
                 let run = UUID()
                 var segments: [CaptionSegment] = []
                 for index in 1...80 {
                     let text: String = index == 1
                         ? "Acmee makes captions useful. Acmee keeps words clear. Acmees stays unchanged."
                         : "Paragraph \(index). Reading, reviewing and sharing should be simple. Keep the original words safe while correcting a transcript."
-                    segments.append(CaptionSegment(runID: run, start: Double(index), end: Double(index + 1), text: text))
+                    segments.append(CaptionSegment(runID: run, start: Double(index), end: Double(index + 1), text: spanishSample ? "Hola mundo. Aprendemos juntos." : text))
                 }
                 try repository.apply(.init(removedIDs: [], upserted: segments), to: sample)
                 try repository.checkpoint(sample, duration: 600, ended: true)
@@ -97,9 +98,9 @@ struct AppRootView: View {
                 if ProcessInfo.processInfo.arguments.contains("--ui-test-translation") {
                     let source = try repository.reviewedParagraphs(for: sample)
                     let spanish = source.enumerated().map { index, paragraph in
-                        ReviewParagraph(id: paragraph.id, text: index == 0 ? "Hola mundo. Aprendemos juntos." : "Párrafo \(index + 1). Leer y compartir debería ser sencillo.")
+                        ReviewParagraph(id: paragraph.id, text: spanishSample ? "Hello world. We learn together." : index == 0 ? "Hola mundo. Aprendemos juntos." : "Párrafo \(index + 1). Leer y compartir debería ser sencillo.")
                     }
-                    try repository.saveTranslation(TranslationSnapshot(source: source, generated: spanish), for: sample)
+                    try repository.saveTranslation(TranslationSnapshot(source: source, generated: spanish, sourceLocale: spanishSample ? "es-ES" : nil), for: sample)
                     if ProcessInfo.processInfo.arguments.contains("--ui-test-translation-stale") {
                         var changed = source
                         changed[0].text = "The English transcript changed."
@@ -169,6 +170,7 @@ private final class ReaderPreviewSpeech: SpeechTranscribing {
     private var continuation: AsyncThrowingStream<TranscriptionUpdate, Error>.Continuation?
     private var producer: Task<Void, Never>?
     private var nextParagraph = 1
+    private var interrupted = false
     func readiness() async -> SpeechReadiness { .ready }
     func installAssets() async throws {}
     func start() async throws -> AsyncThrowingStream<TranscriptionUpdate, Error> {
@@ -190,6 +192,11 @@ private final class ReaderPreviewSpeech: SpeechTranscribing {
                 let index = self.nextParagraph
                 self.continuation?.yield(.init(runID: run, start: Double(index), end: Double(index + 1),
                     text: "Paragraph \(index). New captions keep arriving while you read.", isFinal: true))
+                if ProcessInfo.processInfo.arguments.contains("--ui-test-interruption"), !self.interrupted {
+                    self.interrupted = true
+                    self.continuation?.finish(throwing: TranscriptionFailure.interrupted("Alarm interrupted the microphone."))
+                    return
+                }
                 self.nextParagraph += 1
             }
         }

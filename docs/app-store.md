@@ -2,9 +2,13 @@
 Status updated 2026-10-10: app registered, earlier TestFlight builds used on iPhone, and latest Cloud archive exported/uploaded from the Mac. The first local upload processed as 0.1.0 (1), assigned to Dev. A re-signed copy was uploaded as 0.1.0 (13); its processing/tester availability is unconfirmed. Not submitted for public App Review and not a certified release candidate. See [distribution runbook](distribution-runbook.md).
 Current Apple guidelines, privacy details and metadata/icon documentation checked 2026-10-07.
 
+## Build 20 positioning update
+
+Use [inclusive-use.md](inclusive-use.md) for hearing/low-vision support, supervised child learning and two-language copy. Native iPad support is enabled in source. This does not change the store category to Kids or assert medical/accessibility certification. Public metadata remains a draft; verify physical acceptance before submission.
+
 ## Positioning and metadata
 Name: VoiceInView. App Store Connect app record exists (6820599198); the earlier name vReader was unavailable.
-Subtitle: Live English Captions (21 characters).
+Subtitle draft: Captions & language practice (28 characters).
 Tagline: See what's being said.
 Draft description, keywords, version/build and release notes: app-store-metadata.json.
 Do not publish draft claims until the feature, offline and supported-device tests pass.
@@ -21,11 +25,11 @@ Capture stops on lock/background by default. Continue in background is explicit 
 
 ## Screenshots and icon
 Prepared 1024x1024 opaque caption-bubble icon in the AppIcon asset catalog; design approval and Xcode asset validation pending. Check system-generated dark/tinted appearance.
-Capture actual app screens from a validated build at current App Store Connect-required iPhone sizes:
+Capture actual app screens from a validated build at current App Store Connect-required iPhone and iPad sizes:
 - Live captions with a non-sensitive sample speech source.
 - Paused/readable history and text-size controls.
 - Saved sessions and transcript.
-- Offline Readiness and explicit English model setup.
+- Offline Readiness and selected-language model setup.
 - Settings/privacy.
 Do not use fabricated feature screenshots or imply live captioning is validated while it is not.
 

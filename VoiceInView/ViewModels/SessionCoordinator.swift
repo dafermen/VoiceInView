@@ -38,7 +38,7 @@ final class SessionCoordinator {
             }
             if self.currentSession == nil {
                 self.suggestedTitle = SessionTitle.suggested()
-                self.currentSession = try self.repository.create(title: self.sessionTitle, draft: true)
+                self.currentSession = try self.repository.create(title: self.sessionTitle, draft: true, language: self.caption.language)
                 self.currentIsDraft = true
             }
             if self.caption.saveAudio, !self.caption.recordingPrepared, let session = self.currentSession {
@@ -66,9 +66,18 @@ final class SessionCoordinator {
         }
     }
 
+    func changeCaptureLanguage() async {
+        guard caption.canChooseCaptureOptions else { return }
+        applyCapturePreferences()
+        await caption.checkReadiness()
+    }
+
     /// Preferences choose the next recording. Audio remains fixed once capture has begun.
     private func applyCapturePreferences() {
-        if caption.canChooseCaptureOptions { caption.saveAudio = settings.saveAudio }
+        if caption.canChooseCaptureOptions {
+            caption.saveAudio = settings.saveAudio
+            caption.configureLanguage(settings.captureLanguage)
+        }
         caption.continueInBackground = settings.continueInBackground
     }
 
@@ -77,7 +86,7 @@ final class SessionCoordinator {
         guard currentSession != nil || caption.startedAt != nil || !caption.transcript.finalized.isEmpty else { return true }
         do {
             if currentSession == nil {
-                currentSession = try repository.create(title: sessionTitle, draft: true)
+                currentSession = try repository.create(title: sessionTitle, draft: true, language: caption.language)
                 currentIsDraft = true
             }
             guard let currentSession else { return false }

@@ -4,6 +4,32 @@ import SwiftData
 
 @MainActor
 final class CaptionViewModelTests: XCTestCase {
+    func testLanguageIsFixedAcrossPauseAndResumeUntilNewSession() async throws {
+        let name = UUID().uuidString
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removePersistentDomain(forName: name) }
+        let settings = AppSettings(defaults: defaults)
+        let speech = MockSpeech()
+        let model = CaptionViewModel(microphone: CaptionMicrophone(), speech: speech)
+        let repository = try TranscriptRepository(inMemory: true)
+        let coordinator = SessionCoordinator(repository: repository, caption: model, settings: settings)
+        settings.captureLanguage = .spanish
+        await coordinator.changeCaptureLanguage()
+        XCTAssertEqual(model.language, .spanish); XCTAssertEqual(speech.language, .spanish)
+        await model.start()
+        XCTAssertEqual(coordinator.currentSession?.language, "es-ES")
+        await model.pause()
+        settings.captureLanguage = .english
+        await coordinator.changeCaptureLanguage()
+        XCTAssertEqual(model.language, .spanish)
+        await model.start()
+        XCTAssertEqual(speech.language, .spanish)
+        XCTAssertEqual(coordinator.currentSession?.language, "es-ES")
+        await model.stop(); XCTAssertTrue(coordinator.saveCurrent(ended: true))
+        await coordinator.newSession()
+        XCTAssertEqual(model.language, .english); XCTAssertEqual(speech.language, .english)
+    }
+
     func testInterruptionKeepsDraftAndResumesOnlyOnRequest() async throws {
         let speech = MockSpeech()
         let microphone = CaptionMicrophone()
@@ -167,6 +193,8 @@ private final class CaptionMicrophone: AudioCapturing {
 
 @MainActor
 private final class MockSpeech: SpeechTranscribing {
+    var language: CaptureLanguage = .english
+    func configure(language: CaptureLanguage) { self.language = language }
     var status: SpeechReadiness = .ready
     var starts = 0
     var installations = 0

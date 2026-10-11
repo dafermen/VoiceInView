@@ -1,4 +1,17 @@
 ## Build 18 — English learning
+
+## Build 20: aceptación adicional
+
+- [ ] Confirmar archive final con familia iPhone+iPad y orientaciones iPad; numeración única.
+- [ ] Probar traducción real inglés → español y español → inglés, incluidos exportaciones y edición.
+- [ ] Probar iPad físico, ventanas, rotación y compartición.
+- [ ] Verificar anuncio/aviso después de alarma real y reanudación manual.
+- [ ] Evaluar VoiceOver, texto grande, alto contraste, pasteles y renglones con usuarios.
+- [ ] Revisar textos para familias/docentes; no anunciar certificación ni Kids Category sin su proceso específico.
+- [ ] Confirmar procesamiento TestFlight, grupo Dev y actualización instalada.
+
+Evidencia local separada: [checkpoint build 20](accessibility-checkpoint.md).
+
 - [x] V6→V7 migration and learning tests passed in the validation report.
 - [x] Final Debug/Release and UI test results recorded in [the checkpoint](learning-checkpoint.md).
 - [ ] iPhone: slow playback, looping, interruptions, headphones and text-only sessions.

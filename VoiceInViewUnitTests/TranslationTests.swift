@@ -5,6 +5,66 @@ import SwiftData
 @MainActor
 final class TranslationTests: XCTestCase {
 
+    func testOldPayloadDefaultsToEnglishAndReverseSubtitlesKeepTimes() throws {
+        let id = UUID()
+        let source = [ReviewParagraph(id: id, text: "Hola mundo")]
+        let target = [ReviewParagraph(id: id, text: "Hello world")]
+        let legacy = TranslationSnapshot(source: target, generated: source)
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(legacy)) as? [String: Any])
+        json.removeValue(forKey: "sourceLocale")
+        let restored = try JSONDecoder().decode(TranslationSnapshot.self, from: JSONSerialization.data(withJSONObject: json))
+        XCTAssertEqual(restored.language, .english)
+        let reverse = TranslationSnapshot(source: source, generated: target, sourceLocale: "es-ES")
+        XCTAssertEqual(reverse.paragraphs(mode: .spanish), source)
+        XCTAssertEqual(reverse.paragraphs(mode: .english), target)
+        XCTAssertEqual(reverse.paragraphs(mode: .both).first?.text, "Hola mundo\nHello world")
+        let timings = [id.uuidString: CaptionTiming(start: 1, end: 4, words: [])]
+        let original = TranslatedSubtitles.cues(snapshot: reverse, timings: timings, mode: .spanish)
+        let english = TranslatedSubtitles.cues(snapshot: reverse, timings: timings, mode: .english)
+        XCTAssertEqual(original.first?.text, "Hola mundo")
+        XCTAssertEqual(english.first?.text, "Hello world")
+        XCTAssertEqual(original.first?.start, english.first?.start)
+        XCTAssertEqual(original.first?.end, english.first?.end)
+        let unit = LearningUnit.make(paragraphs: source, timings: timings, translation: reverse).first
+        XCTAssertEqual(unit?.english, "Hola mundo") // V7 legacy field name means source text.
+        XCTAssertEqual(unit?.spanish, "Hello world")
+        let plan = IncrementalTranslation(source: source, previous: reverse, language: .spanish)
+        XCTAssertTrue(plan.pending.isEmpty)
+        XCTAssertEqual(try plan.merging([]), reverse)
+        XCTAssertEqual(IncrementalTranslation(source: source, previous: reverse).pending, source)
+    }
+
+    func testSpanishSessionPersistsLanguageAndRejectsWrongTranslationDirection() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let id = try autoreleasepool { () throws -> UUID in
+            let repo = try TranscriptRepository(directory: folder)
+            let session = try repo.create(title: "Español", language: .spanish)
+            let caption = CaptionSegment(runID: UUID(), start: 0, end: 2, text: "Buenos días")
+            try repo.apply(.init(removedIDs: [], upserted: [caption]), to: session)
+            let source = try repo.reviewedParagraphs(for: session)
+            let target = [ReviewParagraph(id: caption.id, text: "Good morning")]
+            XCTAssertThrowsError(try repo.saveTranslation(TranslationSnapshot(source: source, generated: target), for: session))
+            let reverse = TranslationSnapshot(source: source, generated: target, sourceLocale: "es-ES")
+            try repo.saveTranslation(reverse, for: session)
+            return session.id
+        }
+        let reopened = try TranscriptRepository(directory: folder)
+        XCTAssertEqual(try reopened.container.mainContext.fetch(FetchDescriptor<ConferenceSession>()).first?.language, "es-ES")
+        XCTAssertEqual(try reopened.translation(for: id)?.decoded().english.first?.text, "Good morning")
+    }
+
+    func testVocabularyReversesSpanishHintsWithoutDuplicateSources() {
+        let name = UUID().uuidString
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removePersistentDomain(forName: name) }
+        defaults.set("meeting = reunión\nconference = reunión\nOpenAI", forKey: PersonalVocabulary.key)
+        let values = PersonalVocabulary.saved(for: .spanish, defaults: defaults)
+        XCTAssertEqual(values.count, 2)
+        XCTAssertEqual(values.first?.source, "reunión")
+        XCTAssertEqual(values.first?.target, "meeting")
+    }
+
     func testIncrementalTranslationRetainsOnlyUnchangedEdits() throws {
         let a = ReviewParagraph(id: UUID(), text: "First")
         let b = ReviewParagraph(id: UUID(), text: "Second")

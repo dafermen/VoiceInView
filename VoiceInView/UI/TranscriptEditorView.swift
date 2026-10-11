@@ -42,7 +42,7 @@ struct TranscriptEditorView: View {
                         .accessibilityIdentifier("restoreOriginalDraft")
                         .disabled(history.value == originals)
                 } footer: {
-                    Text(translation ? "Edit Spanish here. The English transcript stays unchanged. Restore translation returns to the machine translation." : "Tap a paragraph to correct it. Changes stay in this draft until you save. The original recognition is always kept.")
+                    Text(translation ? "Edit the translation here. The source transcript stays unchanged. Restore translation returns to the machine translation." : "Tap a paragraph to correct it. Changes stay in this draft until you save. The original recognition is always kept.")
                 }
                 Section("Transcript") {
                     ForEach(Array(history.value.enumerated()), id: \.element.id) { index, paragraph in
@@ -63,7 +63,7 @@ struct TranscriptEditorView: View {
                     }
                 }
             }
-            .navigationTitle(translation ? "Edit Spanish" : "Edit transcript").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(translation ? "Edit translation" : "Edit transcript").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { if dirty { confirmingDiscard = true } else { dismiss() } }

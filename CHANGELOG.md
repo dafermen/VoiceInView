@@ -1,4 +1,14 @@
 ## 2026-10-11 — Local pronunciation practice (source build 19)
+
+## 0.1.0 — source build 20 (2026-10-11)
+
+- English (default) or Spanish capture, with language preserved per session, bidirectional translation and language-aware practice.
+- Rename learning entry to “Practicar idioma”; existing sessions, expressions and translation payloads remain compatible (schema V7 unchanged).
+- Native iPhone/iPad target, iPad orientations, optional light reading colors and notebook guides; high contrast takes precedence.
+- Persistent paused/microphone-off banner with prominent Resume, accessibility announcement and supported-device haptic feedback.
+- Inclusive-use guidance for hearing/low-vision support and adult-guided child language practice; updated student guides and release checks.
+- Local verification and delivery status: [build 20 checkpoint](docs/accessibility-checkpoint.md). A source build is not proof of TestFlight availability.
+
 - Add an explicit listen/record/compare flow with synthetic English examples, slow speech and selectable words/short phrases.
 - Record protected temporary takes for up to 15 seconds, replay and delete on retry/exit/background; clean abandoned files on launch.
 - Offer optional offline-only word recognition, without scores, phoneme claims or expected-answer hints.

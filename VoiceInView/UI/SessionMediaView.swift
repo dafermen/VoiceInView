@@ -18,7 +18,7 @@ struct CaptureOptionsView: View {
                     .font(.caption)
             }
         } header: { Text("Capture preferences") } footer: {
-            Text("These choices are remembered for future sessions. Recording starts only when you tap the microphone. Audio stays on this iPhone. Background listening keeps the microphone active when switching apps or locking the screen. Other apps' internal audio is not captured.")
+            Text("These choices are remembered for future sessions. Recording starts only when you tap the microphone. Audio stays on this device. Background listening keeps the microphone active when switching apps or locking the screen. Other apps' internal audio is not captured.")
         }
     }
 
@@ -167,7 +167,7 @@ struct SessionMediaView: View {
                         }
                         }
                         if let translationLanguage {
-                            Text("Captions: \(translationLanguage). Audio remains in English. Edit Spanish from Translation. Timing within each paragraph is approximate.").font(.caption)
+                            Text("Captions: \(translationLanguage). Audio remains in \(CaptureLanguage(rawValue: session.language)?.name ?? "English"). Edit translated text from Translation. Timing within each paragraph is approximate.").font(.caption)
                         }
                         if audioURL != nil && !cues.isEmpty {
                             Section {

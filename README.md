@@ -1,12 +1,22 @@
 # VoiceInView
 
-**See what's being said.** Live English Captions.
+**See what's being said.** Captions, translation and language practice.
 
-Native iPhone app designed to caption English speech on device during conferences, classes, meetings and presentations, without sending recognition audio to a server, when on-device English support is available.
+Native iPhone and iPad app for following spoken English or Spanish, reviewing conversations and practicing a language. Designed as a reading and learning aid in meetings, conferences, classes and everyday conversations, including support for people with hearing loss or low vision and supervised language practice for children. On-device recognition requires a compatible device and prepared language model.
+
+## Inclusive reading and two languages — source build 20
+
+- **Settings → Idioma de grabación y subtítulos:** English remains the default; Español captions Spanish speech. Each session keeps its language through pause/resume. Saved and live translation use the opposite language.
+- **Practicar idioma** replaces Aprender inglés and follows the saved session’s language, including spoken examples and optional local recognition.
+- **iPad:** universal app layout, portrait/landscape and resizable reading area; the existing bundle identifier and saved data are preserved.
+- **Pause:** a persistent microphone-off banner and a large **Resume / Reanudar** button remain visible in fullscreen. Capture only resumes when requested.
+- **Aa → Fondo de lectura:** optional pale yellow, blue, green or purple, plus notebook guide lines. Settings are remembered. High contrast takes priority.
+
+Read the [inclusive-use and language guide](docs/inclusive-use.md) and [build 20 checkpoint](docs/accessibility-checkpoint.md). These are assistive features, not a claim of certified accessibility or a substitute for an interpreter. Captions and translations can contain mistakes. Child use is designed for adult-guided activities; this is not an App Store Kids Category declaration.
 
 ## Pronunciation practice (source build 19)
 
-Inside **Aprender inglés → Practicar pronunciación**, listen to an English example, record a short temporary take and compare your voice. Choose a word or short phrase and slow the example down. Optional on-device recognition shows what the iPhone understood; it does **not** grade pronunciation. No cloud service or account is required. See the [practice guide](docs/pronunciation.md) and [delivery checkpoint](docs/pronunciation-checkpoint.md).
+Inside **Practicar idioma → Practicar pronunciación**, listen to an example in the session’s language, record a short temporary take and compare your voice. Choose a word or short phrase and slow the example down. Optional on-device recognition shows what the device understood; it does **not** grade pronunciation. No cloud service or account is required. See the [practice guide](docs/pronunciation.md) and [delivery checkpoint](docs/pronunciation-checkpoint.md).
 
 ## Documentation / documentación
 
@@ -51,12 +61,12 @@ Remembered Audio/Background preferences, quick controls beside capture, circular
 
 ## Requirements
 Development: Mac with Xcode 15.2+ and a compatible iOS 17+ SDK/runtime. The modern speech engine requires Xcode 26+ (Swift compiler 6.2+) and iOS 26+.
-Use: iPhone with iOS 17+, on-device en-US recognition support and microphone consent. The compatibility engine also requires Speech Recognition permission. OS version alone does not guarantee engine/model compatibility.
-Final device matrix is pending. System language/model setup may need Internet and disk space. Xcode 15.2 builds use the compatibility engine even on newer iPhones; debugging also requires Xcode support for the phone’s OS.
+Use: iPhone or iPad with iOS/iPadOS 17+, on-device recognition support for the selected locale (en-US or es-ES), and microphone consent. The compatibility engine also requires Speech Recognition permission. OS version alone does not guarantee engine/model compatibility.
+Final device matrix is pending. System language/model setup may need Internet and disk space. Xcode 15.2 builds use the compatibility engine even on newer devices; debugging also requires Xcode support for the device’s OS.
 No account, cloud recognition, OpenAI key or third-party package is required.
 
 ## Build and test on Mac
-Open VoiceInView.xcodeproj, select shared scheme VoiceInView and an iOS 17+ iPhone simulator.
+Open VoiceInView.xcodeproj, select shared scheme VoiceInView and an iOS/iPadOS 17+ iPhone or iPad simulator.
 From the project root:
 ~~~sh
 bash scripts/validate-macos.sh
@@ -67,11 +77,11 @@ The existing bundle identifier and internal `vReader` storage directory are reta
 See [development](docs/development.md), [testing](docs/testing.md) and [release checklist](docs/release-checklist.md).
 
 ## How to use after validation
-1. Settings > Offline Readiness: allow microphone and Speech Recognition when requested. Resolve any readiness warnings while online. With the compatibility engine, enable English (US) Dictation in iPhone Settings if on-device support is unavailable, then refresh; the app cannot download that engine’s model. Use Install English Model only if the modern engine offers it.
+1. Settings > Offline Readiness: allow microphone and Speech Recognition when requested. Resolve any readiness warnings while online. With the compatibility engine, prepare Dictation for the selected language in device Settings if on-device support is unavailable, then refresh; the app cannot download that engine’s model. Use Install Selected Language Model only if the modern engine offers it.
 2. Test Offline Mode: enable Airplane Mode and turn Wi-Fi off, then return to Captions.
 3. Choose Audio and Background directly in Captions; both choices are remembered. Tap the circular microphone to start, pause/play to pause/resume, and the square Stop to finish.
-4. Tap the expand arrows for fullscreen reading; the inward arrows restore the tabs. Rotate the iPhone in either mode. Scroll back to reread while listening continues; tap Back to live to follow again.
-5. Tap Aa for caption size, line spacing, bold text, high contrast, live following and screen wake.
+4. Tap the expand arrows for fullscreen reading; the inward arrows restore the tabs. Rotate the iPhone or iPad in either mode. Scroll back to reread while listening continues; tap Back to live to follow again.
+5. Tap Aa for caption size, line spacing, bold text, high contrast, live following, screen wake, paper color and notebook lines.
 6. After Stop, choose Save Session or Discard. Final captions and optional audio are checkpointed as recovery drafts until you decide. The blue + prepares a new session immediately after saving; if a draft is pending, it offers Save and new session, Discard and new session, or Cancel.
 7. Touch and hold a finished paragraph to Save bookmark. This checkpoints the recovery draft without publishing it to the library. Read saved quotes in (…) > Bookmarks or Sessions > open a session > Bookmarks. Removing a bookmark leaves the transcript intact.
 8. Sessions: open a saved session. The pencil opens Edit transcript; tap a paragraph to correct it or use Find and replace. Apply changes to the draft, then Save. Undo/Redo and Restore original remain available; Cancel lets you discard the draft. Stop an ongoing session before editing.

@@ -40,8 +40,9 @@ final class TranscriptRepository {
         context.autosaveEnabled = false
     }
 
-    func create(title: String, draft: Bool = false) throws -> ConferenceSession {
+    func create(title: String, draft: Bool = false, language: CaptureLanguage = .english) throws -> ConferenceSession {
         let session = ConferenceSession(title: title)
+        session.language = language.rawValue
         context.insert(session)
         if draft { context.insert(SessionDraft(sessionID: session.id)) }
         do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
@@ -302,6 +303,7 @@ final class TranscriptRepository {
     func saveTranslation(_ snapshot: TranslationSnapshot, for session: ConferenceSession) throws {
         try snapshot.validate()
         guard try draft(for: session.id) == nil,
+              snapshot.language.rawValue == session.language,
               snapshot.isCurrent(try reviewedParagraphs(for: session)) else { throw TranslationFailure.sourceChanged }
         let encoded = try JSONEncoder().encode(snapshot)
         let record = try translation(for: session.id) ?? SessionTranslation(sessionID: session.id, payload: encoded)

@@ -75,6 +75,7 @@ struct EnglishLearningView: View {
     @State private var translation = false
     @State private var pronunciation: LearningUnit?
     @State private var failure: String?
+    private var language: CaptureLanguage { CaptureLanguage(rawValue: session.language) ?? .english }
     private var choices: [LearningUnit] { savedOnly ? expressions.map(\.unit) : units }
     private var current: LearningUnit? { choices.indices.contains(selected) ? choices[selected] : nil }
 
@@ -116,22 +117,22 @@ struct EnglishLearningView: View {
                             Text("Listen, then say the phrase aloud. Playback uses the original audio; timing is approximate.")
                                 .font(.caption).foregroundStyle(.secondary)
                         } else {
-                            Text("No recorded audio for this phrase. You can still read, reveal Spanish and save expressions.")
+                            Text("No recorded audio for this phrase. You can still read, reveal the translation and save expressions.")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         Button("Practicar pronunciación", systemImage: "mic.badge.plus") {
                             player.stop(); pronunciation = unit
                         }.buttonStyle(.bordered).accessibilityIdentifier("practicePronunciation")
                         if let spanish = unit.spanish, !spanish.isEmpty {
-                            Button(revealed ? "Hide translation" : "Reveal Spanish", systemImage: "eye") { revealed.toggle() }
+                            Button(revealed ? "Hide translation" : "Reveal \(language.opposite.name)", systemImage: "eye") { revealed.toggle() }
                                 .accessibilityIdentifier("revealLearningSpanish")
                             if revealed {
                                 Text(spanish).font(.title3).accessibilityIdentifier("learningSpanish")
-                                Text("Spanish is a study aid. Alignment within a phrase can be approximate.")
+                                Text("The translation is a study aid. Alignment within a phrase can be approximate.")
                                     .font(.caption).foregroundStyle(.secondary)
                             }
                         } else {
-                            Text("No current Spanish translation for this phrase.").font(.caption)
+                            Text("No current translation for this phrase.").font(.caption)
                             Button("Translate session", systemImage: "character.bubble") { player.stop(); translation = true }
                         }
                         if savedOnly {
@@ -149,14 +150,14 @@ struct EnglishLearningView: View {
                     }
                 }.padding()
             }
-            .navigationTitle("Aprender inglés").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("Practicar idioma").navigationBarTitleDisplayMode(.inline)
             .toolbar { Button("Done") { dismiss() } }
             .task { load() }
             .sheet(item: $pronunciation) { unit in
-                PronunciationPracticeView(text: unit.english)
+                PronunciationPracticeView(text: unit.english, language: language)
             }
             .sheet(item: $editing) { unit in
-                LearningExpressionEditor(unit: unit) { english, spanish in
+                LearningExpressionEditor(unit: unit, language: language) { english, spanish in
                     try repository.saveLearningExpression(unit: unit, english: english, spanish: spanish, for: session)
                     expressions = try repository.learningExpressions(for: session.id)
                 }
@@ -203,6 +204,7 @@ struct EnglishLearningView: View {
 
 private struct LearningExpressionEditor: View {
     let unit: LearningUnit
+    var language: CaptureLanguage = .english
     let save: (String, String) throws -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var english = ""
@@ -215,14 +217,14 @@ private struct LearningExpressionEditor: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("English expression") {
+                Section("\(language.name) expression") {
                     TextField("Word or phrase from this fragment", text: $english, axis: .vertical)
                         .accessibilityIdentifier("learningExpressionEnglish")
                     Text("Keep the phrase or enter a word/expression from this fragment. Up to 500 characters.").font(.caption)
                 }
-                Section("Spanish note (optional)") {
+                Section("\(language.opposite.name) note (optional)") {
                     TextField("Meaning in this context", text: $spanish, axis: .vertical)
-                    Text("If you shorten the English, adjust this note to match it.").font(.caption)
+                    Text("If you shorten the original, adjust this note to match it.").font(.caption)
                 }
                 Section("Original context") { Text(unit.context).textSelection(.enabled) }
                 if let failure { Text(failure).foregroundStyle(.red) }

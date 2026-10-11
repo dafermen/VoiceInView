@@ -11,7 +11,7 @@ struct MicrophoneCheckView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    Text("English captions, on your iPhone.")
+                    Text("English or Spanish captions, on your device.")
                         .font(.largeTitle.bold())
                         .accessibilityAddTraits(.isHeader)
                     Text("Microphone capture")

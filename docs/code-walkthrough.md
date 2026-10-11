@@ -1,5 +1,23 @@
 # Recorrido del código para estudiantes
 
+## Mapa build 20: idioma, iPad y lectura accesible
+
+| Responsabilidad | Archivo / punto de entrada |
+| --- | --- |
+| Preferencias de idioma/papel/renglones, con valores iniciales seguros | `Models/AppSettings.swift`: CaptureLanguage, ReaderPaper, ReaderSurface, ReaderPaperOptions |
+| Configurar reconocimiento antes del primer inicio | `ViewModels/SessionCoordinator.swift`: applyCapturePreferences / changeCaptureLanguage |
+| Evitar cambios durante pausa/reanudación | `ViewModels/CaptionViewModel.swift`: configureLanguage / canChooseCaptureOptions |
+| Idioma en los dos motores | `Services/Speech`: SpeechTranscribing, LegacySpeechBackend, LegacySpeechTranscriber, AppleSpeechTranscriber |
+| Origen/destino y JSON antiguo | `Models/SessionTranslation.swift`: TranslationSnapshot, IncrementalTranslation, TranslatedSubtitles |
+| Persistir idioma sin cambiar esquema V7 | `Persistence/TranscriptRepository.swift`: create / saveTranslation |
+| Traducción en ambas direcciones | `UI/SessionTranslationView.swift`: TranslationJob, LiveSpanishView (nombre interno histórico) |
+| Practicar idioma y voz de la sesión | `UI/EnglishLearningView.swift`, `UI/PronunciationPracticeView.swift` |
+| Banner persistente, Reanudar y anuncio accesible | `UI/CaptionScreen.swift`: resumePanel / onChange(canResume) |
+| Soporte nativo iPad | `project.pbxproj`: TARGETED_DEVICE_FAMILY; `App/Info.plist`: orientaciones iPad |
+
+Los nombres persistidos `LearningExpression.english/spanish` y varios identificadores de pruebas se conservan para compatibilidad: significan frase original y nota/traducción en el otro idioma. No renombrar el esquema solo para traducir una etiqueta de interfaz.
+
+
 Esta guía responde “¿dónde está?”, “¿qué recibe?” y “¿qué produce?”. Los comentarios `///` de las clases principales complementan estas explicaciones y se pueden consultar en Xcode. Los comentarios describen contratos y decisiones; no cambian el comportamiento.
 
 ## Mapa de responsabilidades

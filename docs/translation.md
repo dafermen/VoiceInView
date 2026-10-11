@@ -1,5 +1,10 @@
 # Traducción y revisión — build 17
 
+## Actualización build 20: ambos sentidos
+
+Elegir el idioma hablado en Settings antes de empezar. Inglés sigue siendo predeterminado. Una sesión española genera traducción inglesa, y una inglesa genera traducción española; funciona tanto en vista en vivo como guardada. Los párrafos originales, audio y tiempos permanecen intactos. `sourceLocale` opcional conserva compatibilidad con payloads antiguos (inglés implícito). El vocabulario sigue escribiéndose `English = español` y se invierte para sesiones españolas; destinos duplicados se deduplican al invertir. Ver [guía inclusiva](inclusive-use.md) y [validación](accessibility-checkpoint.md). Las secciones de builds anteriores describen el sentido inglés → español original.
+
+
 ## Uso
 
 1. Guarda la sesión y abre **Sessions → tu sesión → Translate to Spanish**.

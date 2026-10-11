@@ -4,13 +4,13 @@ Source data-flow description updated for optional recording and subtitles; statu
 | Data or action | Behavior | Location / recipient |
 | --- | --- | --- |
 | Microphone audio | User-started listening, optional background continuation, bounded queues; optional Save audio selected before a session | Memory by default; opt-in local protected CAF recording, M4A export |
-| Speech analysis | SFSpeechRecognizer en-US with on-device support checked and required; modern SpeechAnalyzer where available; no remote fallback | Device; installed Apple models |
-| Model setup | System English Dictation setup for compatibility engine; explicit Install English Model only for modern engine | Apple's system asset service |
+| Speech analysis | SFSpeechRecognizer en-US or es-ES with on-device support checked and required; modern SpeechAnalyzer where available; no remote fallback | Device; installed Apple models |
+| Model setup | System Dictation setup for the selected language for compatibility engine; explicit Install Selected Language Model only for modern engine | Apple's system asset service |
 | Final captions | Incremental recovery draft always; explicit Save publishes to library, Discard deletes | Local SwiftData store |
 | Transcript corrections and reading position | Original recognition is retained; corrections and last read paragraph are stored separately | Local SwiftData store |
 | Partial captions | Provisional, displayed in memory; not saved | Device memory |
 | Session metadata | UUID, title, dates, active-listening duration, language and ended status | Local SwiftData store |
-| Preferences | Caption size, wake, appearance, remembered audio/background choices | App's UserDefaults domain |
+| Preferences | Caption size, wake, appearance, paper/rules, selected capture language, remembered audio/background choices | App's UserDefaults domain |
 | Disk capacity | Checked for storage readiness and low-storage safeguard | Local value, not transmitted |
 | Export / Copy / Share | Only after user action | Destination chosen by user; may transmit or sync text, audio and subtitle files |
 | Diagnostics | Microphone check shows volume only | Device memory |

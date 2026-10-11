@@ -15,6 +15,7 @@ enum CaptionState: Equatable {
 @Observable
 final class CaptionViewModel {
     private(set) var state: CaptionState = .idle
+    private(set) var language: CaptureLanguage = .english
     private(set) var readiness: SpeechReadiness = .checking
     private(set) var transcript = TranscriptAssembler()
     private(set) var startedAt: Date?
@@ -75,6 +76,14 @@ final class CaptionViewModel {
         self.init(microphone: audio, speech: LegacySpeechTranscriber(audio: audio))
     }
 
+    /// Capture language is fixed after the first start, including paused/failed resumable runs.
+    func configureLanguage(_ language: CaptureLanguage) {
+        guard canChooseCaptureOptions, self.language != language else { return }
+        self.language = language
+        speech.configure(language: language)
+        readiness = .checking
+    }
+
     func requestSpeechPermission() async {
         guard !state.active, !state.busy, !preparationPending else { return }
         preparationPending = true
@@ -83,10 +92,16 @@ final class CaptionViewModel {
         await checkReadiness()
     }
 
-    func checkReadiness() async { readiness = await speech.readiness() }
+    func checkReadiness() async {
+        let selected = language
+        let result = await speech.readiness()
+        if selected == language { readiness = result }
+    }
 
     func installAssets() async {
-        guard !state.active, !state.busy, readiness != .downloading else { return }
+        guard !state.active, !state.busy, !preparationPending, readiness != .downloading else { return }
+        preparationPending = true
+        defer { preparationPending = false }
         readiness = .downloading
         do { try await speech.installAssets(); await checkReadiness() }
         catch { readiness = .problem(error.localizedDescription) }

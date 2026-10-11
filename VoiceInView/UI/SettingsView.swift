@@ -9,6 +9,17 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section("Idioma de la sesión") {
+                Picker("Idioma de grabación y subtítulos", selection: $settings.captureLanguage) {
+                    ForEach(CaptureLanguage.allCases, id: \.self) { Text($0.name).tag($0) }
+                }.disabled(!coordinator.caption.canChooseCaptureOptions)
+                    .accessibilityIdentifier("captureLanguagePicker")
+                Text(coordinator.caption.canChooseCaptureOptions
+                     ? "Elige el idioma que se habla. Inglés es el predeterminado; la traducción utiliza el otro idioma."
+                     : "Esta sesión conserva su idioma. Termina y guarda o descarta la sesión; crea una nueva para cambiarlo.")
+                    .font(.caption)
+                LabeledContent("Idioma de esta sesión", value: coordinator.caption.language.name)
+            }
             Section("Offline preparation") {
                 NavigationLink("Offline Readiness") { OfflineReadinessView(coordinator: coordinator) }
                 NavigationLink("Microphone Check") { MicrophoneCheckView() }
@@ -19,8 +30,6 @@ struct SettingsView: View {
                 NavigationLink("Names & translation terms") { PersonalVocabularyView() }
             }
             Section("Captions") {
-                LabeledContent("Language", value: "English (United States)")
-                Text("Additional transcription languages are not available yet.").font(.caption)
                 Slider(value: $settings.captionSize, in: 20...44, step: 2) { Text("Caption size") }
                 Toggle("Keep screen awake while listening", isOn: $settings.keepAwake)
                 Picker("Appearance", selection: $settings.appearance) {
@@ -29,18 +38,20 @@ struct SettingsView: View {
                     }
                 }
             }
+            ReaderPaperOptions(settings: settings)
             Section("Local sessions") {
-                Text("While listening, a recovery draft saves final captions and optional audio on this iPhone. After Stop, choose Save Session to keep it or Discard to delete it. Unfinished drafts appear separately in Sessions after reopening the app.")
+                Text("While listening, a recovery draft saves final captions and optional audio on this device. After Stop, choose Save Session to keep it or Discard to delete it. Unfinished drafts appear separately in Sessions after reopening the app.")
                     .font(.caption)
                 Text("Saved sessions are excluded from device backup. Export anything you need to keep.")
                     .font(.caption)
             }
             Section("Privacy") {
                 NavigationLink("Privacy Policy") { PrivacyPolicyView() }
-                Text("No accounts, analytics or tracking. Audio is recorded only when Save audio is enabled before you start.")
+                Text("No accounts, analytics or tracking. Session audio is optional; pronunciation practice records temporary attempts only when you tap its microphone.")
             }
         }
         .navigationTitle("Settings")
+        .onChange(of: settings.captureLanguage) { _, _ in Task { await coordinator.changeCaptureLanguage() } }
     }
 }
 
@@ -86,7 +97,7 @@ struct OfflineReadinessView: View {
                     }
                 }
                 if coordinator.caption.readiness == .missingAssets {
-                    Button("Install English Model") {
+                    Button("Install Selected Language Model") {
                         Task { await coordinator.caption.installAssets() }
                     }
                     .disabled(coordinator.caption.state.active || coordinator.caption.state.busy)
@@ -108,9 +119,9 @@ struct OfflineReadinessView: View {
         .sheet(isPresented: $instructions) {
             NavigationStack {
                 List {
-                    Text("1. While online, allow microphone and speech access as requested. Resolve the readiness checks. If on-device English is unavailable, enable English (US) Dictation in iPhone Settings. Install a model here only if that option is offered.")
+                    Text("1. While online, allow microphone and speech access as requested. Resolve the readiness checks. If recognition is unavailable, prepare Dictation for the selected language in device Settings. Install a model here only if that option is offered.")
                     Text("2. Enable Airplane Mode in Control Center or Settings, and turn Wi-Fi off.")
-                    Text("3. Return to Captions, tap Start Listening, and speak a full English sentence.")
+                    Text("3. Return to Captions, tap Start Listening, and speak a full sentence in your selected language.")
                     Text("4. Verify live and final captions appear; tap Stop and check the saved session.")
                     Text("5. Repeat before attending a conference. If a check fails, prepare the device while online.")
                 }
@@ -144,7 +155,7 @@ struct PersonalVocabularyView: View {
     var body: some View {
         Form {
             Section {
-                Text("One short name or term per line. Add = and your preferred Spanish wording when needed.")
+                Text("One short name or term per line. Use English = español for preferred translations. The pair is reversed for Spanish sessions.")
                 Text("VoiceInView\nmeeting = reunión\nOpenAI").font(.callout.monospaced()).foregroundStyle(.secondary)
                 TextEditor(text: $draft).frame(minHeight: 200).autocorrectionDisabled()
                     .accessibilityLabel("Personal vocabulary").accessibilityIdentifier("vocabularyEditor")
@@ -154,7 +165,7 @@ struct PersonalVocabularyView: View {
                     draft = saved; applied = true
                 }.accessibilityIdentifier("saveVocabularyButton")
             } footer: {
-                Text("Stored on this iPhone. Recognition hints apply on the next recognition start. New translations use your preferred terms; saved translations stay unchanged until you replace them. Review grammar around translated terms.")
+                Text("Stored on this device. Recognition hints apply on the next recognition start. New translations use your preferred terms; saved translations stay unchanged until you replace them. Review grammar around translated terms.")
             }
         }
         .navigationTitle("Personal vocabulary")

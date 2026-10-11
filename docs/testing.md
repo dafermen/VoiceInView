@@ -1,4 +1,16 @@
 # Testing through Phase 9
+
+## Matriz adicional build 20
+
+- Inglés inicial y preferencias idioma/papel/renglones persistentes; valores desconocidos vuelven a defaults.
+- Español seleccionado antes de iniciar, bloqueo durante escucha/pausa, reanudación conservando idioma; nueva sesión cambia idioma.
+- Payload inglés antiguo decodificable; sesión española y traducción inglesa persistentes; exportación original/traducida/bilingüe con tiempos válidos; no reutilizar snapshots del otro idioma.
+- UI: idioma, fondo amarillo y renglones, interrupción simulada, banner y Reanudar en fullscreen/landscape; práctica desde sesión española. Ejecutar iPhone SE e iPad Air.
+- Manual físico: alarma real, Bluetooth, bloqueo/segundo plano, español con distintos acentos, reconocimiento offline por idioma, traducción moderna ambos sentidos, pronunciación local. No confundir fixtures con prueba del modelo.
+- Accesibilidad: VoiceOver con foco en Reanudar, tamaños de accesibilidad, contraste, colores claro/oscuro y reglas desactivadas por alto contraste; usuarios con distintas necesidades. iPad: ventana dividida, rotación, compartir y teclado.
+
+Resultados comprobados: [checkpoint build 20](accessibility-checkpoint.md).
+
 The project now builds with Xcode 15.2/iOS 17. On the iOS 17.2 simulator, 56 compatible unit tests and 12 UI scenarios passed across the full and focused validation runs. The modern AudioConversion test is excluded by the older compiler. See validation-report.md for logs and remaining gates. Simulator tests do not verify actual speech, offline model availability or a physical iPhone.
 
 

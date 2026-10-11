@@ -19,7 +19,7 @@ struct SessionHistoryView: View {
         let originals = session.orderedCaptions.map { ReviewParagraph(id: $0.id, text: $0.text) }
         let english = TranscriptReview.paragraphs(originals: originals, corrections: changes)
         let snapshot = try? translations.first(where: { $0.sessionID == session.id })?.decoded()
-        let spanish = snapshot?.isCurrent(english) == true ? snapshot?.spanish ?? [] : []
+        let spanish = snapshot?.isCurrent(english) == true ? snapshot?.translated ?? [] : []
         return (english + spanish).filter { $0.text.localizedStandardContains(query) }
     }
     private var filtered: [ConferenceSession] {
@@ -197,10 +197,10 @@ struct SessionDetailView: View {
                 }.font(.subheadline).foregroundStyle(.secondary)
                 Button("Audio & subtitles", systemImage: "waveform") { playbackParagraphID = nil; showingMedia = true }
                     .disabled(!canPlay || corrections == nil).accessibilityIdentifier("sessionMediaButton")
-                Button("Translate to Spanish", systemImage: "character.bubble") { showingTranslation = true }
+                Button("Translate to \(CaptureLanguage(rawValue: session.language)?.opposite.name ?? "Español")", systemImage: "character.bubble") { showingTranslation = true }
                     .disabled(!canEdit || !canPlay || corrections == nil || paragraphs.isEmpty)
                     .accessibilityIdentifier("sessionTranslationButton")
-                Button("Aprender inglés", systemImage: "book") { showingLearning = true }
+                Button("Practicar idioma", systemImage: "book") { showingLearning = true }
                     .disabled(!canEdit || !canPlay || corrections == nil || paragraphs.isEmpty)
                     .accessibilityIdentifier("learnEnglishButton")
                 if !canPlay { Text("Stop listening before opening audio and subtitles.").font(.caption) }
@@ -280,7 +280,7 @@ struct SessionDetailView: View {
                         position = match.id
                     } else if canPlay, let translation = try repository.translation(for: session.id)?.decoded(),
                               translation.isCurrent(paragraphs),
-                              translation.spanish.contains(where: { $0.text.localizedStandardContains(initialSearch) }) {
+                              translation.translated.contains(where: { $0.text.localizedStandardContains(initialSearch) }) {
                         showingTranslation = true
                     }
                 }

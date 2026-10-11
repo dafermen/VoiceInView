@@ -8,6 +8,7 @@ final class LearningExpression {
     @Attribute(.unique) var id: UUID
     var sessionID: UUID
     var paragraphID: UUID
+    // Historical field names retained for V7 stores: original text and opposite-language note.
     var english: String
     var spanish: String
     var context: String
@@ -47,9 +48,9 @@ struct LearningUnit: Identifiable, Equatable {
     static func make(paragraphs: [ReviewParagraph], timings: [String: CaptionTiming],
                      translation: TranslationSnapshot?) -> [LearningUnit] {
         let current = translation?.isCurrent(paragraphs) == true ? translation : nil
-        let translatedCues = current.map { TranslatedSubtitles.cues(snapshot: $0, timings: timings, mode: .spanish) } ?? []
+        let translatedCues = current.map { TranslatedSubtitles.cues(snapshot: $0, timings: timings, mode: $0.language.opposite.mode) } ?? []
         let spanishByCue = Dictionary(uniqueKeysWithValues: translatedCues.map { ($0.id, $0.text) })
-        let spanishByParagraph = Dictionary(uniqueKeysWithValues: (current?.spanish ?? []).map { ($0.id, $0.text) })
+        let spanishByParagraph = Dictionary(uniqueKeysWithValues: (current?.translated ?? []).map { ($0.id, $0.text) })
         let cues = Dictionary(grouping: SubtitleExport.cues(paragraphs: paragraphs, timings: timings), by: \.paragraphID)
         return paragraphs.flatMap { paragraph -> [LearningUnit] in
             guard !paragraph.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [] }

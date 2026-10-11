@@ -1,5 +1,10 @@
 # Sesiones: iniciar, guardar y descartar
 
+## Build 20: idioma y pausas visibles
+
+Settings recuerda el idioma para nuevas sesiones; inglés sigue siendo inicial. Después de iniciar, se conserva hasta guardar/descartar y crear otra sesión. Una pausa o interrupción muestra un panel persistente con micrófono apagado y **Resume / Reanudar**, incluso en fullscreen; pide feedback háptico y anuncio accesible al pasar a pausa. El micrófono no vuelve solo. Fondos pastel y renglones se eligen en Aa o Settings y persisten. [Guía completa](inclusive-use.md).
+
+
 Flujo introducido en build 14 y ampliado en fuente 0.1.0 build 15. La disponibilidad de cada entrega en TestFlight debe comprobarse por separado.
 
 ## Recorrido principal

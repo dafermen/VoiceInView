@@ -1,5 +1,18 @@
 # VoiceInView para estudiantes y desarrolladores junior
 
+## Build 20: pensar en necesidades distintas
+
+Una preferencia global es una elección para las próximas sesiones; el idioma de una sesión es un dato histórico. `AppSettings.captureLanguage` guarda en UserDefaults en-US/es-ES. `SessionCoordinator` copia esa elección al preparar la captura y `CaptionViewModel` la bloquea desde el primer inicio. `TranscriptRepository.create` escribe la misma cadena en el campo `ConferenceSession.language`, que ya existía. Por eso reanudar no vuelve a leer un idioma diferente ni se necesita migración SwiftData.
+
+El protocolo `SpeechTranscribing.configure(language:)` comunica la elección sin acoplar la pantalla a un motor. El backend antiguo recrea SFSpeechRecognizer con la locale; el moderno pide el locale/modelo compatible. En ambos se conserva reconocimiento local. Elegir español no descarga un modelo silenciosamente ni cambia todos los menús de la app.
+
+La traducción tiene origen y destino, que no son siempre inglés y español respectivamente. `TranslationSnapshot.sourceLocale` es opcional: un JSON antiguo sin esa clave significa origen inglés. `translated` aplica las correcciones al destino; `english` y `spanish` devuelven el idioma solicitado. `IncrementalTranslation` solo reutiliza párrafos del mismo idioma. Una corrección inglesa en una sesión española nunca modifica el audio español.
+
+La vista `ReaderSurface` dibuja un fondo y guías con CoreGraphics a través de una vista UIKit. No captura gestos ni aparece en el árbol de accesibilidad. Alto contraste tiene prioridad y los pasteles usan texto oscuro. La pausa combina texto, icono y botón explícito: no debemos depender solo del color ni del sonido para explicar el estado.
+
+Ejercicio: crear sesión en español, pausar, intentar cambiar idioma, reanudar y comprobar que `session.language` sigue siendo es-ES; después guardar y comenzar otra en inglés. Leer [guía inclusiva](inclusive-use.md) y las pruebas nuevas antes de modificar este flujo.
+
+
 ## 1. Qué problema resuelve
 
 VoiceInView convierte voz en inglés captada por el micrófono del iPhone en texto legible. Está pensada para clases, reuniones, conferencias y otras situaciones en las que conviene leer lo que se escucha.

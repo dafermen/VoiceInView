@@ -79,3 +79,7 @@ SessionTranslation stores a validated JSON snapshot separately from recognition,
 
 ## Learning expressions (V7)
 Build 18 adds LearningExpression snapshots associated by session/paragraph UUID. LearningUnit is a pure presentation model using corrected source and current Spanish; it never synthesizes missing timing. PracticePlayer owns a separate playback lifecycle and cancels looping on exit/background/interruption. No microphone or new remote service is involved. Repository deletion removes study records with their session; deleting only a study record preserves source/translation/audio. See [learning design](learning.md).
+
+## Build 20 — per-session language and presentation
+
+CaptureLanguage is a persisted global default copied into the existing session language. Recognition configuration is locked after start; a pause is not a new session. Translation payloads add optional sourceLocale (old missing values mean English). Translation/learning views derive direction from session language, never the current global default. V7 schema and bundle identity are retained. Paper/rules are presentation preferences only; ReaderSurface uses a simple CoreGraphics ruling layer, cannot intercept input and is hidden from accessibility. Universal target family and iPad orientations enable native tablet layouts. See [inclusive guide](inclusive-use.md).

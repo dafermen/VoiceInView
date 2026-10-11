@@ -1,3 +1,18 @@
+# Informe de validación
+
+## Build 20 — 2026-10-11
+
+Implementado: idiomas en-US/es-ES por sesión, traducción en ambos sentidos, Practicar idioma, familia iPhone/iPad, aviso persistente de pausa, colores claros y renglones. Esquema V7 e identidad sin cambios.
+
+- **Unitarias:** 88 aprobadas, 0 fallos, Xcode 15.2 / iOS 17.2 Simulator (`VoiceInView-20-Unit.xcresult`). Incluyen preferencias persistentes, bloqueo del idioma al pausar/reanudar, reapertura de sesión española, dirección de subtítulos, vocabulario inverso y payloads antiguos. Se ejecutaron antes del ajuste final de dibujo CoreGraphics y de congelar el diccionario por trabajo. El intento de repetirlas junto con UI quedó esperando al runner y se canceló: no sumar una segunda aprobación.
+- **UI iPhone, fuente final:** `VoiceInView-20-confirmed.log` registra aprobación de idioma/fondo/renglones/interrupción/fullscreen/giro/Reanudar (86,863 s) y práctica de sesión española (56,310 s). El recorrido de edición/audio/exportación había pasado en `VoiceInView-20-UI.xcresult`; en la repetición conjunta no logró abrir Sessions, por lo que esa ejecución no pasó íntegra. XCTest se bloqueó después esperando el runner unitario; al cancelar no finalizó correctamente el xcresult. Conservar el log, sin presentar ese bundle como resultado completo.
+- **Regresión aislada final:** `VoiceInView-20-regression-final.log` abrió Sessions y completó corrección, guardado y reproducción. Tras confirmar SRT quedó esperando las consultas de accesibilidad de la hoja nativa de compartir (reintentos de 30 s); se canceló sin resultado final aprobado. La muestra de proceso no terminó, por lo que no se atribuye una causa definitiva.
+- **Release de dispositivo final:** `VoiceInView-20-release-final.log` terminó BUILD SUCCEEDED. Paquete 0.1.0 (20), UIDeviceFamily `[1,2]`, icono iPad y cuatro orientaciones, identidad original. Compilación sin firma local, no prueba de upload.
+- **iPad:** configuración universal y capturas anteriores de vertical/fullscreen horizontal revisadas con fondo amarillo y pausa. La última prueba de renglones no inició XCTest y se canceló; aceptación final en iPad pendiente.
+- **Estática:** plist y metadatos válidos, 166 enlaces locales de documentación sin roturas, `git diff --check` y sintaxis de `validate-macos.sh` correctos. No se ejecutó el antiguo validador PowerShell.
+
+Artefactos locales: `/private/tmp/VoiceInView-20-*`; [estado actualizado](accessibility-checkpoint.md). Xcode 15.2 no valida las ramas modernas de Speech/Translation. Probar modelos reales, alarma real, VoiceOver/tamaño accesible y ventanas/compartición en iPad físico. La publicación de fuente, el check de Cloud y la instalación TestFlight son evidencias diferentes.
+
 ## 2026-10-11 — Pronunciación local, source build 19
 
 - Debug y Release final **BUILD SUCCEEDED** en Xcode 15.2/iOS 17.2, arm64/x86_64 de simulador. Metadatos revisados: build 19, identidad, iOS mínimo, permisos actualizados, orientaciones, background audio, assets y privacidad.

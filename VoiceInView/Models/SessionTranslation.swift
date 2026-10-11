@@ -1,28 +1,34 @@
 import Foundation
 import SwiftData
 
-/// Una traducción es una copia derivada: nunca sustituye reconocimiento ni correcciones inglesas.
+/// Una traducción es una copia derivada: nunca sustituye reconocimiento ni correcciones originales.
 /// El snapshot exacto permite detectar cambios de origen sin depender de hashes o fechas.
 struct TranslationSnapshot: Codable, Equatable, Sendable {
     let source: [ReviewParagraph]
     let generated: [ReviewParagraph]
     var edits: [String: String] = [:]
 
-    var spanish: [ReviewParagraph] {
+    // Optional for compatibility: payloads written before build 20 imply English source.
+    var sourceLocale: String? = nil
+    var language: CaptureLanguage { CaptureLanguage(rawValue: sourceLocale ?? "en-US") ?? .english }
+    var english: [ReviewParagraph] { language == .english ? source : translated }
+    var spanish: [ReviewParagraph] { language == .spanish ? source : translated }
+    var translated: [ReviewParagraph] {
         TranscriptReview.paragraphs(originals: generated, corrections: edits)
     }
     func isCurrent(_ paragraphs: [ReviewParagraph]) -> Bool { source == paragraphs }
     func paragraphs(mode: TranscriptLanguage) -> [ReviewParagraph] {
         switch mode {
-        case .english: return source
+        case .english: return english
         case .spanish: return spanish
         case .both:
-            return zip(source, spanish).map {
+            return zip(source, translated).map {
                 ReviewParagraph(id: $0.id, text: $0.text + "\n" + $1.text)
             }
         }
     }
     func validate() throws {
+        if let sourceLocale, CaptureLanguage(rawValue: sourceLocale) == nil { throw TranslationFailure.incomplete }
         guard !source.isEmpty, Set(source.map(\.id)).count == source.count,
               source.map(\.id) == generated.map(\.id),
               edits.keys.allSatisfy({ key in source.contains { $0.id.uuidString == key } }),
@@ -44,7 +50,7 @@ enum TranslationFailure: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .incomplete: return "The translation is incomplete. Please try again. Your saved text is unchanged."
-        case .sourceChanged: return "The English transcript changed. Reopen Translation and translate again."
+        case .sourceChanged: return "The source transcript changed. Reopen Translation and translate again."
         case .unsupported: return "Translation requires iOS 18 or later and a compatible app build. Saved translations remain available."
         }
     }
@@ -70,14 +76,14 @@ enum SessionSchemaV6: VersionedSchema {
     }
 }
 
-/// Conserva las ventanas inglesas. Reparte las palabras españolas proporcionalmente entre ellas;
+/// Conserva las ventanas del original. Reparte las palabras traducidas proporcionalmente entre ellas;
 /// es sincronización aproximada dentro del párrafo, no alineación fonética entre idiomas.
 enum TranslatedSubtitles {
     static func cues(snapshot: TranslationSnapshot, timings: [String: CaptionTiming],
                      mode: TranscriptLanguage) -> [SubtitleCue] {
         let original = SubtitleExport.cues(paragraphs: snapshot.source, timings: timings)
-        guard mode != .english else { return original }
-        let spanish = Dictionary(uniqueKeysWithValues: snapshot.spanish.map { ($0.id, $0.text) })
+        guard mode != snapshot.language.mode else { return original }
+        let spanish = Dictionary(uniqueKeysWithValues: snapshot.translated.map { ($0.id, $0.text) })
         let grouped = Dictionary(grouping: original, by: \.paragraphID)
         var result: [SubtitleCue] = []
         for paragraph in snapshot.source {
@@ -103,28 +109,30 @@ enum TranslatedSubtitles {
 
 
 /// Plan puro: solo solicita párrafos nuevos/modificados; UUID + texto identifican lo reutilizable.
-/// Las correcciones españolas se conservan únicamente si su fuente inglesa sigue siendo idéntica.
+/// Las correcciones del destino se conservan si el texto y el idioma de origen siguen siendo idénticos.
 struct IncrementalTranslation {
     let source: [ReviewParagraph]
     let previous: TranslationSnapshot?
+    var language: CaptureLanguage = .english
+    private var compatiblePrevious: TranslationSnapshot? { previous?.language == language ? previous : nil }
     var pending: [ReviewParagraph] {
         source.filter { paragraph in
-            previous?.source.contains(paragraph) != true
+            compatiblePrevious?.source.contains(paragraph) != true
         }
     }
     func merging(_ responses: [ReviewParagraph]) throws -> TranslationSnapshot {
         guard responses.map(\.id) == pending.map(\.id) else { throw TranslationFailure.incomplete }
         let fresh = Dictionary(uniqueKeysWithValues: responses.map { ($0.id, $0) })
-        let retained = Set(source.filter { previous?.source.contains($0) == true }.map { $0.id.uuidString })
+        let retained = Set(source.filter { compatiblePrevious?.source.contains($0) == true }.map { $0.id.uuidString })
         let generated = try source.map { paragraph -> ReviewParagraph in
             if let response = fresh[paragraph.id] { return response }
-            guard let old = previous?.generated.first(where: { $0.id == paragraph.id }) else {
+            guard let old = compatiblePrevious?.generated.first(where: { $0.id == paragraph.id }) else {
                 throw TranslationFailure.incomplete
             }
             return old
         }
         let result = TranslationSnapshot(source: source, generated: generated,
-            edits: previous?.edits.filter { retained.contains($0.key) } ?? [:])
+            edits: compatiblePrevious?.edits.filter { retained.contains($0.key) } ?? [:], sourceLocale: language.rawValue)
         try result.validate()
         return result
     }
@@ -150,6 +158,15 @@ enum PersonalVocabulary {
     }
     static func saved(defaults: UserDefaults = .standard) -> [Term] {
         terms(defaults.string(forKey: key) ?? "")
+    }
+    static func saved(for language: CaptureLanguage, defaults: UserDefaults = .standard) -> [Term] {
+        let entries = saved(defaults: defaults)
+        guard language == .spanish else { return entries }
+        var seen = Set<String>()
+        return entries.compactMap { term in
+            guard seen.insert(term.target.lowercased()).inserted else { return nil }
+            return Term(source: term.target, target: term.source)
+        }
     }
     static func parts(_ text: String, terms: [Term]) -> [Part] {
         guard !terms.isEmpty else { return [Part(text: text, literal: false)] }

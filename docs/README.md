@@ -1,6 +1,11 @@
 # Documentación de VoiceInView
 
-Actualizada el 10 de octubre de 2026. Los documentos de aprendizaje están en español; la interfaz de la app y parte de la documentación técnica conservan el inglés.
+## Ampliación inclusiva e idiomas — build 20
+
+[Guía para usuarios, familias y docentes](inclusive-use.md): inglés/español, apoyo a audición/baja visión, iPad, Practicar idioma, aviso de pausa y papel con renglones. [Estado de validación y reanudación](accessibility-checkpoint.md). Los apartados por build que siguen conservan el historial.
+
+
+Actualizada el 11 de octubre de 2026. Los documentos de aprendizaje están en español; la interfaz de la app y parte de la documentación técnica conservan el inglés.
 
 ## Por dónde empezar
 

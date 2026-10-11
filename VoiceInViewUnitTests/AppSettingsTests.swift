@@ -29,6 +29,24 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertFalse(reloaded.keepAwake)
     }
 
+    func testCaptureLanguageAndPaperPersistWithEnglishDefault() {
+        let name = UUID().uuidString
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removePersistentDomain(forName: name) }
+        let settings = AppSettings(defaults: defaults)
+        XCTAssertEqual(settings.captureLanguage, .english)
+        XCTAssertEqual(settings.readerPaper, .system)
+        XCTAssertFalse(settings.ruledPaper)
+        settings.captureLanguage = .spanish; settings.readerPaper = .purple; settings.ruledPaper = true
+        let restored = AppSettings(defaults: defaults)
+        XCTAssertEqual(restored.captureLanguage, .spanish)
+        XCTAssertEqual(restored.transcriptionLanguage, "es-ES")
+        XCTAssertEqual(restored.readerPaper, .purple); XCTAssertTrue(restored.ruledPaper)
+        defaults.set("unknown", forKey: "captureLanguage"); defaults.set("unknown", forKey: "readerPaper")
+        XCTAssertEqual(AppSettings(defaults: defaults).captureLanguage, .english)
+        XCTAssertEqual(AppSettings(defaults: defaults).readerPaper, .system)
+    }
+
     func testUnknownOrLowCapacityIsNotReportedReady() {
         XCTAssertFalse(StorageReadiness(availableBytes: nil).ready)
         XCTAssertFalse(StorageReadiness(availableBytes: 1).ready)
