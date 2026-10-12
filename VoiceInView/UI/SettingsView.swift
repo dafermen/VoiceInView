@@ -9,14 +9,21 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Idioma de la sesión") {
-                Picker("Idioma de grabación y subtítulos", selection: $settings.captureLanguage) {
+            Section("App interface") {
+                Picker("Menus and buttons", selection: $settings.interfaceLanguage) {
+                    ForEach(InterfaceLanguage.allCases, id: \.self) { Text($0.name).tag($0) }
+                }.accessibilityIdentifier("interfaceLanguagePicker")
+                Text("Changes the app's menus and messages. It does not change speech recognition, recordings or translations.")
+                    .font(.caption)
+            }
+            Section("Voice capture and captions") {
+                Picker("Spoken language", selection: $settings.captureLanguage) {
                     ForEach(CaptureLanguage.allCases, id: \.self) { Text($0.name).tag($0) }
                 }.disabled(!coordinator.caption.canChooseCaptureOptions)
                     .accessibilityIdentifier("captureLanguagePicker")
-                Text(coordinator.caption.canChooseCaptureOptions
+                Text(uiKey(coordinator.caption.canChooseCaptureOptions
                      ? "Elige el idioma que se habla. Inglés es el predeterminado; la traducción utiliza el otro idioma."
-                     : "Esta sesión conserva su idioma. Termina y guarda o descarta la sesión; crea una nueva para cambiarlo.")
+                     : "Esta sesión conserva su idioma. Termina y guarda o descarta la sesión; crea una nueva para cambiarlo."))
                     .font(.caption)
                 LabeledContent("Idioma de esta sesión", value: coordinator.caption.language.name)
             }
@@ -34,7 +41,7 @@ struct SettingsView: View {
                 Toggle("Keep screen awake while listening", isOn: $settings.keepAwake)
                 Picker("Appearance", selection: $settings.appearance) {
                     ForEach(AppAppearance.allCases, id: \.self) { appearance in
-                        Text(appearance.rawValue.capitalized).tag(appearance)
+                        Text(LocalizedStringKey(appearance.rawValue.capitalized)).tag(appearance)
                     }
                 }
             }
@@ -70,10 +77,10 @@ struct OfflineReadinessView: View {
     var body: some View {
         Form {
             Section("Required checks") {
-                LabeledContent("Microphone", value: permission == .granted ? "Ready" : "Permission needed")
-                LabeledContent("Speech recognition", value: coordinator.caption.readiness.description)
-                LabeledContent("Local storage", value: storage.description)
-                LabeledContent("Offline transcription", value: ready ? "Ready for offline test" : "Not ready")
+                LabeledContent("Microphone") { Text(uiKey(permission == .granted ? "Ready" : "Permission needed")) }
+                LabeledContent("Speech recognition") { Text(LocalizedStringKey(coordinator.caption.readiness.description)) }
+                LabeledContent("Local storage") { Text(LocalizedStringKey(storage.description)) }
+                LabeledContent("Offline transcription") { Text(uiKey(ready ? "Ready for offline test" : "Not ready")) }
                 if permission == .undetermined {
                     Button("Allow Microphone") {
                         Task {
@@ -160,7 +167,7 @@ struct PersonalVocabularyView: View {
                 TextEditor(text: $draft).frame(minHeight: 200).autocorrectionDisabled()
                     .accessibilityLabel("Personal vocabulary").accessibilityIdentifier("vocabularyEditor")
                 Text("\(PersonalVocabulary.terms(draft).count)/100 valid terms. Duplicate or empty terms and overlong entries are ignored.").font(.caption)
-                Button(applied ? "Saved" : "Save vocabulary") {
+                Button(uiKey(applied ? "Saved" : "Save vocabulary")) {
                     saved = PersonalVocabulary.terms(draft).map { $0.source + " = " + $0.target }.joined(separator: "\n")
                     draft = saved; applied = true
                 }.accessibilityIdentifier("saveVocabularyButton")

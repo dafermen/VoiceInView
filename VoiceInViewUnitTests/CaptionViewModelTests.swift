@@ -9,6 +9,7 @@ final class CaptionViewModelTests: XCTestCase {
         let defaults = UserDefaults(suiteName: name)!
         defer { defaults.removePersistentDomain(forName: name) }
         let settings = AppSettings(defaults: defaults)
+        settings.saveAudio = false // Fake speech/microphone tests do not provide a real audio recorder.
         let speech = MockSpeech()
         let model = CaptionViewModel(microphone: CaptionMicrophone(), speech: speech)
         let repository = try TranscriptRepository(inMemory: true)
@@ -36,7 +37,9 @@ final class CaptionViewModelTests: XCTestCase {
         let model = CaptionViewModel(microphone: microphone, speech: speech)
         let repository = try TranscriptRepository(inMemory: true)
         let defaults = UserDefaults(suiteName: UUID().uuidString)!
-        let coordinator = SessionCoordinator(repository: repository, caption: model, settings: AppSettings(defaults: defaults))
+        let settings = AppSettings(defaults: defaults)
+        settings.saveAudio = false // Recording is covered by the audio integration tests.
+        let coordinator = SessionCoordinator(repository: repository, caption: model, settings: settings)
         await model.start()
         let id = try XCTUnwrap(coordinator.currentSession?.id)
         microphone.onLevel?(0.7)
@@ -69,7 +72,9 @@ final class CaptionViewModelTests: XCTestCase {
         let defaults = UserDefaults(suiteName: name)!
         defer { defaults.removePersistentDomain(forName: name) }
         let settings = AppSettings(defaults: defaults)
+        settings.saveAudio = false // Fake speech/microphone tests do not provide a real audio recorder.
         settings.continueInBackground = true
+        settings.saveAudio = false
         let repository = try TranscriptRepository(inMemory: true)
         let model = CaptionViewModel(microphone: CaptionMicrophone(), speech: MockSpeech())
         let coordinator = SessionCoordinator(repository: repository, caption: model, settings: settings)
@@ -102,7 +107,9 @@ final class CaptionViewModelTests: XCTestCase {
         let defaults = UserDefaults(suiteName: settingsName)!
         defer { defaults.removePersistentDomain(forName: settingsName) }
         let model = CaptionViewModel(microphone: CaptionMicrophone(), speech: MockSpeech())
-        let coordinator = SessionCoordinator(repository: repository, caption: model, settings: AppSettings(defaults: defaults))
+        let settings = AppSettings(defaults: defaults)
+        settings.saveAudio = false // Recording is covered by the audio integration tests.
+        let coordinator = SessionCoordinator(repository: repository, caption: model, settings: settings)
         await model.start()
         await model.stop()
         let id = try XCTUnwrap(coordinator.currentSession?.id)
@@ -133,6 +140,21 @@ final class CaptionViewModelTests: XCTestCase {
         await model.reset()
         XCTAssertFalse(model.continueInBackground)
         XCTAssertFalse(model.saveAudio)
+    }
+
+    func testPreparingMicrophoneNeverStartsListening() async {
+        let microphone = CaptionMicrophone()
+        microphone.permission = .undetermined
+        let speech = MockSpeech()
+        let model = CaptionViewModel(microphone: microphone, speech: speech)
+        XCTAssertEqual(model.microphonePermission, .undetermined)
+        await model.requestMicrophonePermission()
+        XCTAssertEqual(model.microphonePermission, .granted)
+        XCTAssertEqual(speech.starts, 0)
+        XCTAssertEqual(model.state, .idle)
+        microphone.permission = .denied
+        model.refreshMicrophonePermission()
+        XCTAssertTrue(model.permissionDenied)
     }
 
     func testMissingModelNeverStartsCaptureOrInstallsImplicitly() async {
@@ -186,7 +208,7 @@ private final class CaptionMicrophone: AudioCapturing {
     var onLevel: (@MainActor @Sendable (Float) -> Void)?
     var permission: MicrophonePermission = .granted
     var onFailure: (@MainActor @Sendable (CaptureFailure) -> Void)?
-    func requestPermission() async -> Bool { true }
+    func requestPermission() async -> Bool { permission = .granted; return true }
     func start() throws -> AsyncStream<Float> { AsyncStream { $0.finish() } }
     func stop() throws {}
 }

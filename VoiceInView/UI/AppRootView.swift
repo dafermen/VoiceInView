@@ -26,11 +26,12 @@ struct AppRootView: View {
                 }
                 .modelContainer(coordinator.repository.container)
                 .preferredColorScheme(coordinator.settings.colorScheme)
+                .environment(\.locale, coordinator.settings.interfaceLanguage.locale)
                 .alert("Storage problem", isPresented: Binding(
                     get: { coordinator.storageMessage != nil },
                     set: { if !$0 { coordinator.storageMessage = nil } })) {
                         Button("OK") { coordinator.storageMessage = nil }
-                    } message: { Text(coordinator.storageMessage ?? "") }
+                    } message: { Text(LocalizedStringKey(coordinator.storageMessage ?? "")) }
             } else if storageFailure {
                 ContentUnavailableView {
                     Label("Local storage unavailable", systemImage: "externaldrive.badge.exclamationmark")
@@ -123,6 +124,9 @@ struct AppRootView: View {
                 return
             }
             #endif
+            let oldStore = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+                .appendingPathComponent("vReader/Sessions.store")
+            AppSettings.registerAudioDefault(existingInstallation: oldStore.map { FileManager.default.fileExists(atPath: $0.path) } ?? false)
             coordinator = SessionCoordinator(repository: try TranscriptRepository())
             storageFailure = false
         } catch { storageFailure = true }
@@ -158,9 +162,9 @@ private struct LiveCaptionView: View {
 /// Deterministic input for UI regression tests; never compiled into TestFlight builds.
 @MainActor
 private final class ReaderPreviewMicrophone: AudioCapturing {
-    let permission: MicrophonePermission = .granted
+    var permission: MicrophonePermission = ProcessInfo.processInfo.arguments.contains("--ui-test-preparation") ? .undetermined : .granted
     var onFailure: (@MainActor @Sendable (CaptureFailure) -> Void)?
-    func requestPermission() async -> Bool { true }
+    func requestPermission() async -> Bool { permission = .granted; return true }
     func start() throws -> AsyncStream<Float> { AsyncStream { $0.finish() } }
     func stop() throws {}
 }
@@ -171,8 +175,9 @@ private final class ReaderPreviewSpeech: SpeechTranscribing {
     private var producer: Task<Void, Never>?
     private var nextParagraph = 1
     private var interrupted = false
-    func readiness() async -> SpeechReadiness { .ready }
-    func installAssets() async throws {}
+    private var needsModel = ProcessInfo.processInfo.arguments.contains("--ui-test-preparation")
+    func readiness() async -> SpeechReadiness { needsModel ? .missingAssets : .ready }
+    func installAssets() async throws { needsModel = false }
     func start() async throws -> AsyncThrowingStream<TranscriptionUpdate, Error> {
         let run = UUID()
         let stream = AsyncThrowingStream<TranscriptionUpdate, Error> { continuation = $0 }

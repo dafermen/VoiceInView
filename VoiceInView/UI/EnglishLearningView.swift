@@ -101,14 +101,14 @@ struct EnglishLearningView: View {
                             .accessibilityIdentifier("learningEnglish")
                         if unit.audioRange(duration: player.duration) != nil {
                             HStack(spacing: 24) {
-                                Button(player.playing ? "Stop practice audio" : "Listen to phrase",
+                                Button(uiKey(player.playing ? "Stop practice audio" : "Listen to phrase"),
                                        systemImage: player.playing ? "stop.circle.fill" : "play.circle.fill") {
                                     if player.playing { player.stop() } else { player.play(unit) }
                                 }.font(.largeTitle).labelStyle(.iconOnly).accessibilityIdentifier("learningPlay")
                                 Button("Repeat", systemImage: "repeat") { player.repeating.toggle() }
                                     .labelStyle(.iconOnly).buttonStyle(.bordered)
                                     .tint(player.repeating ? .accentColor : .secondary)
-                                    .accessibilityValue(player.repeating ? "On" : "Off")
+                                    .accessibilityValue(uiKey(player.repeating ? "On" : "Off"))
                                     .accessibilityIdentifier("learningRepeat")
                                 Picker("Speed", selection: $player.rate) {
                                     Text("0.75×").tag(Float(0.75)); Text("1×").tag(Float(1))
@@ -124,7 +124,7 @@ struct EnglishLearningView: View {
                             player.stop(); pronunciation = unit
                         }.buttonStyle(.bordered).accessibilityIdentifier("practicePronunciation")
                         if let spanish = unit.spanish, !spanish.isEmpty {
-                            Button(revealed ? "Hide translation" : "Reveal \(language.opposite.name)", systemImage: "eye") { revealed.toggle() }
+                            Button(uiKey(revealed ? "Hide translation" : "Reveal \(language.opposite.name)"), systemImage: "eye") { revealed.toggle() }
                                 .accessibilityIdentifier("revealLearningSpanish")
                             if revealed {
                                 Text(spanish).font(.title3).accessibilityIdentifier("learningSpanish")
@@ -145,7 +145,7 @@ struct EnglishLearningView: View {
                                 .accessibilityIdentifier("saveLearningExpression")
                         }
                     } else {
-                        ContentUnavailableView(savedOnly ? "No saved expressions" : "No phrases yet",
+                        ContentUnavailableView(uiKey(savedOnly ? "No saved expressions" : "No phrases yet"),
                             systemImage: "book", description: Text("Save an expression from Session phrases to practice it here."))
                     }
                 }.padding()
@@ -171,7 +171,7 @@ struct EnglishLearningView: View {
             .alert("Learning", isPresented: Binding(get: { failure != nil || player.failure != nil },
                 set: { if !$0 { failure = nil; player.failure = nil } })) {
                 Button("OK") { failure = nil; player.failure = nil }
-            } message: { Text(failure ?? player.failure ?? "") }
+            } message: { Text(LocalizedStringKey(failure ?? player.failure ?? "")) }
         }
     }
     private func load() {
@@ -227,7 +227,7 @@ private struct LearningExpressionEditor: View {
                     Text("If you shorten the original, adjust this note to match it.").font(.caption)
                 }
                 Section("Original context") { Text(unit.context).textSelection(.enabled) }
-                if let failure { Text(failure).foregroundStyle(.red) }
+                if let failure { Text(LocalizedStringKey(failure)).foregroundStyle(.red) }
             }
             .navigationTitle("Save expression").navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -75,10 +75,10 @@ struct TranscriptShareView: View {
                 }.padding()
                 Divider()
                 preview.frame(maxWidth: .infinity, maxHeight: .infinity)
-                if let failure { Text(failure).font(.caption).foregroundStyle(.red).padding(.horizontal) }
+                if let failure { Text(LocalizedStringKey(failure)).font(.caption).foregroundStyle(.red).padding(.horizontal) }
                 Divider()
                 HStack {
-                    Button(copied ? "Copied" : "Copy", systemImage: copied ? "checkmark" : "doc.on.doc") {
+                    Button(uiKey(copied ? "Copied" : "Copy"), systemImage: copied ? "checkmark" : "doc.on.doc") {
                         UIPasteboard.general.string = exportText
                         copied = true
                     }
@@ -122,9 +122,9 @@ struct TranscriptShareView: View {
                 description: Text("Reopen the session before sharing. Your original captions have not been changed."))
         } else if !hasText {
             ContentUnavailableView("No text to share", systemImage: "text.bubble",
-                description: Text(selection == .bookmarks ? "This session has no bookmarked text." : "This transcript is empty."))
+                description: Text(uiKey(selection == .bookmarks ? "This session has no bookmarked text." : "This transcript is empty.")))
         } else if preparing || preparedRequest != request {
-            ProgressView(format == .pdf ? "Preparing PDF" : "Preparing preview")
+            ProgressView(uiKey(format == .pdf ? "Preparing PDF" : "Preparing preview"))
         } else if format == .pdf, let prepared {
             TranscriptPDFPreview(data: prepared).accessibilityIdentifier("pdfPreview")
         } else {

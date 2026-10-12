@@ -16,7 +16,7 @@ Para una actividad breve con niños: escoger una frase apropiada, escucharla nor
 
 ## Inglés o español
 
-Antes de iniciar una sesión, abrir **Settings → Idioma de grabación y subtítulos**. **English (en-US)** es el valor inicial; **Español (es-ES)** activa reconocimiento de español. La interfaz completa no cambia de idioma: es una preferencia del contenido hablado, no una traducción integral de los menús. No hay detección automática ni mezcla de dos idiomas en una misma sesión. Preparar el modelo para el idioma elegido y comprobar disponibilidad en el dispositivo.
+Antes de iniciar una sesión, abrir **Settings → Voice capture and captions → Spoken language**. **English (en-US)** es el valor inicial; **Español (es-ES)** activa reconocimiento de español. Este selector afecta al contenido hablado. Para los menús usa la sección independiente App interface → Menus and buttons (Interfaz de la aplicación → Menús y botones). No hay detección automática ni mezcla de dos idiomas en una misma sesión. Preparar el modelo para el idioma elegido y comprobar disponibilidad en el dispositivo.
 
 La opción queda recordada. Una sesión conserva su idioma después de iniciarse, incluso al pausar, recibir una interrupción o reanudar. Para cambiarlo: detener, guardar o descartar, crear una nueva sesión y elegir el idioma. Esto evita que una sola grabación mezcle configuraciones incompatibles.
 
@@ -41,3 +41,8 @@ Comprobar en iPad físico: micrófono y permisos, modelos de los dos idiomas, ro
 VoiceInView ofrece apoyos de lectura y práctica; no sustituye servicios profesionales de interpretación o accesibilidad cuando son necesarios. El reconocimiento puede equivocarse por ruido, distancia o acentos. Conservar original y revisar antes de compartir. No anunciar conformidad WCAG, certificación médica ni categoría infantil sin evaluación específica. Para la próxima aceptación incluir personas que utilicen VoiceOver, baja visión o subtítulos habitualmente.
 
 Referencias de implementación: [orientaciones UIKit](https://developer.apple.com/documentation/uikit/uiviewcontroller/supportedinterfaceorientations), [ventanas iPad y UIRequiresFullScreen](https://developer.apple.com/documentation/technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key) y [anuncios de accesibilidad](https://developer.apple.com/documentation/uikit/uiaccessibility/notification/announcement).
+
+
+## Actualización build 21
+
+Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).

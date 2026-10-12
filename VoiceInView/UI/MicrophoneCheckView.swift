@@ -16,16 +16,16 @@ struct MicrophoneCheckView: View {
                         .accessibilityAddTraits(.isHeader)
                     Text("Microphone capture")
                         .font(.title2.bold())
-                    Label(model.state.title, systemImage: model.state == .listening ? "mic.fill" : "mic")
+                    Label(LocalizedStringKey(model.state.title), systemImage: model.state == .listening ? "mic.fill" : "mic")
                         .font(.headline)
                         .accessibilityIdentifier("listeningStatus")
                     if case .error(let failure) = model.state {
-                        Text(failure.message)
+                        Text(LocalizedStringKey(failure.message))
                             .foregroundStyle(.primary)
                             .accessibilityIdentifier("captureError")
                     }
                     if let notice = model.notice {
-                        Text(notice).font(.callout)
+                        Text(LocalizedStringKey(notice)).font(.callout)
                     }
                     ProgressView(value: Double(model.level), total: 1)
                         .accessibilityLabel("Microphone input level")

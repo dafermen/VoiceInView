@@ -27,3 +27,8 @@ Build 18 stores study expressions and optional Spanish notes in the same local, 
 ## Pronunciation practice — October 11, 2026
 
 Short practice recordings stay on this iPhone, are protected and excluded from backup. They are deleted on retry, exercise change, leaving practice or entering the background; abandoned takes are removed at next launch. Optional word recognition requires on-device support. No pronunciation assessment provider receives these recordings. Session audio settings do not apply to these temporary takes.
+
+
+## Actualización build 21
+
+Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).

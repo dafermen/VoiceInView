@@ -1,5 +1,18 @@
 # Incidentes de desarrollo y distribución
 
+## 2026-10-11 — Renglones y pruebas al activar audio inicialmente (build 21)
+
+La primera prueba geométrica mostró que `lineFragmentUsedRect` y `boundingRect(forGlyphRange:)` incluyen espacio de layout: dibujar después de su maxY invadía la línea siguiente. Se usa ahora la línea base real de TextKit y el descenso de UIFont, con separación mínima entre renglones. La prueba contrasta reglas con límites de tinta independientes de CoreText e incluye vueltas a vertical, fuentes grandes e interlineados. Pasó en la suite final; revisar también capturas y aceptación física.
+
+Activar Save audio por defecto en instalaciones nuevas expuso dos pruebas con `CaptionMicrophone`, un doble que no implementa grabación real. El modelo devolvía correctamente RecordingFailure.unavailable; por ello no empezaba y fallaban las aserciones posteriores de pausa/idioma. Esos escenarios configuran explícitamente audio desactivado. Las pruebas de AppSettings siguen exigiendo audio inicialmente activado y preservación de valores anteriores. No modificar el comportamiento de producción para satisfacer un doble incompleto.
+
+Los resultados fallidos recopilaron diagnósticos del simulador durante varios minutos después de terminar las aserciones. La ejecución acabó por sí misma; un intento de SIGINT llegó después y no detuvo ningún proceso. Las repeticiones utilizan `-collect-test-diagnostics never`, conservando logs y xcresult. No reiniciar powerd ni cambiar firma por esta espera. La ejecución final `VoiceInView-21-Verified.xcresult` cerró normalmente: 92 pruebas, cero fallos.
+
+La primera tanda UI encontró dos selectores incorrectos: SwiftUI propagó el identificador de la tarjeta al botón de permiso y las hojas superpuestas mostraron dos botones Done después de traducir Listo al inglés. Se comprobaron los botones por su etiqueta de acción y se limitó Done a la barra Pronunciation. El nuevo recorrido de preparación y el de práctica pasaron. La revisión visual detectó además un aviso de micrófono truncado en iPhone pequeño; se fijó su altura de texto y se añadió una aserción de ajuste de líneas. El recorrido final de preparación pasó después de ese cambio.
+
+Antes de UI se retiró exclusivamente el runner de pruebas del simulador iPhone para evitar el ejecutable antiguo documentado en build 20. No se eliminaron la app ni sesiones del teléfono físico.
+
+
 ## 2026-10-11 — renglones y compilador gráfico del simulador
 
 La prueba con el runner correcto llegó a activar renglones y bloqueó la interfaz. La muestra de `VoiceInView` (`voiceinview20-app.sample`) situó el hilo principal en RenderBox → Metal → `XPCCompilerConnection::setupConnection`, esperando al servicio del compilador gráfico. No era evidencia de un bucle infinito de nuestros párrafos ni de un problema del reconocimiento.

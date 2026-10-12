@@ -21,6 +21,7 @@ final class CaptionViewModel {
     private(set) var startedAt: Date?
     private(set) var elapsed: TimeInterval = 0
     private(set) var permissionDenied = false
+    private(set) var microphonePermission: MicrophonePermission = .undetermined
     private(set) var preparationPending = false
     private(set) var inputLevel: Float = 0
     @ObservationIgnored private var lastMeterUpdate = Date.distantPast
@@ -54,6 +55,7 @@ final class CaptionViewModel {
 
     init(microphone: any AudioCapturing, speech: any SpeechTranscribing) {
         self.microphone = microphone
+        microphonePermission = microphone.permission
         self.speech = speech
         microphone.onLevel = { [weak self] value in
             guard let self, self.state == .listening, value.isFinite,
@@ -82,6 +84,19 @@ final class CaptionViewModel {
         self.language = language
         speech.configure(language: language)
         readiness = .checking
+    }
+
+    func refreshMicrophonePermission() {
+        microphonePermission = microphone.permission
+        permissionDenied = microphonePermission == .denied
+    }
+
+    func requestMicrophonePermission() async {
+        guard !state.active, !state.busy, !preparationPending else { return }
+        preparationPending = true
+        defer { preparationPending = false }
+        _ = await microphone.requestPermission()
+        refreshMicrophonePermission()
     }
 
     func requestSpeechPermission() async {
@@ -127,11 +142,13 @@ final class CaptionViewModel {
         }
         guard generation == identifier, foreground else { return }
         guard !Task.isCancelled else { await abort(message: "Start cancelled."); return }
+        refreshMicrophonePermission()
         guard microphone.permission == .granted else {
             permissionDenied = true
             state = .problem(CaptureFailure.permissionDenied.message)
             return
         }
+        refreshMicrophonePermission()
         permissionDenied = false
         do {
             if startedAt == nil { try onWillStart?() }
@@ -232,7 +249,7 @@ final class CaptionViewModel {
         if let identifier = prepareForBackground() { await cleanupBackground(identifier) }
     }
 
-    func foregrounded() { foreground = true }
+    func foregrounded() { foreground = true; refreshMicrophonePermission(); Task { await checkReadiness() } }
 
     func reset() async {
         generation = UUID()

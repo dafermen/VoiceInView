@@ -58,7 +58,7 @@ struct SessionTranslationView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 Picker("Reading language", selection: $mode) {
-                    ForEach(TranscriptLanguage.allCases) { Text($0.rawValue).tag($0) }
+                    ForEach(TranscriptLanguage.allCases) { Text(LocalizedStringKey($0.rawValue)).tag($0) }
                 }.pickerStyle(.segmented).padding().accessibilityIdentifier("translationLanguagePicker")
                 status.padding(.horizontal)
                 ScrollViewReader { proxy in
@@ -138,14 +138,14 @@ struct SessionTranslationView: View {
             .sheet(isPresented: $exportMenu, onDismiss: {
                 if let kind = pendingExport { pendingExport = nil; export(kind: kind) }
             }) { exportPreview }
-            .confirmationDialog("Translate again? This replaces the saved translation and its edits.",
+            .confirmationDialog(uiKey("Translate again? This replaces the saved translation and its edits."),
                                 isPresented: $replacing, titleVisibility: .visible) {
                 Button("Replace translation", role: .destructive) { start(replaceAll: true) }
                 Button("Cancel", role: .cancel) {}
             }
             .alert("Translation", isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) {
                 Button("OK") { failure = nil }
-            } message: { Text(failure ?? "") }
+            } message: { Text(LocalizedStringKey(failure ?? "")) }
             .onDisappear { job = nil; exportTask?.cancel(); if share == nil { cleanup() } }
         }
     }
@@ -177,7 +177,7 @@ struct SessionTranslationView: View {
 
     private var controls: some View {
         HStack {
-            Button(current ? "Translate again" : snapshot == nil ? "Translate to \(language.opposite.name)" : "Update changed paragraphs", systemImage: "character.bubble") {
+            Button(uiKey(current ? "Translate again" : snapshot == nil ? "Translate to \(language.opposite.name)" : "Update changed paragraphs"), systemImage: "character.bubble") {
                 if current { replacing = true } else { start() }
             }.disabled(!canTranslate || !loaded || source.allSatisfy { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } || job != nil || preparing)
                 .accessibilityIdentifier("translateSpanishButton")
@@ -199,8 +199,8 @@ struct SessionTranslationView: View {
         NavigationStack {
             Form {
                 Section("Before sharing") {
-                    LabeledContent("Language", value: mode.rawValue)
-                    LabeledContent("Translation", value: mode == language.mode ? "Original \(language.name)" : current ? "Up to date" : "Needs update")
+                    LabeledContent("Language") { Text(LocalizedStringKey(mode.rawValue)) }
+                    LabeledContent("Translation") { Text(uiKey(mode == language.mode ? "Original \(language.name)" : current ? "Up to date" : "Needs update")) }
                     Picker("Format", selection: $previewKind) {
                         Text("TXT").tag("txt")
                         Text("PDF").tag("pdf")
@@ -367,6 +367,7 @@ struct LiveSpanishView: View {
     var language: CaptureLanguage = .english
     var lineSpacing: Double = 4
     var bold = false
+    var ruled = false
     @Environment(\.scenePhase) private var phase
     @State private var buffer = LiveTranslationBuffer()
     @State private var job: TranslationJob?
@@ -377,14 +378,13 @@ struct LiveSpanishView: View {
             HStack {
                 Text("Live \(language.opposite.name) · preview").font(.caption)
                 Spacer()
-                Button(follow ? "Following" : "Follow latest") { follow.toggle() }.font(.caption)
+                Button(uiKey(follow ? "Following" : "Follow latest")) { follow.toggle() }.font(.caption)
             }.padding(.horizontal)
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 18) {
                         ForEach(buffer.source) { paragraph in
-                            Text(buffer.translated[paragraph.id] ?? paragraph.text)
-                                .font(.system(size: fontSize, weight: bold ? .semibold : .regular)).lineSpacing(lineSpacing)
+                            ReaderParagraph(text: buffer.translated[paragraph.id] ?? paragraph.text, points: fontSize, spacing: lineSpacing, bold: bold, ruled: ruled)
                                 .foregroundStyle(buffer.translated[paragraph.id] == nil ? .secondary : .primary)
                                 .frame(maxWidth: .infinity, alignment: .leading).id(paragraph.id)
                         }
@@ -395,10 +395,10 @@ struct LiveSpanishView: View {
                 }
             }
             if let failure {
-                Text(failure).font(.caption).padding(.horizontal)
+                Text(LocalizedStringKey(failure)).font(.caption).padding(.horizontal)
                 Button("Retry translation") { self.failure = nil; schedule() }
             } else {
-                Text(job == nil ? "Waiting for confirmed text. Preview is not saved; translate the saved session to export." : "Translating… The original is shown while waiting.")
+                Text(uiKey(job == nil ? "Waiting for confirmed text. Preview is not saved; translate the saved session to export." : "Translating… The original is shown while waiting."))
                     .font(.caption).foregroundStyle(.secondary).padding(.horizontal)
             }
         }

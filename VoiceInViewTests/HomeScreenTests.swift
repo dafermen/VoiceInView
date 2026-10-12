@@ -2,6 +2,64 @@ import XCTest
 
 final class HomeScreenTests: XCTestCase {
     @MainActor
+    func testProminentPreparationDoesNotStartCapture() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-reader", "--ui-test-preparation"]
+        app.launch()
+        let microphone = app.buttons["Allow Microphone"]
+        XCTAssertTrue(microphone.waitForExistence(timeout: 20))
+        XCTAssertTrue(microphone.isHittable)
+        if app.frame.width < 450 {
+            XCTAssertGreaterThan(app.staticTexts["Microphone access is needed to hear the conversation."].frame.height, 24, "The notice must wrap instead of truncating")
+        }
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = "First-preparation"; shot.lifetime = .keepAlways; add(shot)
+        microphone.tap()
+        let model = app.buttons["Download speech model"]
+        XCTAssertTrue(model.waitForExistence(timeout: 5))
+        XCTAssertTrue(model.isHittable)
+        model.tap()
+        expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: model)
+        waitForExpectations(timeout: 5)
+        XCTAssertEqual(app.buttons["primaryCaptionAction"].label, "Start Listening")
+        XCTAssertFalse(app.buttons["resumeCaptureButton"].exists)
+    }
+
+    @MainActor
+    func testInterfaceLanguageDoesNotChangeCaptureLanguage() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-reader", "--ui-test-session-flow"]
+        app.launch()
+        XCTAssertTrue(app.tabBars.buttons["Settings"].waitForExistence(timeout: 20))
+        app.tabBars.buttons["Settings"].tap()
+        app.buttons["interfaceLanguagePicker"].tap()
+        app.buttons["Español"].tap()
+        XCTAssertTrue(app.tabBars.buttons["Ajustes"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["captureLanguagePicker"].label.contains("English"))
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = "Separate-interface-and-capture-languages"; shot.lifetime = .keepAlways; add(shot)
+        app.buttons["captureLanguagePicker"].tap()
+        app.buttons["Español"].tap()
+        app.buttons["interfaceLanguagePicker"].tap()
+        app.buttons["English"].tap()
+        XCTAssertTrue(app.tabBars.buttons["Settings"].exists)
+        XCTAssertTrue(app.buttons["captureLanguagePicker"].label.contains("Español"))
+        app.tabBars.buttons["Captions"].tap()
+        XCTAssertTrue(app.staticTexts["captionPlaceholder"].label.contains("Español"))
+        app.buttons["primaryCaptionAction"].tap()
+        expectation(for: NSPredicate(format: "label == 'Pause'"), evaluatedWith: app.buttons["primaryCaptionAction"])
+        waitForExpectations(timeout: 10)
+        app.buttons["primaryCaptionAction"].tap()
+        XCTAssertTrue(app.buttons["resumeCaptureButton"].waitForExistence(timeout: 5))
+        app.tabBars.buttons["Settings"].tap()
+        app.buttons["interfaceLanguagePicker"].tap()
+        app.buttons["Español"].tap()
+        app.tabBars.buttons["Subtítulos"].tap()
+        XCTAssertTrue(app.buttons["resumeCaptureButton"].exists)
+        XCTAssertEqual(app.buttons["resumeCaptureButton"].label, "Reanudar")
+    }
+
+    @MainActor
     func testBilingualSettingsPaperAndInterruptedResume() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--ui-test-reader", "--ui-test-session-flow", "--ui-test-interruption"]
@@ -28,7 +86,7 @@ final class HomeScreenTests: XCTestCase {
                 thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.45)))
         }
         paper.tap()
-        app.buttons["Amarillo claro"].tap()
+        app.buttons["Light yellow"].tap()
         let lines = app.switches["ruledPaperToggle"]
         for _ in 0..<8 {
             if lines.isHittable { break }
@@ -81,7 +139,7 @@ final class HomeScreenTests: XCTestCase {
         XCTAssertEqual(paragraph.label, "Hola mundo. Aprendemos juntos.")
         app.buttons["Done"].tap()
         app.buttons["learnEnglishButton"].tap()
-        XCTAssertTrue(app.navigationBars["Practicar idioma"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Language practice"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.staticTexts["learningEnglish"].label, "Hola mundo. Aprendemos juntos.")
         app.buttons["revealLearningSpanish"].tap()
         XCTAssertEqual(app.staticTexts["learningSpanish"].label, "Hello world. We learn together.")
@@ -92,7 +150,7 @@ final class HomeScreenTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["pronunciationTarget"].label.contains("Hola"))
         let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         shot.name = "Spanish-pronunciation"; shot.lifetime = .keepAlways; add(shot)
-        app.buttons["Listo"].tap()
+        app.navigationBars["Pronunciation"].buttons["Done"].tap()
     }
 
     @MainActor
@@ -120,7 +178,7 @@ final class HomeScreenTests: XCTestCase {
             let allow = system.alerts.buttons["Allow"]
             if allow.exists { allow.tap() } else { system.alerts.buttons["OK"].tap() }
         }
-        expectation(for: NSPredicate(format: "label == 'Terminar'"), evaluatedWith: app.buttons["pronunciationRecord"])
+        expectation(for: NSPredicate(format: "label == 'Finish'"), evaluatedWith: app.buttons["pronunciationRecord"])
         waitForExpectations(timeout: 10)
         // UI actions consume enough time to produce a valid (possibly silent) test take.
         let recording = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
@@ -177,7 +235,7 @@ final class HomeScreenTests: XCTestCase {
         XCTAssertFalse(app.staticTexts["learningSpanish"].exists)
         let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         screenshot.name = "Saved-learning-expression"; screenshot.lifetime = .keepAlways; add(screenshot)
-        app.navigationBars["Practicar idioma"].buttons["Done"].tap()
+        app.navigationBars["Language practice"].buttons["Done"].tap()
         app.buttons["learnEnglishButton"].tap()
         app.segmentedControls["learningCollection"].buttons["Saved expressions"].tap()
         XCTAssertTrue(app.staticTexts["learningEnglish"].exists)

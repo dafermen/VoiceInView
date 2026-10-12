@@ -57,3 +57,8 @@ Escucha/repite fragmentos a 0.75× o 1×, revela el español y conserva expresio
 ## Práctica de pronunciación
 
 [Guía de uso y explicación para estudiantes](pronunciation.md) · [Punto de reanudación build 19](pronunciation-checkpoint.md).
+
+
+## Actualización build 21
+
+Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).

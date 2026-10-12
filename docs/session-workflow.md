@@ -47,3 +47,8 @@ La grabación que empieza a mitad de sesión queda fuera de esta entrega; requie
 ## Traducir después de guardar
 
 Sessions → sesión → Translate to Spanish abre la lectura en español, inglés o ambos. El lápiz corrige únicamente español; editar inglés deja la traducción pendiente de actualización. La captura conserva su flujo actual. [Guía y límites](translation.md).
+
+
+## Actualización build 21
+
+Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).

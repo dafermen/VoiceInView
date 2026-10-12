@@ -44,13 +44,14 @@ struct CaptionScreen: View {
                     .padding(.horizontal, 16)
                 }
                 if model.canResume { resumePanel }
+                else if needsPreparation { preparationPanel }
                 else if let message = statusMessage { captureNotice(message) }
                 Group {
                     if liveSpanish {
                         LiveSpanishView(paragraphs: model.transcript.finalized.suffix(40).map {
                             ReviewParagraph(id: $0.id, text: $0.text)
                         }, fontSize: Double(scaledSize) * settings.captionSize / 28,
-                           language: model.language, lineSpacing: settings.lineSpacing, bold: settings.boldCaptions)
+                           language: model.language, lineSpacing: settings.lineSpacing, bold: settings.boldCaptions, ruled: settings.ruledPaper && !settings.highContrast)
                             .id(model.language)
                     } else { transcript }
                 }
@@ -126,7 +127,7 @@ struct CaptionScreen: View {
         } message: {
             Text("Recovery drafts stay on this device until you save or discard them.")
         }
-        .confirmationDialog("Keep this session before starting another?",
+        .confirmationDialog(uiKey("Keep this session before starting another?"),
                             isPresented: $confirmNewSession, titleVisibility: .visible) {
             Button("Save and new session") {
                 Task { await saveAndNewSession?(); resetReaderPosition() }
@@ -136,24 +137,75 @@ struct CaptionScreen: View {
             }
             Button("Cancel", role: .cancel) { }
         } message: { Text("Discard permanently deletes this session's transcript and any recorded audio.") }
-        .confirmationDialog("Discard this session?", isPresented: $confirmDiscard, titleVisibility: .visible) {
+        .confirmationDialog(uiKey("Discard this session?"), isPresented: $confirmDiscard, titleVisibility: .visible) {
             Button("Discard Session", role: .destructive) {
                 Task { await discardSession?(); resetReaderPosition() }
             }
             Button("Cancel", role: .cancel) { }
         } message: { Text("This permanently deletes the transcript and any audio from this session.") }
-        .task { await model.checkReadiness() }
+        .task { model.refreshMicrophonePermission(); await model.checkReadiness() }
         .onChange(of: model.state) { _, _ in applyWakePreference() }
         .onChange(of: model.canResume) { wasPaused, paused in
             if paused && !wasPaused {
                 UINotificationFeedbackGenerator().notificationOccurred(.warning)
                 UIAccessibility.post(notification: .announcement,
-                    argument: "Listening paused. Microphone is off. Tap Resume to continue.")
+                    argument: InterfaceLocalization.string("Listening paused. Microphone is off. Tap Resume to continue.", language: settings.interfaceLanguage))
             }
         }
         .onChange(of: settings.keepAwake) { _, _ in applyWakePreference() }
         .onAppear { applyWakePreference() }
         .onDisappear { followScrollTask?.cancel(); UIApplication.shared.isIdleTimerDisabled = false }
+    }
+
+    private var needsPreparation: Bool {
+        guard !model.state.active, !model.state.busy, model.state != .ended else { return false }
+        return model.microphonePermission != .granted || model.readiness != .ready
+    }
+
+    private var preparationPanel: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Prepare to listen", systemImage: "exclamationmark.bubble.fill")
+                .font(.headline).accessibilityAddTraits(.isHeader)
+            Text("Allow access and prepare the spoken language before starting. Nothing is recorded until you tap the microphone.")
+                .font(.subheadline).fixedSize(horizontal: false, vertical: true)
+            if model.microphonePermission != .granted {
+                Text("Microphone access is needed to hear the conversation.").font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+                if model.microphonePermission == .undetermined {
+                    Button("Allow Microphone") { Task { await model.requestMicrophonePermission() } }
+                        .accessibilityIdentifier("prepareMicrophoneButton")
+                } else { openSystemSettingsButton }
+            } else {
+                Text(LocalizedStringKey(model.readiness.description)).font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+                switch model.readiness {
+                case .authorizationRequired:
+                    Button("Allow Speech Recognition") { Task { await model.requestSpeechPermission() } }
+                        .accessibilityIdentifier("prepareSpeechButton")
+                case .missingAssets:
+                    Button("Download speech model") { Task { await model.installAssets() } }
+                        .accessibilityIdentifier("prepareModelButton")
+                    Text("Internet and free storage are needed for this download.").font(.caption)
+                case .authorizationDenied, .systemModelUnavailable:
+                    openSystemSettingsButton
+                    Button("Refresh Checks") { Task { await model.checkReadiness() } }
+                case .checking, .downloading:
+                    ProgressView()
+                default:
+                    Button("View preparation details") { showingStatus = true }
+                }
+            }
+        }.buttonStyle(.borderedProminent).controlSize(.large)
+            .disabled(model.preparationPending)
+            .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.orange.opacity(0.15))
+            .accessibilityIdentifier("capturePreparationPanel")
+    }
+
+    private var openSystemSettingsButton: some View {
+        Button("Open Settings") {
+            if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+        }
     }
 
     private var resumePanel: some View {
@@ -180,13 +232,13 @@ struct CaptionScreen: View {
             Button { showingStatus = true } label: {
                 HStack(spacing: 8) {
                     Image(systemName: isProblem || model.permissionDenied ? "exclamationmark.circle" : "info.circle")
-                    Text(message).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                    interfaceMessage(message).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
                     Image(systemName: "chevron.right").font(.caption)
                 }
                 .font(.subheadline).padding(.horizontal, 16).frame(minHeight: 44)
                 .contentShape(Rectangle())
             }
-            .accessibilityLabel(message + ". Show details")
+            .accessibilityLabel(interfaceMessage(message) + Text(". Show details"))
             .accessibilityIdentifier("captionStatusDetails")
             if model.canResume {
                 Button { Task { await model.start() } } label: {
@@ -207,11 +259,11 @@ struct CaptionScreen: View {
 
     private var status: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Label(model.isRecordingAudio ? "Recording" : statusTitle,
+            Label(uiKey(model.isRecordingAudio ? "Recording" : LocalizedStringKey(statusTitle)),
                   systemImage: model.isRecordingAudio ? "record.circle.fill" : (model.state == .listening ? "mic.fill" : "mic"))
                 .foregroundStyle(model.isRecordingAudio ? Color.red : Color.primary)
                 .font(.subheadline.weight(.semibold))
-                .accessibilityLabel(model.isRecordingAudio ? "Recording audio and captions" : (model.state == .listening ? "Transcribing without saving audio" : model.state.title))
+                .accessibilityLabel(uiKey(model.isRecordingAudio ? "Recording audio and captions" : (model.state == .listening ? "Transcribing without saving audio" : LocalizedStringKey(model.state.title))))
                 .accessibilityIdentifier("listeningStatus")
             TimelineView(.periodic(from: Date(), by: 1)) { context in
                 HStack(spacing: 6) {
@@ -254,7 +306,7 @@ struct CaptionScreen: View {
                 Image(systemName: "character.bubble").frame(width: 44, height: 44)
                     .foregroundStyle(liveSpanish ? Color.accentColor : Color.primary)
             }
-            .accessibilityLabel(liveSpanish ? "Show original \(model.language.name)" : "Show live \(model.language.opposite.name)")
+            .accessibilityLabel(uiKey(liveSpanish ? "Show original \(model.language.name)" : "Show live \(model.language.opposite.name)"))
             .accessibilityValue(liveSpanish ? model.language.opposite.name : model.language.name)
             .accessibilityIdentifier("liveSpanishButton")
         }
@@ -266,7 +318,7 @@ struct CaptionScreen: View {
             Image(systemName: isFullScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
                 .frame(width: 44, height: 44)
         }
-        .accessibilityLabel(isFullScreen ? "Exit full screen" : "Full screen")
+        .accessibilityLabel(uiKey(isFullScreen ? "Exit full screen" : "Full screen"))
         .accessibilityIdentifier("fullScreenButton")
     }
 
@@ -294,6 +346,10 @@ struct CaptionScreen: View {
             .onEnded { value in
                 settings.captionSize = min(max(settings.captionSize * Double(value), 20), 44)
             }
+    }
+
+    private var captionPoints: CGFloat {
+        scaledSize * CGFloat(min(max(settings.captionSize * Double(pinchScale), 20), 44)) / 28
     }
 
     private var captionFont: Font {
@@ -325,13 +381,13 @@ struct CaptionScreen: View {
                         if bookmarkedIDs.contains(segment.id) {
                             Label("Bookmarked", systemImage: "bookmark.fill").font(.caption)
                         }
-                        Text(segment.text).textSelection(.enabled)
+                        ReaderParagraph(text: segment.text, points: captionPoints, spacing: settings.lineSpacing, bold: settings.boldCaptions, ruled: settings.ruledPaper && !settings.highContrast)
                             .accessibilityIdentifier("caption-" + segment.id.uuidString)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contextMenu {
                         if let bookmarkSegment {
-                            Button(bookmarkedIDs.contains(segment.id) ? "Remove bookmark" : "Save bookmark",
+                            Button(uiKey(bookmarkedIDs.contains(segment.id) ? "Remove bookmark" : "Save bookmark"),
                                    systemImage: "bookmark") { bookmarkSegment(segment) }
                         }
                     }
@@ -342,7 +398,7 @@ struct CaptionScreen: View {
                 if !model.transcript.partial.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Live · may change").font(.caption)
-                        Text(model.transcript.partial.map(\.text).joined(separator: "\n"))
+                        ReaderParagraph(text: model.transcript.partial.map(\.text).joined(separator: "\n"), points: captionPoints, spacing: settings.lineSpacing, bold: settings.boldCaptions, ruled: settings.ruledPaper && !settings.highContrast)
                             .accessibilityIdentifier("provisionalCaption")
                     }
                     .id("provisionalCaption")
@@ -362,8 +418,7 @@ struct CaptionScreen: View {
         .defaultScrollAnchor(followLive ? .bottom : nil)
         .foregroundStyle(settings.highContrast ? (colorScheme == .dark ? Color.white : Color.black) : settings.readerPaper != .system ? Color.black : Color.primary)
         .accessibilityIdentifier("captionScrollView")
-        .accessibilityValue("\(model.transcript.finalized.count) finished paragraphs. " +
-                            (followLive ? "Following live captions" : "Reading earlier captions"))
+        .accessibilityValue(Text("\(model.transcript.finalized.count) finished paragraphs. ") + Text(uiKey(followLive ? "Following live captions" : "Reading earlier captions")))
     }
 
     private func interactiveCaptionContent(height: CGFloat) -> some View {
@@ -408,11 +463,11 @@ struct CaptionScreen: View {
                 settings.saveAudio.toggle()
                 model.saveAudio = settings.saveAudio
             } label: {
-                Label(settings.saveAudio ? "Audio on" : "Audio off", systemImage: settings.saveAudio ? "waveform.circle.fill" : "waveform.circle")
+                Label(uiKey(settings.saveAudio ? "Audio on" : "Audio off"), systemImage: settings.saveAudio ? "waveform.circle.fill" : "waveform.circle")
                     .frame(minHeight: 44)
             }
             .accessibilityLabel("Save audio")
-            .accessibilityValue(settings.saveAudio ? "On" : "Off")
+            .accessibilityValue(uiKey(settings.saveAudio ? "On" : "Off"))
             .accessibilityIdentifier("quickAudioPreference")
             Spacer(minLength: 0)
             Button {
@@ -423,7 +478,7 @@ struct CaptionScreen: View {
                     .frame(minHeight: 44)
             }
             .accessibilityLabel("Continue in background")
-            .accessibilityValue(settings.continueInBackground ? "On" : "Off")
+            .accessibilityValue(uiKey(settings.continueInBackground ? "On" : "Off"))
             .accessibilityIdentifier("quickBackgroundPreference")
         }
         .font(.subheadline)
@@ -474,7 +529,7 @@ struct CaptionScreen: View {
             }
             .frame(minWidth: 44, minHeight: 44)
             .accessibilityLabel("Capture preferences")
-            .accessibilityValue("Audio " + (model.saveAudio ? "on" : "off") + ", background " + (model.continueInBackground ? "on" : "off"))
+            .accessibilityValue(Text(uiKey(model.saveAudio ? "Audio on" : "Audio off")) + Text(". Background: ") + Text(uiKey(model.continueInBackground ? "On" : "Off")))
             .accessibilityIdentifier("capturePreferencesButton")
     }
 
@@ -502,7 +557,7 @@ struct CaptionScreen: View {
                     .background(Color.accentColor, in: Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(primaryTitle)
+            .accessibilityLabel(LocalizedStringKey(primaryTitle))
             .accessibilityIdentifier("primaryCaptionAction")
             .disabled(model.state.busy || model.preparationPending)
         }
@@ -564,11 +619,11 @@ struct CaptionScreen: View {
         NavigationStack {
             Form {
                 if case .problem(let message) = model.state {
-                    Section("Capture problem") { Text(message).accessibilityIdentifier("captureError") }
+                    Section("Capture problem") { interfaceMessage(message).accessibilityIdentifier("captureError") }
                 }
-                if let notice = model.notice { Section("Notice") { Text(notice) } }
+                if let notice = model.notice { Section("Notice") { Text(LocalizedStringKey(notice)) } }
                 Section("Speech recognition") {
-                    Text(model.readiness.description)
+                    Text(LocalizedStringKey(model.readiness.description))
                     if model.readiness == .authorizationRequired {
                         Button("Allow Speech Recognition") { Task { await model.requestSpeechPermission() } }
                             .disabled(model.state.active || model.state.busy || model.preparationPending)

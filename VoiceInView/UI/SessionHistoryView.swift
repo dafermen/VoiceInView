@@ -58,7 +58,7 @@ struct SessionHistoryView: View {
         }
         .searchable(text: $query, prompt: "Titles, English or Spanish")
         .navigationTitle("Sessions")
-        .confirmationDialog("Delete this session permanently?", isPresented: Binding(
+        .confirmationDialog(uiKey("Delete this session permanently?"), isPresented: Binding(
             get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
                 Button("Delete", role: .destructive) {
                     if let deleting {
@@ -75,7 +75,7 @@ struct SessionHistoryView: View {
         .alert("Storage problem", isPresented: Binding(
             get: { failure != nil }, set: { if !$0 { failure = nil } })) {
                 Button("OK") { failure = nil }
-            } message: { Text(failure ?? "") }
+            } message: { Text(LocalizedStringKey(failure ?? "")) }
     }
 
     private func saveDraft(_ session: ConferenceSession) {
@@ -101,8 +101,7 @@ struct SessionHistoryView: View {
                     Text(match.text).font(.subheadline).lineLimit(3)
                 }
                 Text(session.createdAt, style: .date).font(.subheadline)
-                Text(session.endedAt == nil ? "Unfinished or interrupted session" :
-                     SessionClock.format(session.duration)).font(.caption)
+                (session.endedAt == nil ? Text("Unfinished or interrupted session") : Text(verbatim: SessionClock.format(session.duration))).font(.caption)
             }
         }
         .swipeActions {
@@ -178,7 +177,7 @@ struct SessionDetailView: View {
             .accessibilityHint("Listen from this paragraph")
             .accessibilityIdentifier("listenParagraph-\(index)")
         } else {
-            Text(paragraph.text.isEmpty ? "Empty paragraph" : paragraph.text)
+            (paragraph.text.isEmpty ? Text("Empty paragraph") : Text(verbatim: paragraph.text))
                 .font(.title2).textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityIdentifier("reviewParagraph-\(index)")
@@ -197,7 +196,7 @@ struct SessionDetailView: View {
                 }.font(.subheadline).foregroundStyle(.secondary)
                 Button("Audio & subtitles", systemImage: "waveform") { playbackParagraphID = nil; showingMedia = true }
                     .disabled(!canPlay || corrections == nil).accessibilityIdentifier("sessionMediaButton")
-                Button("Translate to \(CaptureLanguage(rawValue: session.language)?.opposite.name ?? "Español")", systemImage: "character.bubble") { showingTranslation = true }
+                Button(uiKey("Translate to \(CaptureLanguage(rawValue: session.language)?.opposite.name ?? "Español")"), systemImage: "character.bubble") { showingTranslation = true }
                     .disabled(!canEdit || !canPlay || corrections == nil || paragraphs.isEmpty)
                     .accessibilityIdentifier("sessionTranslationButton")
                 Button("Practicar idioma", systemImage: "book") { showingLearning = true }
@@ -270,7 +269,7 @@ struct SessionDetailView: View {
         .alert("Storage problem", isPresented: Binding(
             get: { failure != nil }, set: { if !$0 { failure = nil } })) {
                 Button("OK") { failure = nil }
-            } message: { Text(failure ?? "") }
+            } message: { Text(LocalizedStringKey(failure ?? "")) }
         .task {
             guard !restored else { return }
             do {

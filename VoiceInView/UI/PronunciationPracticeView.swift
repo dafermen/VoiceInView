@@ -58,6 +58,7 @@ final class PronunciationPractice {
     private(set) var take: URL?
     private(set) var heard: String?
     var message: String?
+    private(set) var needsSettings = false
     private var recorder: AVAudioRecorder?
     private var player: AVAudioPlayer?
     private var synthesizer = AVSpeechSynthesizer()
@@ -109,7 +110,7 @@ final class PronunciationPractice {
     }
     func reset() {
         stopActivity()
-        take = nil; heard = nil; message = nil; elapsed = 0
+        take = nil; heard = nil; message = nil; needsSettings = false; elapsed = 0
         if let directory { try? FileManager.default.removeItem(at: directory) }
         directory = nil
     }
@@ -120,8 +121,9 @@ final class PronunciationPractice {
     func stopPlayback() { stopActivity() }
 
     func listen(_ text: String, slow: Bool) {
-        stopActivity(); message = nil
+        stopActivity(); message = nil; needsSettings = false
         guard let voice = AVSpeechSynthesisVoice(language: language.rawValue) else {
+            needsSettings = true
             message = "No hay una voz para este idioma disponible. Revisa las voces del idioma elegido en Ajustes del dispositivo."; return
         }
         do {
@@ -259,8 +261,23 @@ struct PronunciationPracticeView: View {
     private var busy: Bool { practice.activity == .recording || practice.activity == .permission || practice.activity == .checking }
     var body: some View {
         NavigationStack {
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    if let message = practice.message {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Label("Practice notice", systemImage: "exclamationmark.circle.fill").font(.headline)
+                            Text(LocalizedStringKey(message)).fixedSize(horizontal: false, vertical: true)
+                            if practice.needsSettings {
+                                Text("For voices, open device Settings → Accessibility → Spoken Content → Voices and download a voice for the spoken language. Names may vary by iOS version.").font(.subheadline)
+                                Button("Open Settings") {
+                                    if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                                }.buttonStyle(.borderedProminent)
+                            }
+                        }.padding().frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.orange.opacity(0.15), in: RoundedRectangle(cornerRadius: 12))
+                            .accessibilityIdentifier("pronunciationNotice").id("practiceNotice")
+                    }
                     Text("Escucha · Pronuncia · Compara").font(.subheadline).foregroundStyle(.secondary)
                     Text(target).font(.title2.bold()).textSelection(.enabled).accessibilityIdentifier("pronunciationTarget")
                     Menu {
@@ -271,7 +288,7 @@ struct PronunciationPracticeView: View {
                         .disabled(busy).accessibilityIdentifier("pronunciationPrompt")
                     VStack(alignment: .leading, spacing: 12) {
                         Text("1. Escucha el ejemplo").font(.headline)
-                        Button(practice.activity == .example ? "Detener ejemplo" : "Escuchar ejemplo",
+                        Button(uiKey(practice.activity == .example ? "Detener ejemplo" : "Escuchar ejemplo"),
                                systemImage: practice.activity == .example ? "stop.fill" : "speaker.wave.2.fill") {
                             if practice.activity == .example { practice.stopPlayback() } else { practice.listen(target, slow: slow) }
                         }.buttonStyle(.bordered).disabled(busy).accessibilityIdentifier("pronunciationExample")
@@ -283,7 +300,7 @@ struct PronunciationPracticeView: View {
                             if practice.activity == .recording { practice.finishRecording() }
                             else { Task { await practice.startRecording() } }
                         } label: {
-                            Label(practice.activity == .recording ? "Terminar" : (practice.take == nil ? "Pronunciar" : "Volver a grabar"),
+                            Label(uiKey(practice.activity == .recording ? "Terminar" : (practice.take == nil ? "Pronunciar" : "Volver a grabar")),
                                   systemImage: practice.activity == .recording ? "stop.circle.fill" : "mic.circle.fill")
                                 .frame(maxWidth: .infinity).padding(.vertical, 6)
                         }.buttonStyle(.borderedProminent).controlSize(.large)
@@ -298,31 +315,34 @@ struct PronunciationPracticeView: View {
                     if practice.take != nil {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("3. Escucha y compara").font(.headline)
-                            Button(practice.activity == .playback ? "Detener mi voz" : "Escuchar mi voz",
+                            Button(uiKey(practice.activity == .playback ? "Detener mi voz" : "Escuchar mi voz"),
                                    systemImage: practice.activity == .playback ? "stop.fill" : "play.fill") {
                                 if practice.activity == .playback { practice.stopPlayback() } else { practice.listenToTake() }
                             }.buttonStyle(.bordered).disabled(busy).accessibilityIdentifier("pronunciationReplay")
                             Text("Alterna entre el ejemplo y tu voz. Prueba despacio y luego a tu ritmo.").font(.subheadline)
                             if practice.activity == .checking { ProgressView("Reconociendo en el dispositivo…") }
                             else {
-                                Button("¿Qué entendió el dispositivo?", systemImage: "text.bubble") {
+                                Button(uiKey("¿Qué entendió el dispositivo?"), systemImage: "text.bubble") {
                                     Task { await practice.checkWords() }
                                 }.disabled(busy).accessibilityIdentifier("pronunciationCheck")
                             }
                             if let heard = practice.heard {
                                 Text(heard).font(.title3).accessibilityIdentifier("pronunciationHeard")
-                                Text(PracticeRecognition.matches(heard, target: target)
+                                Text(uiKey(PracticeRecognition.matches(heard, target: target)
                                      ? "El dispositivo reconoció el texto esperado. Escucha ambos audios para seguir practicando."
-                                     : "El dispositivo entendió algo distinto. Puede influir el ruido o el reconocimiento; escucha ambos audios y prueba otra vez.")
+                                     : "El dispositivo entendió algo distinto. Puede influir el ruido o el reconocimiento; escucha ambos audios y prueba otra vez."))
                             }
                             Text("Esto comprueba palabras reconocidas, no evalúa sonidos ni califica tu pronunciación.")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
-                    if let message = practice.message { Text(message).foregroundStyle(.secondary).accessibilityIdentifier("pronunciationNotice") }
                     Text("Tu práctica queda en este dispositivo y se borra al salir, cambiar de palabra o volver a grabar.")
                         .font(.caption).foregroundStyle(.secondary)
                 }.padding()
+            }
+            .onChange(of: practice.message) { _, message in
+                if message != nil { withAnimation { proxy.scrollTo("practiceNotice", anchor: .top) } }
+            }
             }
             .navigationTitle("Pronunciación").navigationBarTitleDisplayMode(.inline)
             .toolbar { Button("Listo") { practice.close(); dismiss() } }

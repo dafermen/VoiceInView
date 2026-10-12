@@ -38,11 +38,11 @@ struct TranscriptEditorView: View {
                     .buttonStyle(.borderless).frame(minHeight: 44)
                     Button("Find and replace", systemImage: "magnifyingglass") { showingFind = true }
                         .accessibilityIdentifier("findReplaceButton")
-                    Button(translation ? "Restore translation" : "Restore original", systemImage: "clock.arrow.circlepath") { confirmingRestore = true }
+                    Button(uiKey(translation ? "Restore translation" : "Restore original"), systemImage: "clock.arrow.circlepath") { confirmingRestore = true }
                         .accessibilityIdentifier("restoreOriginalDraft")
                         .disabled(history.value == originals)
                 } footer: {
-                    Text(translation ? "Edit the translation here. The source transcript stays unchanged. Restore translation returns to the machine translation." : "Tap a paragraph to correct it. Changes stay in this draft until you save. The original recognition is always kept.")
+                    Text(uiKey(translation ? "Edit the translation here. The source transcript stays unchanged. Restore translation returns to the machine translation." : "Tap a paragraph to correct it. Changes stay in this draft until you save. The original recognition is always kept."))
                 }
                 Section("Transcript") {
                     ForEach(Array(history.value.enumerated()), id: \.element.id) { index, paragraph in
@@ -53,7 +53,7 @@ struct TranscriptEditorView: View {
                                     Spacer()
                                     Image(systemName: "pencil").font(.caption)
                                 }
-                                Text(paragraph.text.isEmpty ? "Empty paragraph" : paragraph.text)
+                                (paragraph.text.isEmpty ? Text("Empty paragraph") : Text(verbatim: paragraph.text))
                                     .foregroundStyle(.primary).frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .padding(.vertical, 4)
@@ -63,7 +63,7 @@ struct TranscriptEditorView: View {
                     }
                 }
             }
-            .navigationTitle(translation ? "Edit translation" : "Edit transcript").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(uiKey(translation ? "Edit translation" : "Edit transcript")).navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { if dirty { confirmingDiscard = true } else { dismiss() } }
@@ -88,17 +88,17 @@ struct TranscriptEditorView: View {
             .sheet(isPresented: $showingFind) {
                 FindReplaceView(paragraphs: Binding(get: { history.value }, set: { history.set($0) }))
             }
-            .confirmationDialog("Discard unsaved corrections?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
+            .confirmationDialog(uiKey("Discard unsaved corrections?"), isPresented: $confirmingDiscard, titleVisibility: .visible) {
                 Button("Discard changes", role: .destructive) { dismiss() }
                 Button("Keep editing", role: .cancel) {}
             }
-            .confirmationDialog(translation ? "Restore the machine translation in this draft?" : "Restore the original recognition in this draft?", isPresented: $confirmingRestore, titleVisibility: .visible) {
+            .confirmationDialog(uiKey(translation ? "Restore the machine translation in this draft?" : "Restore the original recognition in this draft?"), isPresented: $confirmingRestore, titleVisibility: .visible) {
                 Button("Restore original", role: .destructive) { history.set(originals) }
                 Button("Cancel", role: .cancel) {}
             }
             .alert("Could not save corrections", isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) {
                 Button("OK") { failure = nil }
-            } message: { Text(failure ?? "") }
+            } message: { Text(LocalizedStringKey(failure ?? "")) }
         }
         .interactiveDismissDisabled(dirty)
     }
@@ -143,7 +143,7 @@ private struct ParagraphEditorView: View {
                     Button("Apply") { apply(history.value); dismiss() }
                 }
             }
-            .confirmationDialog("Discard this paragraph's changes?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
+            .confirmationDialog(uiKey("Discard this paragraph's changes?"), isPresented: $confirmingDiscard, titleVisibility: .visible) {
                 Button("Discard changes", role: .destructive) { dismiss() }
                 Button("Keep editing", role: .cancel) {}
             }
@@ -184,7 +184,7 @@ private struct FindReplaceView: View {
                             HStack(alignment: .firstTextBaseline, spacing: 8) {
                                 Text(match.matched).strikethrough().foregroundStyle(.secondary)
                                 Image(systemName: "arrow.right").accessibilityHidden(true)
-                                Text(search.replacement.isEmpty ? "(delete)" : search.replacement).bold()
+                                (search.replacement.isEmpty ? Text("(delete)") : Text(verbatim: search.replacement)).bold()
                             }
                             .font(.subheadline)
                             Text(String(match.before.suffix(80)) + search.replacement + String(match.after.prefix(80)))
@@ -209,7 +209,7 @@ private struct FindReplaceView: View {
                     Button("Replace all") { confirmingAll = true }.disabled(matches.isEmpty)
                 }
             }
-            .confirmationDialog("Replace all \(matches.count) matches?", isPresented: $confirmingAll, titleVisibility: .visible) {
+            .confirmationDialog(uiKey("Replace all \(matches.count) matches?"), isPresented: $confirmingAll, titleVisibility: .visible) {
                 Button("Replace \(matches.count) matches") { paragraphs = search.replacingAll(in: paragraphs) }
                 Button("Cancel", role: .cancel) {}
             } message: { Text("You can undo this change in the transcript editor.") }

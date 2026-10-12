@@ -1,6 +1,6 @@
 import Foundation
 
-/// Testable boundary for microphone capture. Saving audio is explicitly opt-in.
+/// Testable boundary for microphone capture. Audio capture always requires an explicit start; saving follows the session preference.
 @MainActor
 protocol AudioCapturing: AnyObject {
     var onLevel: (@MainActor @Sendable (Float) -> Void)? { get set }

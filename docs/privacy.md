@@ -3,7 +3,7 @@ Source data-flow description updated for optional recording and subtitles; statu
 
 | Data or action | Behavior | Location / recipient |
 | --- | --- | --- |
-| Microphone audio | User-started listening, optional background continuation, bounded queues; optional Save audio selected before a session | Memory by default; opt-in local protected CAF recording, M4A export |
+| Microphone audio | User-started listening, optional background continuation, bounded queues; optional Save audio selected before a session | Memory plus local protected CAF when Save audio is enabled (initially on in new installations); M4A export |
 | Speech analysis | SFSpeechRecognizer en-US or es-ES with on-device support checked and required; modern SpeechAnalyzer where available; no remote fallback | Device; installed Apple models |
 | Model setup | System Dictation setup for the selected language for compatibility engine; explicit Install Selected Language Model only for modern engine | Apple's system asset service |
 | Final captions | Incremental recovery draft always; explicit Save publishes to library, Discard deletes | Local SwiftData store |
@@ -19,7 +19,7 @@ No account, analytics, advertising, tracking, OpenAI key, server endpoint or cus
 On-device support is checked before each compatibility request. Modern model reserve does not install assets at Start. Device support is rechecked before each run.
 Microphone and Speech Recognition purpose strings are declared. The compatibility engine requests speech authorization through an explicit user action and sets requiresOnDeviceRecognition=true only after verifying supportsOnDeviceRecognition. The modern SpeechAnalyzer engine does not request legacy speech authorization.
 
-Audio/background choices initially default off but persist after the user changes them. The microphone still starts only on explicit Start/Resume. Recording choice is fixed for the active session; background continuation can change while listening.
+Audio saving initially defaults on for a new installation; background stays off. Existing installations retain their audio choice, including the previous default-off behavior. Both choices persist. The microphone still starts only on explicit Start/Resume. Recording choice is fixed for the active session; background continuation can change while listening.
 
 ## Persistence and deletion
 SwiftData uses an explicit application-support store with CloudKit disabled. The transcript and recording directory is excluded from backup and created with complete-until-first-user-authentication protection.
@@ -64,3 +64,8 @@ Build 18 stores study expressions and optional Spanish notes in the same local, 
 ## Práctica local de pronunciación — 2026-10-11
 
 Build 19 permite grabaciones temporales explícitas de hasta 15 segundos. Se protegen, excluyen de backup y eliminan al repetir/cambiar/salir/background; tras cierre inesperado, al próximo inicio. Reconocimiento opcional exclusivamente local, sin Azure ni puntuaciones. Los controles globales de sesiones no afectan esta práctica. Véase [alcance y futura evaluación en línea](pronunciation.md).
+
+
+## Actualización build 21
+
+Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).

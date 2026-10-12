@@ -151,3 +151,8 @@ Escucha/repite fragmentos a 0.75× o 1×, revela el español y conserva expresio
 ## Pronunciación local (build 19)
 
 `PronunciationPracticeView.swift` contiene PracticeRecognition (texto y peticiones locales), PracticeFiles (temporales protegidos), PronunciationPractice (estado y audio) y la vista de tres pasos. Consulta [el recorrido explicado](pronunciation.md). VoiceInViewApp limpia intentos abandonados al iniciar; EnglishLearningView detiene su reproducción antes de abrir la práctica.
+
+
+## Actualización build 21
+
+Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).

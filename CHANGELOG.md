@@ -1,5 +1,14 @@
 ## 2026-10-11 — Local pronunciation practice (source build 19)
 
+## 0.1.0 — source build 21 (2026-10-11)
+
+- Menús, instrucciones y avisos en inglés/español, separados del idioma de captura.
+- Preparación inicial destacada con acciones de permiso/modelo y avisos de voces de práctica más visibles.
+- Audio guardado inicialmente en nuevas instalaciones, respetando preferencias de actualizaciones.
+- Guías dibujadas por el layout real de cada párrafo para mantener alineación al reanudar y girar.
+- Documentación de uso y explicación para estudiantes: docs/interface-and-onboarding.md.
+
+
 ## 0.1.0 — source build 20 (2026-10-11)
 
 - English (default) or Spanish capture, with language preserved per session, bidirectional translation and language-aware practice.

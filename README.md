@@ -4,9 +4,18 @@
 
 Native iPhone and iPad app for following spoken English or Spanish, reviewing conversations and practicing a language. Designed as a reading and learning aid in meetings, conferences, classes and everyday conversations, including support for people with hearing loss or low vision and supervised language practice for children. On-device recognition requires a compatible device and prepared language model.
 
+## Interface language and clearer preparation — source build 21
+
+- Separate **App interface → Menus and buttons** (English/Español) from **Voice capture and captions → Spoken language**. Changing menus preserves session content and the language being recognized.
+- Prominent microphone/model preparation notices and highlighted practice voice notices, with direct actions.
+- Audio saving initially enabled for new installations; previous choices are preserved and listening always starts explicitly.
+- Notebook rules follow the actual paragraph layout through pause/resume, font changes and rotation.
+
+See [the bilingual settings guide](docs/interface-and-onboarding.md), [delivery checkpoint](docs/interface-checkpoint.md) and [validation evidence](docs/validation-report.md).
+
 ## Inclusive reading and two languages — source build 20
 
-- **Settings → Idioma de grabación y subtítulos:** English remains the default; Español captions Spanish speech. Each session keeps its language through pause/resume. Saved and live translation use the opposite language.
+- **Settings → Voice capture and captions → Spoken language:** English remains the default; Español captions Spanish speech. Each session keeps its language through pause/resume. Saved and live translation use the opposite language.
 - **Practicar idioma** replaces Aprender inglés and follows the saved session’s language, including spoken examples and optional local recognition.
 - **iPad:** universal app layout, portrait/landscape and resizable reading area; the existing bundle identifier and saved data are preserved.
 - **Pause:** a persistent microphone-off banner and a large **Resume / Reanudar** button remain visible in fullscreen. Capture only resumes when requested.
@@ -16,7 +25,7 @@ Read the [inclusive-use and language guide](docs/inclusive-use.md) and [build 20
 
 ## Pronunciation practice (source build 19)
 
-Inside **Practicar idioma → Practicar pronunciación**, listen to an example in the session’s language, record a short temporary take and compare your voice. Choose a word or short phrase and slow the example down. Optional on-device recognition shows what the device understood; it does **not** grade pronunciation. No cloud service or account is required. See the [practice guide](docs/pronunciation.md) and [delivery checkpoint](docs/pronunciation-checkpoint.md).
+Inside **Language practice → Pronunciation practice** (Spanish: **Practicar idioma → Practicar pronunciación**), listen to an example in the session’s language, record a short temporary take and compare your voice. Choose a word or short phrase and slow the example down. Optional on-device recognition shows what the device understood; it does **not** grade pronunciation. No cloud service or account is required. See the [practice guide](docs/pronunciation.md) and [delivery checkpoint](docs/pronunciation-checkpoint.md).
 
 ## Documentation / documentación
 

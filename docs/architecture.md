@@ -35,7 +35,7 @@ Future schema changes require an explicit migration plan.
 
 ## Privacy and distribution
 System language/model preparation can use system download services. The compatibility engine cannot explicitly download models; its readiness screen directs users to English Dictation settings. Speech authorization is requested explicitly for that engine. The modern engine retains explicit AssetInventory installation. Explicit file export/Copy/Share can send text to user-selected destinations.
-Optional local audio storage follows a remembered explicit opt-in, snapshotted at Start. No developer network client, tracking, ads, analytics, account or embedded secret.
+Local audio storage follows the remembered Save audio preference, snapshotted at Start. It initially defaults on for new installations; existing preferences are preserved. Microphone capture still requires an explicit start. No developer network client, tracking, ads, analytics, account or embedded secret.
 Manifest includes app-owned preferences and disk-space reasons. Source review is not a binary privacy/security audit.
 Phase 9 prepared metadata/icon/scripts/checklist. Local unit/UI/build checks and basic TestFlight use have since been recorded. On 2026-10-10, a Cloud archive was exported/uploaded from the Mac; see [distribution runbook](distribution-runbook.md). Detailed device/privacy/reliability validation and public-release inputs remain pending.
 Phase 10 is not implemented.

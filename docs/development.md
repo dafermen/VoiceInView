@@ -44,7 +44,7 @@ The script rejects placeholder identifiers, archives for a physical iOS destinat
 This script compiles with the selected local SDK; an archive compiled with Xcode 15.2 does not satisfy the currently documented upload SDK requirement. For the tested workaround, export the already-modern Cloud archive using the [distribution runbook](distribution-runbook.md), rather than recompiling it with the old SDK. Public release still requires the open release-checklist.md gates.
 
 ## Store/version rules
-Source version 0.1.0/build 19. Pronunciation practice uses isolated temporary recordings; see [local practice](pronunciation.md). Local schema version 7 with additive V1→V2→V3→V4→V5→V6→V7 migrations, no CloudKit. V5 adds SessionDraft markers; existing sessions remain saved. V6 adds independent SessionTranslation snapshots. V7 adds LearningExpression study copies; see [English learning](learning.md). Apple translation generation requires iOS 18+ and a Translation-capable SDK; Xcode 15.2 compiles the compatible data/UI path. UIBackgroundModes includes audio; recording/background preferences are remembered explicit opt-ins. See [session workflow](session-workflow.md).
+Source version 0.1.0/build 21. Pronunciation practice uses isolated temporary recordings; see [local practice](pronunciation.md). Local schema version 7 with additive V1→V2→V3→V4→V5→V6→V7 migrations, no CloudKit. V5 adds SessionDraft markers; existing sessions remain saved. V6 adds independent SessionTranslation snapshots. V7 adds LearningExpression study copies; see [English learning](learning.md). Apple translation generation requires iOS 18+ and a Translation-capable SDK; Xcode 15.2 compiles the compatible data/UI path. UIBackgroundModes includes audio; audio saving is initially on in new installations; background requires opt-in. Both preferences are remembered and existing choices are preserved. See [session workflow](session-workflow.md).
 Never delete/recreate a failed store automatically. Add a migration plan for future deployed schema changes.
 Use small conventional local commits. The origin remote is https://github.com/dafermen/VoiceInView.git.
 
@@ -60,3 +60,8 @@ Apple requires Xcode 26 or later and the iOS 26 SDK or later for current uploads
 No Capacitor, npm, CocoaPods, or custom post-clone script is needed for this native project. The MetodoMogollon post-clone script should not be copied here. The first cloud build must also validate the modern speech code, which cannot be compiled by local Xcode 15.2. Cloud onboarding and basic TestFlight operation have since succeeded. Cloud compilation also validated that the modern source compiles; it did not run modern speech/audio tests. The later local upload succeeded on 2026-10-10. Detailed real-device speech/media tests remain pending.
 
 References: [Apple's initial setup](https://developer.apple.com/documentation/xcode/configuring-your-first-xcode-cloud-workflow), [distribution workflow](https://developer.apple.com/documentation/xcode/creating-a-workflow-that-builds-your-app-for-distribution), [SDK requirements](https://developer.apple.com/news/upcoming-requirements/?id=04282026a).
+
+
+## Actualización build 21
+
+Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).

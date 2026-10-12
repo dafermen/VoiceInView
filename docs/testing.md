@@ -101,3 +101,11 @@ For each run record date, source commit, device/OS/SDK, scenario, result, latenc
 ## Build 16 translation acceptance
 
 Verify V5→V6 migration, persisted Spanish edits, unchanged English, incomplete-result rejection, stale-source detection and cascade cleanup. Verify both-language subtitle timestamps, escaping and text conservation. UI fixtures cover saved translation selection/edit/play/share and stale translation blocking; they are not Apple translation tests. On an iOS 18+ iPhone test real English→Spanish, first download, download refusal, cancellation mid-session, retry, offline after download, long paragraphs, Spanish corrections, source correction/retranslation and upgrade without losing sessions.
+
+
+## Actualización build 21
+
+Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).
+
+
+Para los catálogos de interfaz: `python3 scripts/validate-localization.py`. Tras compilar con `SWIFT_EMIT_LOC_STRINGS=YES`, añadir `--extracted <carpeta Objects-normal/arquitectura>` contrasta las claves que Swift detectó. Esto complementa las pruebas UI: no detecta por sí solo textos String que se presenten sin LocalizedStringKey.

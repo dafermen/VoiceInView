@@ -132,7 +132,7 @@ struct SessionMediaView: View {
             VStack(spacing: 12) {
                 if audioURL != nil {
                     if captions {
-                        Text(currentCue?.text ?? (player.playing ? "…" : "Play to read synchronized captions"))
+                        (currentCue.map { Text(verbatim: $0.text) } ?? Text(uiKey(player.playing ? "…" : "Play to read synchronized captions")))
                             .font(.title2.weight(.medium)).multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity, maxHeight: fullScreen ? .infinity : 160)
                             .padding().background(.black, in: RoundedRectangle(cornerRadius: 16))
@@ -149,11 +149,11 @@ struct SessionMediaView: View {
                     }.font(.caption).foregroundStyle(.secondary)
                     HStack(spacing: 28) {
                         Button("Back 10 seconds", systemImage: "gobackward.10") { player.seek(player.time - 10) }
-                        Button(player.playing ? "Pause" : "Play", systemImage: player.playing ? "pause.fill" : "play.fill") { player.toggle() }
+                        Button(uiKey(player.playing ? "Pause" : "Play"), systemImage: player.playing ? "pause.fill" : "play.fill") { player.toggle() }
                             .accessibilityIdentifier("recordingPlayButton")
                         Button("Forward 10 seconds", systemImage: "goforward.10") { player.seek(player.time + 10) }
                         Button("Subtitles", systemImage: captions ? "captions.bubble.fill" : "captions.bubble") { captions.toggle() }
-                            .accessibilityValue(captions ? "On" : "Off")
+                            .accessibilityValue(uiKey(captions ? "On" : "Off"))
                     }.labelStyle(.iconOnly).font(.title2).buttonStyle(PlaybackButtonStyle())
                         .frame(minHeight: 44)
                 }
@@ -167,13 +167,13 @@ struct SessionMediaView: View {
                         }
                         }
                         if let translationLanguage {
-                            Text("Captions: \(translationLanguage). Audio remains in \(CaptureLanguage(rawValue: session.language)?.name ?? "English"). Edit translated text from Translation. Timing within each paragraph is approximate.").font(.caption)
+                            Text(uiKey("Captions: \(translationLanguage). Audio remains in \(CaptureLanguage(rawValue: session.language)?.name ?? "English"). Edit translated text from Translation. Timing within each paragraph is approximate.")).font(.caption)
                         }
                         if audioURL != nil && !cues.isEmpty {
                             Section {
-                                Button(showingPhrases ? "Hide phrases" : "Listen by phrase",
+                                Button(uiKey(showingPhrases ? "Hide phrases" : "Listen by phrase"),
                                        systemImage: showingPhrases ? "chevron.up" : "chevron.down") { showingPhrases.toggle() }
-                                    .accessibilityValue(showingPhrases ? "Expanded" : "Collapsed")
+                                    .accessibilityValue(uiKey(showingPhrases ? "Expanded" : "Collapsed"))
                                     .accessibilityIdentifier("phraseListButton")
                                 if showingPhrases {
                                 ForEach(cues) { cue in
@@ -217,7 +217,7 @@ struct SessionMediaView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
                 ToolbarItem(placement: .primaryAction) {
                     if audioURL != nil {
-                        Button(fullScreen ? "Exit full screen" : "Full screen", systemImage: fullScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right") {
+                        Button(uiKey(fullScreen ? "Exit full screen" : "Full screen"), systemImage: fullScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right") {
                             captions = true; fullScreen.toggle()
                         }
                     }
@@ -235,7 +235,7 @@ struct SessionMediaView: View {
             .task { reviewed = paragraphs; load() }
             .onDisappear { player.stop(); exportTask?.cancel(); cleanup() }
             .onChange(of: phase) { _, phase in if phase != .active { player.pause() } }
-            .confirmationDialog("Delete the recording permanently? Your text and subtitles will stay.", isPresented: $deleting, titleVisibility: .visible) {
+            .confirmationDialog(uiKey("Delete the recording permanently? Your text and subtitles will stay."), isPresented: $deleting, titleVisibility: .visible) {
                 Button("Delete audio", role: .destructive) {
                     player.stop()
                     do { try repository.deleteAudio(for: session.id); audioURL = nil; try rebuildCues() }
@@ -245,7 +245,7 @@ struct SessionMediaView: View {
             .sheet(item: $export, onDismiss: { cleanup() }) { item in MediaActivityView(urls: item.urls) }
             .alert("Audio & subtitles", isPresented: Binding(get: { failure != nil || player.failure != nil }, set: { if !$0 { failure = nil; player.failure = nil } })) {
                 Button("OK") { failure = nil; player.failure = nil }
-            } message: { Text(failure ?? player.failure ?? "") }
+            } message: { Text(LocalizedStringKey(failure ?? player.failure ?? "")) }
         }
     }
 
