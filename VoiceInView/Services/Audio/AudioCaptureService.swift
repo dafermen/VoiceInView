@@ -13,6 +13,14 @@ final class AudioCaptureService: SpeechAudioCapturing {
     var recorder: SessionAudioRecorder?
     private let session = AVAudioSession.sharedInstance()
     private var engine: AVAudioEngine?
+    private(set) var noiseReductionEnabled = false
+
+    /// Configure only between runs. The view model keeps this choice fixed across pause/resume.
+    func configureNoiseReduction(_ enabled: Bool) throws {
+        guard engine == nil else { throw CaptureFailure.configurationChanged }
+        noiseReductionEnabled = enabled
+    }
+
     private var continuation: AsyncStream<Float>.Continuation?
     private var tapInstalled = false
     private var sessionActive = false
@@ -38,7 +46,7 @@ final class AudioCaptureService: SpeechAudioCapturing {
         let identifier = UUID()
         generation = identifier
         do {
-            try session.setCategory(.playAndRecord, mode: .measurement, options: [.mixWithOthers, .defaultToSpeaker])
+            try session.setCategory(.playAndRecord, mode: noiseReductionEnabled ? .voiceChat : .measurement, options: [.mixWithOthers, .defaultToSpeaker])
             try session.setActive(true)
             sessionActive = true
         } catch {
@@ -55,6 +63,21 @@ final class AudioCaptureService: SpeechAudioCapturing {
             let newEngine = AVAudioEngine()
             engine = newEngine
             let input = newEngine.inputNode
+            if noiseReductionEnabled {
+                // Voice processing changes I/O formats. Enable on a stopped engine BEFORE
+                // reading the format or installing the tap. Both recorder and Speech receive
+                // this processed stream; no second raw copy is written.
+                do {
+                    try input.setVoiceProcessingEnabled(true)
+                    guard input.isVoiceProcessingEnabled else { throw CaptureFailure.noiseReductionUnavailable }
+                    input.isVoiceProcessingBypassed = false
+                    // Avoid automatically amplifying quiet room noise. Apple's suppression
+                    // strength itself is not an adjustable "low/medium/high" control.
+                    input.isVoiceProcessingAGCEnabled = false
+                    input.voiceProcessingOtherAudioDuckingConfiguration = .init(
+                        enableAdvancedDucking: false, duckingLevel: .min)
+                } catch { throw CaptureFailure.noiseReductionUnavailable }
+            }
             let format = input.outputFormat(forBus: 0)
             guard format.sampleRate > 0, format.channelCount > 0,
                   format.commonFormat == .pcmFormatFloat32 else {

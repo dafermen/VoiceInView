@@ -128,6 +128,21 @@ final class AppSettingsTests: XCTestCase {
         }
     }
 
+    func testNoiseReductionIsOptInAndPersistsIndependently() {
+        let name = UUID().uuidString
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removePersistentDomain(forName: name) }
+        let settings = AppSettings(defaults: defaults)
+        XCTAssertFalse(settings.reduceBackgroundNoise)
+        settings.reduceBackgroundNoise = true
+        let restored = AppSettings(defaults: defaults)
+        XCTAssertTrue(restored.reduceBackgroundNoise)
+        XCTAssertTrue(restored.saveAudio)
+        XCTAssertEqual(restored.captureLanguage, .english)
+        restored.reduceBackgroundNoise = false
+        XCTAssertFalse(AppSettings(defaults: defaults).reduceBackgroundNoise)
+    }
+
     func testUnknownOrLowCapacityIsNotReportedReady() {
         XCTAssertFalse(StorageReadiness(availableBytes: nil).ready)
         XCTAssertFalse(StorageReadiness(availableBytes: 1).ready)

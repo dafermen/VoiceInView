@@ -1,5 +1,9 @@
 # VoiceInView
 
+## Optional noise reduction — source build 22
+
+Enable **Settings → Capture preferences → Reduce background noise**, or use the filter icon before starting a session. The choice is remembered and stays fixed through pause/resume; changes during a session apply to the next one. Initially off, because distant speakers and loudspeaker audio may be attenuated. Processing happens on-device before recording and recognition. Saved recordings are unchanged; new recordings/exports contain the processed audio when enabled. See the [noise reduction guide](docs/noise-reduction.md) and [validation report](docs/validation-report.md).
+
 **See what's being said.** Captions, translation and language practice.
 
 Native iPhone and iPad app for following spoken English or Spanish, reviewing conversations and practicing a language. Designed as a reading and learning aid in meetings, conferences, classes and everyday conversations, including support for people with hearing loss or low vision and supervised language practice for children. On-device recognition requires a compatible device and prepared language model.

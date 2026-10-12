@@ -331,6 +331,51 @@ final class HomeScreenTests: XCTestCase {
     }
 
     @MainActor
+    func testNoisePreferenceIsAccessibleAndFixedWhilePaused() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-reader", "--ui-test-session-flow"]
+        app.launch()
+        let quick = app.buttons["quickNoisePreference"]
+        XCTAssertTrue(quick.waitForExistence(timeout: 20))
+        XCTAssertTrue(quick.isHittable)
+        XCTAssertEqual(quick.value as? String, "Off")
+        quick.tap()
+        XCTAssertEqual(quick.value as? String, "On")
+        XCTAssertEqual(app.buttons["primaryCaptionAction"].label, "Start Listening")
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = "Noise-quick-preference"; shot.lifetime = .keepAlways; add(shot)
+        app.buttons["primaryCaptionAction"].tap()
+        expectation(for: NSPredicate(format: "label == 'Pause'"), evaluatedWith: app.buttons["primaryCaptionAction"])
+        waitForExpectations(timeout: 10)
+        app.buttons["primaryCaptionAction"].tap()
+        XCTAssertTrue(app.buttons["resumeCaptureButton"].waitForExistence(timeout: 5))
+        app.buttons["capturePreferencesButton"].tap()
+        let toggle = app.switches["noiseReductionToggle"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        XCTAssertEqual(toggle.value as? String, "1")
+        toggle.switches.firstMatch.exists ? toggle.switches.firstMatch.tap() : toggle.tap()
+        XCTAssertEqual(toggle.value as? String, "0")
+        XCTAssertTrue(app.staticTexts["Audio saving and noise reduction changes apply to your next session. Background listening can change during this session."].exists)
+        let settingsShot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        settingsShot.name = "Noise-session-preferences"; settingsShot.lifetime = .keepAlways; add(settingsShot)
+        app.buttons["Done"].tap()
+        app.buttons["resumeCaptureButton"].tap()
+        expectation(for: NSPredicate(format: "label == 'Pause'"), evaluatedWith: app.buttons["primaryCaptionAction"])
+        waitForExpectations(timeout: 10)
+        app.buttons["primaryCaptionAction"].tap()
+        XCTAssertTrue(app.buttons["resumeCaptureButton"].waitForExistence(timeout: 5))
+        app.tabBars.buttons["Settings"].tap()
+        app.buttons["interfaceLanguagePicker"].tap()
+        app.buttons["Español"].tap()
+        app.tabBars.buttons["Subtítulos"].tap()
+        app.buttons["capturePreferencesButton"].tap()
+        XCTAssertTrue(app.switches["noiseReductionToggle"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.switches["noiseReductionToggle"].label.contains("Reducir ruido de fondo"))
+        let spanish = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        spanish.name = "Noise-preferences-Spanish"; spanish.lifetime = .keepAlways; add(spanish)
+    }
+
+    @MainActor
     func testGlobalCapturePreferencesPersistWithoutStartingMicrophone() throws {
         let app = XCUIApplication()
         app.launch()

@@ -479,3 +479,10 @@
 "You can undo this change in the transcript editor." = "You can undo this change in the transcript editor.";
 "Your saved data has not been deleted. Free storage and try again." = "Your saved data has not been deleted. Free storage and try again.";
 "¿Qué entendió el dispositivo?" = "What did the device understand?";
+
+/* Optional noise reduction for new capture. */
+"Reduce background noise" = "Reduce background noise";
+"Filters new microphone audio for recording and captions. May soften distant voices or sound from speakers. Existing recordings are unchanged." = "Filters new microphone audio for recording and captions. May soften distant voices or sound from speakers. Existing recordings are unchanged.";
+"Noise reduction in this session" = "Noise reduction in this session";
+"Audio saving and noise reduction changes apply to your next session. Background listening can change during this session." = "Audio saving and noise reduction changes apply to your next session. Background listening can change during this session.";
+"Noise reduction could not start. Turn it off in Capture preferences, then stop and create a new session if needed. Existing audio and text are kept." = "Noise reduction could not start. Turn it off in Capture preferences, then stop and create a new session if needed. Existing audio and text are kept.";

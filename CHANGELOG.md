@@ -1,5 +1,12 @@
 ## 2026-10-11 — Local pronunciation practice (source build 19)
 
+## Source build 22 — 2026-10-12
+
+- Optional on-device noise reduction for new microphone capture, shared by recording and recognition.
+- Remembered global preference and compact filter shortcut before listening; session choice retained across pause/resume.
+- English/Spanish labels, current-session status and explicit next-session messaging. Unsupported processing fails visibly instead of silently recording unfiltered audio.
+- Original recordings, subtitle sample clock, app identity and persistence schema remain unchanged.
+
 ## 0.1.0 — source build 21 (2026-10-11)
 
 - Menús, instrucciones y avisos en inglés/español, separados del idioma de captura.

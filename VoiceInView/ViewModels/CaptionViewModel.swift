@@ -29,6 +29,7 @@ final class CaptionViewModel {
     var canResume: Bool { startedAt != nil && (state == .paused || isProblem) && !preparationPending }
     private(set) var notice: String?
     // Snapshot of global choices for this capture; the coordinator restores defaults after reset.
+    var reduceBackgroundNoise = false
     var saveAudio = false
     var continueInBackground = false
     private(set) var recordingPrepared = false
@@ -151,6 +152,7 @@ final class CaptionViewModel {
         refreshMicrophonePermission()
         permissionDenied = false
         do {
+            try microphone.configureNoiseReduction(reduceBackgroundNoise)
             if startedAt == nil { try onWillStart?() }
             let updates = try await speech.start()
             guard generation == identifier, foreground else { await speech.cancel(); return }
@@ -264,6 +266,7 @@ final class CaptionViewModel {
         }
         recordingPrepared = false
         saveAudio = false
+        reduceBackgroundNoise = false
         continueInBackground = false
         transcript = TranscriptAssembler()
         startedAt = nil

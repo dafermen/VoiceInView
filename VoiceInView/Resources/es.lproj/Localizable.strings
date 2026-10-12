@@ -479,3 +479,10 @@
 "You can undo this change in the transcript editor." = "Puedes deshacer este cambio en el editor de transcripción.";
 "Your saved data has not been deleted. Free storage and try again." = "Tus datos guardados no se han eliminado. Libera espacio e inténtalo de nuevo.";
 "¿Qué entendió el dispositivo?" = "¿Qué entendió el dispositivo?";
+
+/* Optional noise reduction for new capture. */
+"Reduce background noise" = "Reducir ruido de fondo";
+"Filters new microphone audio for recording and captions. May soften distant voices or sound from speakers. Existing recordings are unchanged." = "Filtra el audio nuevo del micrófono para la grabación y los subtítulos. Puede atenuar voces lejanas o el sonido de altavoces. No modifica grabaciones anteriores.";
+"Noise reduction in this session" = "Reducción de ruido en esta sesión";
+"Audio saving and noise reduction changes apply to your next session. Background listening can change during this session." = "Los cambios de guardado de audio y reducción de ruido se aplicarán a tu próxima sesión. La escucha en segundo plano puede cambiar durante esta sesión.";
+"Noise reduction could not start. Turn it off in Capture preferences, then stop and create a new session if needed. Existing audio and text are kept." = "No se pudo iniciar la reducción de ruido. Desactívala en Preferencias de captura; si es necesario, detén la sesión y crea una nueva. Se conservan el audio y el texto existentes.";

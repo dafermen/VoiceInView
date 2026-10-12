@@ -67,6 +67,57 @@ final class CaptionViewModelTests: XCTestCase {
         XCTAssertTrue(coordinator.currentSession?.fullTranscript.contains("Before interruption.") == true)
     }
 
+    func testNoiseReductionSnapshotSurvivesPauseAndChangesOnlyForNewSession() async throws {
+        let name = UUID().uuidString
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removePersistentDomain(forName: name) }
+        let settings = AppSettings(defaults: defaults)
+        settings.saveAudio = false
+        settings.reduceBackgroundNoise = true
+        let microphone = CaptionMicrophone()
+        let speech = MockSpeech()
+        let model = CaptionViewModel(microphone: microphone, speech: speech)
+        let coordinator = SessionCoordinator(repository: try TranscriptRepository(inMemory: true), caption: model, settings: settings)
+        XCTAssertEqual(speech.starts, 0, "Changing preferences never starts capture")
+        await model.start()
+        XCTAssertEqual(model.state, .listening)
+        XCTAssertEqual(microphone.noiseChoices, [true])
+        await model.pause()
+        settings.reduceBackgroundNoise = false
+        await model.start()
+        XCTAssertEqual(model.state, .listening)
+        XCTAssertTrue(model.reduceBackgroundNoise)
+        XCTAssertEqual(microphone.noiseChoices, [true, true])
+        await model.stop()
+        XCTAssertTrue(coordinator.saveCurrent(ended: true))
+        await coordinator.newSession()
+        XCTAssertFalse(model.reduceBackgroundNoise)
+        await model.start()
+        XCTAssertEqual(microphone.noiseChoices, [true, true, false])
+        await model.stop()
+    }
+
+    func testNoiseConfigurationFailureDoesNotSilentlyStartUnfilteredSpeech() async {
+        let microphone = CaptionMicrophone()
+        microphone.rejectNoise = true
+        let speech = MockSpeech()
+        let model = CaptionViewModel(microphone: microphone, speech: speech)
+        model.reduceBackgroundNoise = true
+        var prepared = false
+        model.onWillStart = { prepared = true }
+        await model.start()
+        XCTAssertEqual(model.state, .problem(CaptureFailure.noiseReductionUnavailable.message))
+        XCTAssertEqual(speech.starts, 0)
+        XCTAssertFalse(prepared)
+        XCTAssertNil(model.startedAt)
+        XCTAssertTrue(model.canChooseCaptureOptions)
+        model.reduceBackgroundNoise = false
+        await model.start()
+        XCTAssertEqual(model.state, .listening)
+        XCTAssertEqual(speech.starts, 1)
+        await model.stop()
+    }
+
     func testDraftRequiresExplicitSaveAndPreferencesSurviveNewSession() async throws {
         let name = "FlowTests." + UUID().uuidString
         let defaults = UserDefaults(suiteName: name)!
@@ -205,6 +256,12 @@ final class CaptionViewModelTests: XCTestCase {
 
 @MainActor
 private final class CaptionMicrophone: AudioCapturing {
+    var noiseChoices: [Bool] = []
+    var rejectNoise = false
+    func configureNoiseReduction(_ enabled: Bool) throws {
+        if enabled && rejectNoise { throw CaptureFailure.noiseReductionUnavailable }
+        noiseChoices.append(enabled)
+    }
     var onLevel: (@MainActor @Sendable (Float) -> Void)?
     var permission: MicrophonePermission = .granted
     var onFailure: (@MainActor @Sendable (CaptureFailure) -> Void)?

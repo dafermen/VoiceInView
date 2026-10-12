@@ -1,5 +1,11 @@
 # Incidentes de desarrollo y distribución
 
+## 2026-10-12 — build 22: conexión de XCTest al simulador
+
+El primer intento compiló, pero el daemon de XCTest agotó 120 segundos al iniciar la sesión de control antes de ejecutar pruebas. Se canceló únicamente ese xcodebuild; no se registra como suite aprobada. Al intentar apagar el simulador ya estaba Shutdown por la limpieza de XCTest. Se volvió a arrancar y `simctl bootstatus -b` confirmó Finished antes de repetir. No se borraron los datos del simulador ni del iPhone, ni se reinició powerd. Los resultados de la repetición se registran en [checkpoint de ruido](noise-checkpoint.md).
+
+Al introducir Voice Processing, habilitarlo antes de consultar el formato del input y antes del tap; mantener la elección al reanudar. El control de ganancia y el ducking no son niveles de reducción de ruido. Comprobar calidad y rutas en dispositivo; la prueba UI usa un doble sin DSP y no demuestra mejora acústica.
+
 ## Build 21 — resultado Cloud publicado con otro identificador
 
 El check inicial `114613990875` continuó mostrando in_progress. Al consultar de nuevo los check-runs del commit `59f4eae`, Apple devolvió `114617065401`, completado satisfactoriamente el 2026-10-12 a las 00:39:42 UTC. Archive duró aproximadamente 16 minutos, sin errores; conservó cuatro advertencias existentes (allowBluetooth, AVAudioPCMBuffer, AVAssetExportSession y AVFAudio). No diagnosticar un bloqueo basándose solo en el ID inicial ni repetir builds mientras todavía pueden estar ejecutándose. Consultar `gh api repos/dafermen/VoiceInView/commits/<SHA>/check-runs` y distinguir el resultado de Archive de procesamiento y disponibilidad en TestFlight.

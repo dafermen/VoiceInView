@@ -8,6 +8,7 @@ enum CaptureFailure: LocalizedError, Equatable, Sendable {
     case permissionDenied
     case permissionUnavailable
     case noInput
+    case noiseReductionUnavailable
     case invalidFormat
     case engineFailure
     case recordingFailure
@@ -28,6 +29,8 @@ enum CaptureFailure: LocalizedError, Equatable, Sendable {
             "Microphone permission is unavailable on this device."
         case .noInput:
             "No microphone input is available. Check your device and try again."
+        case .noiseReductionUnavailable:
+            "Noise reduction could not start. Turn it off in Capture preferences, then stop and create a new session if needed. Existing audio and text are kept."
         case .invalidFormat:
             "The microphone audio format is unavailable. Reconnect your audio device and try again."
         case .engineFailure:

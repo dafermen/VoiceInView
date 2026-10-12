@@ -1,5 +1,15 @@
 # Testing through Phase 9
 
+## Build 22: reducción de ruido
+
+- Persistencia opt-in independiente de audio/idioma; cambiar la opción no inicia captura.
+- Instantánea activa conservada al pausar/reanudar, preferencia nueva aplicada a la próxima sesión.
+- Error de configuración no inicia Speech sin filtro ni crea un borrador antes de esa validación.
+- Acceso rápido, valor actual frente a preferencia futura y localización en iPhone/iPad.
+- Comparación **física pendiente**: voz cercana/lejana, ruido continuo, otras voces, altavoz del mismo dispositivo, auriculares, alarma y reanudación. Escuchar/exportar audio, verificar volumen, reconocimiento y tiempos SRT. Los dobles UI no ejecutan DSP.
+
+[Guía y límites](noise-reduction.md); [evidencia de esta entrega](noise-checkpoint.md).
+
 ## Matriz adicional build 20
 
 - Inglés inicial y preferencias idioma/papel/renglones persistentes; valores desconocidos vuelven a defaults.

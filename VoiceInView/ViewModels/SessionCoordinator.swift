@@ -76,6 +76,7 @@ final class SessionCoordinator {
     private func applyCapturePreferences() {
         if caption.canChooseCaptureOptions {
             caption.saveAudio = settings.saveAudio
+            caption.reduceBackgroundNoise = settings.reduceBackgroundNoise
             caption.configureLanguage(settings.captureLanguage)
         }
         caption.continueInBackground = settings.continueInBackground

@@ -469,6 +469,18 @@ struct CaptionScreen: View {
             .accessibilityLabel("Save audio")
             .accessibilityValue(uiKey(settings.saveAudio ? "On" : "Off"))
             .accessibilityIdentifier("quickAudioPreference")
+            Button {
+                settings.reduceBackgroundNoise.toggle()
+                model.reduceBackgroundNoise = settings.reduceBackgroundNoise
+            } label: {
+                Image(systemName: settings.reduceBackgroundNoise
+                      ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                    .font(.title3).frame(minWidth: 44, minHeight: 44)
+            }
+            .accessibilityLabel("Reduce background noise")
+            .accessibilityValue(uiKey(settings.reduceBackgroundNoise ? "On" : "Off"))
+            .help("Reduce background noise")
+            .accessibilityIdentifier("quickNoisePreference")
             Spacer(minLength: 0)
             Button {
                 settings.continueInBackground.toggle()

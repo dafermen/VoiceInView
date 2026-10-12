@@ -1,5 +1,16 @@
 # Informe de validación
 
+## Build 22 — 2026-10-12
+
+- **95 pruebas unitarias aprobadas**, cero fallos: persistencia opt-in, configuración sin inicio automático, instantánea a través de pausa/reanudación/nueva sesión y error sin inicio silencioso. Suite completa compatible con Xcode 15.2; no incluye ramas que ese SDK desconoce.
+- **UI iPhone aprobada**: acceso rápido, opción futura frente a sesión actual, pausa/reanudación, inglés y español (33,287 s). `/private/tmp/VoiceInView22-verified.log` y `.xcresult`, TEST SUCCEEDED; capturas revisadas.
+- **UI iPad aprobada** con el mismo recorrido (51,624 s): `/private/tmp/VoiceInView22-ipad.log` y `.xcresult`, TEST EXECUTE SUCCEEDED; capturas revisadas.
+- **Release universal aprobado**, BUILD SUCCEEDED: `/private/tmp/VoiceInView22-release.log`, 0.1.0 (22), familia [1,2], bundle original, sin firma local. Advertencias de concurrencia onLevel/onDismiss existentes.
+- Paridad de 485 claves por idioma y dos razones de permiso, placeholders y plist válidos. No se ejecutó comparación de extracción del compilador porque este build no emitió .stringsdata; el validador lo señaló explícitamente. Las claves nuevas fueron contrastadas con el catálogo y la UI.
+- El primer intento unitario no inició las pruebas por timeout del daemon; ver [incidentes](build-incidents.md). No se cuenta como aprobación.
+
+Estado GitHub/Cloud en [checkpoint](noise-checkpoint.md). Los dobles de captura prueban estados y preferencias, no reducción acústica. Pendiente comparación física de ruido, volumen con AGC desactivado, ruta, voces lejanas, traducción/reconocimiento real, alarma/reanudación y sincronía de la exportación.
+
 ## Build 21 — 2026-10-11
 
 - **Unitarias finales:** 92 aprobadas, cero fallos, TEST SUCCEEDED (`build21-verified.log`, `VoiceInView-21-Verified.xcresult`). Incluyen conservación del audio previo, valor inicial nuevo, idiomas independientes, permisos sin inicio automático y reglas de TextKit contrastadas con límites de tinta de CoreText a tamaños 20/28/44/70, anchos 280/700/280 e interlineados 0/4/16.

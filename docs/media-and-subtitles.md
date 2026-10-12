@@ -1,5 +1,9 @@
 # Audio and subtitle workflow
 
+## Reducción opcional antes de grabar — build 22
+
+El [filtro de ruido](noise-reduction.md) procesa la señal compartida por grabación y Speech, en el dispositivo. Se elige antes de la sesión y permanece al reanudar. Los archivos nuevos conservan el resultado; no se guarda una segunda copia sin filtro. El reloj de muestras y los subtítulos mantienen su duración. Las grabaciones existentes no se limpian con este interruptor.
+
 Before Start, choose Audio and Background in Captions or use Capture preferences/Settings. On new installations, audio saving initially defaults on and background off. Existing choices, including the previous default-off audio behavior, are preserved. Both preferences are remembered across sessions and app relaunches. Recording follows the audio choice at Start; changes while listening apply to the next session. Background can be changed during capture. A recovery draft always stores final captions and any optional recording; Stop then Save publishes it, while confirmed Discard deletes it. A red Recording label appears while audio saving is active, including fullscreen. Stop before reviewing saved audio.
 
 Sessions > open session > Audio & subtitles provides playback, ±10-second seeking, position slider, captions on/off and fullscreen rotation. M4A can be shared alone or together with corrected TXT and SRT/VTT. Native sharing provides Save to Files. Existing TXT/PDF review/export remains available. Delete audio keeps transcript, edits, bookmarks and subtitle timing; Delete session also deletes its audio.

@@ -1,5 +1,8 @@
 # Documentación de VoiceInView
 
+- [Reducción de ruido: uso, límites y explicación para estudiantes](noise-reduction.md).
+- [Estado de entrega build 22](noise-checkpoint.md).
+
 ## Ampliación inclusiva e idiomas — build 20
 
 [Guía para usuarios, familias y docentes](inclusive-use.md): inglés/español, apoyo a audición/baja visión, iPad, Practicar idioma, aviso de pausa y papel con renglones. [Estado de validación y reanudación](accessibility-checkpoint.md). Los apartados por build que siguen conservan el historial.

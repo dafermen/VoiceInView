@@ -50,6 +50,8 @@ final class AppSettings {
     var keepAwake: Bool { didSet { defaults.set(keepAwake, forKey: "keepAwake") } }
     // Remember choices; audio defaults on only for a fresh installation, never auto-starts.
     var saveAudio: Bool { didSet { defaults.set(saveAudio, forKey: "saveAudio") } }
+    /// Opt-in: processing may suppress distant speakers and loudspeaker playback.
+    var reduceBackgroundNoise: Bool { didSet { defaults.set(reduceBackgroundNoise, forKey: "reduceBackgroundNoise") } }
     var continueInBackground: Bool { didSet { defaults.set(continueInBackground, forKey: "continueInBackground") } }
     var appearance: AppAppearance { didSet { defaults.set(appearance.rawValue, forKey: "appearance") } }
     var interfaceLanguage: InterfaceLanguage { didSet { defaults.set(interfaceLanguage.rawValue, forKey: "interfaceLanguage") } }
@@ -72,6 +74,7 @@ final class AppSettings {
         highContrast = defaults.bool(forKey: "highContrast")
         keepAwake = defaults.object(forKey: "keepAwake") as? Bool ?? true
         saveAudio = defaults.object(forKey: "saveAudio") as? Bool ?? true
+        reduceBackgroundNoise = defaults.bool(forKey: "reduceBackgroundNoise")
         continueInBackground = defaults.bool(forKey: "continueInBackground")
         appearance = AppAppearance(rawValue: defaults.string(forKey: "appearance") ?? "") ?? .system
     }

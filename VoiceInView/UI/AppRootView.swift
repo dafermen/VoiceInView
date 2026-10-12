@@ -162,6 +162,7 @@ private struct LiveCaptionView: View {
 /// Deterministic input for UI regression tests; never compiled into TestFlight builds.
 @MainActor
 private final class ReaderPreviewMicrophone: AudioCapturing {
+    func configureNoiseReduction(_ enabled: Bool) throws {}
     var permission: MicrophonePermission = ProcessInfo.processInfo.arguments.contains("--ui-test-preparation") ? .undetermined : .granted
     var onFailure: (@MainActor @Sendable (CaptureFailure) -> Void)?
     func requestPermission() async -> Bool { permission = .granted; return true }

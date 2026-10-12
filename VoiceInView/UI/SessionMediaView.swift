@@ -10,11 +10,20 @@ struct CaptureOptionsView: View {
         Section {
             Toggle("Save audio with transcript", isOn: audioBinding)
                 .accessibilityIdentifier("saveAudioToggle")
+            Toggle("Reduce background noise", isOn: noiseBinding)
+                .accessibilityIdentifier("noiseReductionToggle")
+            Text("Filters new microphone audio for recording and captions. May soften distant voices or sound from speakers. Existing recordings are unchanged.")
+                .font(.caption).foregroundStyle(.secondary)
+            if !model.canChooseCaptureOptions {
+                LabeledContent("Noise reduction in this session") {
+                    Text(uiKey(model.reduceBackgroundNoise ? "On" : "Off"))
+                }.accessibilityIdentifier("sessionNoiseReductionStatus")
+            }
             Toggle("Continue in background", isOn: backgroundBinding)
                 .accessibilityIdentifier("backgroundAudioToggle")
                 .disabled(model.state.busy || model.preparationPending)
             if !model.canChooseCaptureOptions {
-                Text("Audio changes apply to your next session. Background listening can change during this session.")
+                Text("Audio saving and noise reduction changes apply to your next session. Background listening can change during this session.")
                     .font(.caption)
             }
         } header: { Text("Capture preferences") } footer: {
@@ -26,6 +35,12 @@ struct CaptureOptionsView: View {
         Binding(get: { settings.saveAudio }, set: {
             settings.saveAudio = $0
             if model.canChooseCaptureOptions { model.saveAudio = $0 }
+        })
+    }
+    private var noiseBinding: Binding<Bool> {
+        Binding(get: { settings.reduceBackgroundNoise }, set: {
+            settings.reduceBackgroundNoise = $0
+            if model.canChooseCaptureOptions { model.reduceBackgroundNoise = $0 }
         })
     }
     private var backgroundBinding: Binding<Bool> {

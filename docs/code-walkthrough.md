@@ -1,5 +1,9 @@
 # Recorrido del código para estudiantes
 
+## Build 22: entrada de voz procesada
+
+`AppSettings.reduceBackgroundNoise` → `SessionCoordinator.applyCapturePreferences` → `CaptionViewModel.reduceBackgroundNoise` → `AudioCapturing.configureNoiseReduction` → `AudioCaptureService.start`. La configuración se realiza antes de crear el tap y leer el formato. `CaptureOptionsView` muestra preferencia futura y estado actual; `CaptionScreen.quickPreferences` ofrece el filtro antes de empezar. Consulta [ruido](noise-reduction.md) para el orden de llamadas, AGC, rutas y limitaciones.
+
 ## Mapa build 20: idioma, iPad y lectura accesible
 
 | Responsabilidad | Archivo / punto de entrada |

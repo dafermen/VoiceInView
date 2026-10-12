@@ -1,5 +1,9 @@
 # VoiceInView para estudiantes y desarrolladores junior
 
+## Build 22: filtrar antes de repartir el audio
+
+La reducción de ruido es una preferencia global que se copia al iniciar la sesión. El motor procesa la entrada antes del tap; ese tap entrega la misma señal al archivo y al reconocimiento. No basta con modificar el reproductor: hacerlo allí no cambiaría el audio exportado ni la entrada de Speech. Mantener la opción fija al reanudar evita mezclar tratamientos/formato en un archivo. Lee el [recorrido explicado de reducción de ruido](noise-reduction.md), sus límites y las pruebas con dobles frente a pruebas acústicas reales.
+
 ## Build 20: pensar en necesidades distintas
 
 Una preferencia global es una elección para las próximas sesiones; el idioma de una sesión es un dato histórico. `AppSettings.captureLanguage` guarda en UserDefaults en-US/es-ES. `SessionCoordinator` copia esa elección al preparar la captura y `CaptionViewModel` la bloquea desde el primer inicio. `TranscriptRepository.create` escribe la misma cadena en el campo `ConferenceSession.language`, que ya existía. Por eso reanudar no vuelve a leer un idioma diferente ni se necesita migración SwiftData.
