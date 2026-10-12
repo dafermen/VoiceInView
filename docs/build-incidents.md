@@ -1,5 +1,9 @@
 # Incidentes de desarrollo y distribución
 
+## Build 21 — resultado Cloud publicado con otro identificador
+
+El check inicial `114613990875` continuó mostrando in_progress. Al consultar de nuevo los check-runs del commit `59f4eae`, Apple devolvió `114617065401`, completado satisfactoriamente el 2026-10-12 a las 00:39:42 UTC. Archive duró aproximadamente 16 minutos, sin errores; conservó cuatro advertencias existentes (allowBluetooth, AVAudioPCMBuffer, AVAssetExportSession y AVFAudio). No diagnosticar un bloqueo basándose solo en el ID inicial ni repetir builds mientras todavía pueden estar ejecutándose. Consultar `gh api repos/dafermen/VoiceInView/commits/<SHA>/check-runs` y distinguir el resultado de Archive de procesamiento y disponibilidad en TestFlight.
+
 ## 2026-10-11 — Renglones y pruebas al activar audio inicialmente (build 21)
 
 La primera prueba geométrica mostró que `lineFragmentUsedRect` y `boundingRect(forGlyphRange:)` incluyen espacio de layout: dibujar después de su maxY invadía la línea siguiente. Se usa ahora la línea base real de TextKit y el descenso de UIFont, con separación mínima entre renglones. La prueba contrasta reglas con límites de tinta independientes de CoreText e incluye vueltas a vertical, fuentes grandes e interlineados. Pasó en la suite final; revisar también capturas y aceptación física.
@@ -9,6 +13,8 @@ Activar Save audio por defecto en instalaciones nuevas expuso dos pruebas con `C
 Los resultados fallidos recopilaron diagnósticos del simulador durante varios minutos después de terminar las aserciones. La ejecución acabó por sí misma; un intento de SIGINT llegó después y no detuvo ningún proceso. Las repeticiones utilizan `-collect-test-diagnostics never`, conservando logs y xcresult. No reiniciar powerd ni cambiar firma por esta espera. La ejecución final `VoiceInView-21-Verified.xcresult` cerró normalmente: 92 pruebas, cero fallos.
 
 La primera tanda UI encontró dos selectores incorrectos: SwiftUI propagó el identificador de la tarjeta al botón de permiso y las hojas superpuestas mostraron dos botones Done después de traducir Listo al inglés. Se comprobaron los botones por su etiqueta de acción y se limitó Done a la barra Pronunciation. El nuevo recorrido de preparación y el de práctica pasaron. La revisión visual detectó además un aviso de micrófono truncado en iPhone pequeño; se fijó su altura de texto y se añadió una aserción de ajuste de líneas. El recorrido final de preparación pasó después de ese cambio.
+
+En iPad, XCTest esperó varias veces 60 segundos la notificación de fin de animaciones al abrir selectores. Continuó y los tres recorridos terminaron aprobados. Conservar ese dato como latencia del recorrido automatizado, sin diagnosticar un bloqueo del dispositivo físico ni reiniciar servicios del Mac.
 
 Antes de UI se retiró exclusivamente el runner de pruebas del simulador iPhone para evitar el ejecutable antiguo documentado en build 20. No se eliminaron la app ni sesiones del teléfono físico.
 

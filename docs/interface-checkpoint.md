@@ -1,20 +1,35 @@
-# Punto de reanudación — build 21
+# Entrega — source build 21
 
-Base: a5e9937, main. Mejoras autorizadas: avisos iniciales/modelos más visibles, audio inicial activado sin sobrescribir preferencias anteriores, renglones alineados al texto y menús en inglés/español independientes de la captura.
+2026-10-11. Código publicado en `main`: `59f4eae9a8d233cac49dea4fe0cc5397553663f0`. Identidad `com.dafermen.vReader`, esquema V7 y mínimo iOS 17 conservados.
 
-Implementación local terminada. Release iPhone/iPad y 92 pruebas unitarias aprobadas. Cuatro recorridos UI de iPhone aprobados en tandas dirigidas, incluida la preparación con aviso completo. En iPad ya pasó lectura/renglones/giro/reanudar; siguen idioma/preparación. Se está repitiendo Release tras el último ajuste de altura del aviso. Publicación y Cloud pendientes. No confundir la aprobación Cloud de build 20 con esta entrega. Identidad com.dafermen.vReader, esquema V7 y mínimo iOS 17 sin cambios.
+## Cambios
 
-Código: AppSettings/InterfaceLanguage; AppRootView propaga locale y aplica valor inicial antes de abrir el almacén; ReaderParagraph/TextKit mide y dibuja guías; CaptionScreen prepara permisos; catálogos en Resources. Pruebas AppSettingsTests, CaptionViewModelTests y HomeScreenTests. Revisar especialmente interpolaciones de localización y geometría con descendentes.
+- Interfaz English/Español, independiente de la voz reconocida, la traducción y el idioma fijo de una sesión abierta.
+- Permisos y preparación de modelos visibles con acciones; avisos de voces de práctica destacados. Autorizar o preparar no inicia captura.
+- Guardar audio activado inicialmente en instalaciones nuevas, conservando elecciones anteriores y el antiguo valor desactivado de instalaciones sin preferencia explícita.
+- Renglones por párrafo, calculados con la línea base y descendentes de TextKit; texto y guías se redistribuyen juntos.
 
-Evidencia: /private/tmp/build21-release.log (BUILD SUCCEEDED, fuente 21, UIDeviceFamily [1,2]); /private/tmp/build21-verified.log y VoiceInView-21-Verified.xcresult (92 pruebas, cero fallos, TEST SUCCEEDED). Pruebas de interfaz: build21-ui.log / VoiceInView-21-UI.xcresult. Después de validar, actualizar este archivo y validation-report, commit/push y verificar el Archive del SHA publicado. Si se interrumpe la conversación, empezar por git status y este punto, sin reinstalar el iPhone ni borrar sesiones.
+## Verificación local completada
 
-Guía: [interfaz y preparación](interface-and-onboarding.md). Build 20: [checkpoint anterior](accessibility-checkpoint.md). Incidentes anteriores de firma y simulador: [registro](build-incidents.md).
+- **92 unitarias aprobadas**, cero fallos: `build21-verified.log`, `VoiceInView-21-Verified.xcresult`, TEST SUCCEEDED. Fue antes del último ajuste de altura de dos textos de preparación; ese cambio de presentación se comprobó con UI después.
+- **Cuatro escenarios UI iPhone aprobados** en tandas dirigidas. `build21-ui.log`: renglones/interrupción/giro/reanudar (50,356 s) e idioma independiente durante pausa (27,804 s). Esa tanda tuvo además dos fallos de selectores, por lo que no pasó globalmente.
+- `build21-ui-verified.log` / `VoiceInView-21-UI-Verified.xcresult`: preparación inicial (13,391 s) y práctica de sesión española (33,348 s), TEST SUCCEEDED.
+- **Preparación final sin truncamiento**: `build21-preparation-final.log` / `VoiceInView-21-Preparation-Final.xcresult`, 14,821 s, TEST SUCCEEDED.
+- **Tres recorridos UI iPad**, fuente final: renglones/giro/reanudar (71,486 s), idioma independiente durante pausa (230,819 s), preparación (12,088 s). `build21-ipad.log` / `VoiceInView-21-iPad.xcresult`, TEST EXECUTE SUCCEEDED. Hubo esperas de notificación de animaciones de XCTest; no fallaron las aserciones.
+- Capturas de ajustes españoles, preparación y renglones en vertical/horizontal revisadas para iPhone e iPad: `/private/tmp/screens21`, `/private/tmp/screens21-ipad`.
+- **Release final universal aprobado**: `build21-release-final.log`, BUILD SUCCEEDED. Fuente 0.1.0 (21), UIDeviceFamily `[1,2]`, sin firma local. El catálogo extraído por Swift también fue validado.
+- **480 claves** por idioma y dos razones de permiso por idioma; paridad y placeholders correctos. Las 370 claves extraídas por el compilador están cubiertas, incluyendo etiquetas neutrales y formatos. `scripts/validate-localization.py` reproduce la verificación.
 
+Artefactos en `/private/tmp`. Xcode local 15.2 / simuladores iOS 17.2. Los motores modernos Speech/Translation se compilan por separado en Cloud. Simulación no acredita precisión de voz real, instalación TestFlight ni aprobación de accesibilidad.
 
-## Evidencia UI
+## Compilación Cloud
 
-- `build21-ui.log`: lectura con renglones/interrupción/giro 50,356 s e idiomas independientes durante pausa 27,804 s aprobados. Dos fallos de selectores corregidos; esa tanda global no pasó completa.
-- `build21-ui-verified.log` / `VoiceInView-21-UI-Verified.xcresult`: preparación inicial 13,391 s y práctica de sesión española 33,348 s, TEST SUCCEEDED.
-- `build21-preparation-final.log` / `VoiceInView-21-Preparation-Final.xcresult`: aviso sin truncamiento en iPhone pequeño, 14,821 s, TEST SUCCEEDED. Este fue el último ajuste de presentación; no modifica modelos, permisos ni persistencia.
-- Capturas de ajustes españoles, preparación completa y renglones en vertical/horizontal revisadas en `/private/tmp/screens21`.
-- iPad: `build21-ipad.log`, lectura/renglones/giro/reanudar pasó en 71,486 s. Otros recorridos todavía en ejecución.
+[Archive – iOS](https://appstoreconnect.apple.com/teams/6f8417db-fcfe-4f6e-99af-3d19a8ed6ceb/apps/6820599198/ci/builds/28cd7677-a6aa-43dd-bebc-06ab92756070/action/339e49ef-db61-4999-9160-4c864b4f830b) **aprobado** para `59f4eae9a8d233cac49dea4fe0cc5397553663f0`: check final `114617065401`, `success`, terminado el 2026-10-12 a las 00:39:42 UTC (20:39:42 del 11 de octubre en Nueva York). Cero errores y cuatro advertencias existentes: allowBluetooth obsoleto, captura de AVAudioPCMBuffer y AVAssetExportSession no Sendable, y sugerencia @preconcurrency para AVFAudio. No se declara compatibilidad completa con modo Swift 6.
+
+Apple publicó el resultado con otro check ID; el inicial `114613990875` conservaba in_progress. Consultar todos los check-runs del SHA antes de diagnosticar una espera. El commit posterior de documentación no cambia código ni configuración de la app. Archive aprobado no confirma procesamiento ni instalación en TestFlight.
+
+## Aceptación pendiente del usuario
+
+Revisar TestFlight una vez que la nueva compilación termine y se procese. Comprobar idiomas, permisos y modelos reales, captura/traducción y voces, VoiceOver, tamaño accesible, fondo oscuro y uso prolongado en iPhone/iPad. No borrar las sesiones del dispositivo para verificar valores de instalación nueva.
+
+Guía: [interfaz y preparación](interface-and-onboarding.md). Explicación para estudiantes: [junior](junior-guide.md) y [recorrido de código](code-walkthrough.md). Historial: [incidentes](build-incidents.md), [build 20](accessibility-checkpoint.md).
