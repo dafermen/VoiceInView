@@ -4,6 +4,8 @@
 
 El primer intento compiló, pero el daemon de XCTest agotó 120 segundos al iniciar la sesión de control antes de ejecutar pruebas. Se canceló únicamente ese xcodebuild; no se registra como suite aprobada. Al intentar apagar el simulador ya estaba Shutdown por la limpieza de XCTest. Se volvió a arrancar y `simctl bootstatus -b` confirmó Finished antes de repetir. No se borraron los datos del simulador ni del iPhone, ni se reinició powerd. Los resultados de la repetición se registran en [checkpoint de ruido](noise-checkpoint.md).
 
+La repetición terminó TEST SUCCEEDED: 95 unitarias y UI iPhone (33,287 s). El mismo recorrido UI iPad terminó TEST EXECUTE SUCCEEDED (51,624 s). Release y Archive Cloud pasaron. Para el SHA `32e549b`, el check inicial `114875255384` fue sustituido por el resultado final `114877221766` (2026-10-12 15:13:38 UTC, success, cero errores/cuatro advertencias existentes). No esperar indefinidamente al ID inicial; consultar todos los checks del SHA.
+
 Al introducir Voice Processing, habilitarlo antes de consultar el formato del input y antes del tap; mantener la elección al reanudar. El control de ganancia y el ducking no son niveles de reducción de ruido. Comprobar calidad y rutas en dispositivo; la prueba UI usa un doble sin DSP y no demuestra mejora acústica.
 
 ## Build 21 — resultado Cloud publicado con otro identificador

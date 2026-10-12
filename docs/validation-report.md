@@ -9,7 +9,7 @@
 - Paridad de 485 claves por idioma y dos razones de permiso, placeholders y plist válidos. No se ejecutó comparación de extracción del compilador porque este build no emitió .stringsdata; el validador lo señaló explícitamente. Las claves nuevas fueron contrastadas con el catálogo y la UI.
 - El primer intento unitario no inició las pruebas por timeout del daemon; ver [incidentes](build-incidents.md). No se cuenta como aprobación.
 
-Estado GitHub/Cloud en [checkpoint](noise-checkpoint.md). Los dobles de captura prueban estados y preferencias, no reducción acústica. Pendiente comparación física de ruido, volumen con AGC desactivado, ruta, voces lejanas, traducción/reconocimiento real, alarma/reanudación y sincronía de la exportación.
+Código `32e549bc1e38203c238e0afb91e0dd2e5dd556eb` publicado en main; Archive Cloud aprobado el 2026-10-12 15:13:38 UTC, check `114877221766`, cero errores y cuatro advertencias preexistentes de concurrencia/audio. Enlace y límites en [checkpoint](noise-checkpoint.md). Los dobles de captura prueban estados y preferencias, no reducción acústica. Pendiente comparación física de ruido, volumen con AGC desactivado, ruta, voces lejanas, traducción/reconocimiento real, alarma/reanudación y sincronía de la exportación.
 
 ## Build 21 — 2026-10-11
 
