@@ -17,3 +17,7 @@ Estado: implementación y validación local terminadas. Entrega en main mediante
 - Capturas originales en `/private/tmp/live24-iphone-final-shots` y `/private/tmp/live24-ipad-shots`; inspección de pares, etiquetas y pantalla completa.
 
 La compilación local con Xcode 15.2 no prueba la rama de Translation de Apple. Sigue pendiente probar los modelos reales, demora/calidad, texto provisional, VoiceOver/Dynamic Type, seguimiento de lectura, segundo plano y persistencia de la opción en un dispositivo compatible. No atribuir a los fixtures la evaluación del motor real. Sin cambios de política/servicios ni migración.
+
+## Ajuste visual — build fuente 25
+
+Línea fina entre original y traducción únicamente en Ambos, incluida la espera de traducción. Conserva etiquetas e interlineado; usa el color primario adaptable al fondo claro/oscuro y se oculta a VoiceOver por ser decorativa. No cambia captura, traducción, cola ni almacenamiento. Compilación Debug y recorrido bilingüe existente pasaron en iPhone SE 3/iOS 17.2: `/private/tmp/VoiceInView25-visual.xcresult`, TEST SUCCEEDED (22.736 s). Capturas en `/private/tmp/live25-shots`; se inspeccionó la línea entre los dos textos. No se añadieron tests para decoración ni se repitió la suite completa. Entrega en main; Cloud/TestFlight de este ajuste pendientes de confirmación.

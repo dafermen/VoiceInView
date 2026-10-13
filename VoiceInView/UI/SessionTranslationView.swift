@@ -464,6 +464,10 @@ struct LiveSpanishView: View {
                         .accessibilityIdentifier("liveOriginal-" + paragraph.id.uuidString)
                 }
             }
+            if display == .both {
+                // Separación visual que no añade ruido a la lectura con VoiceOver.
+                Divider().overlay(Color.primary.opacity(0.25)).accessibilityHidden(true)
+            }
             if let translated = buffer.translated[paragraph.id] {
                 VStack(alignment: .leading, spacing: 4) {
                     if display == .both {

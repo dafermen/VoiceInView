@@ -1,3 +1,7 @@
+## Source build 25 — 2026-10-13
+
+- Add a subtle separator between original and translated live captions in Both mode, retaining language labels and reading space. The decorative line is hidden from VoiceOver and follows light/dark appearance.
+
 ## Source build 24 — 2026-10-13
 
 - Live captions offer Original, Translation and Both in one compact menu, independent of interface/capture language.

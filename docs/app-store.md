@@ -1,6 +1,6 @@
 # Preparación de App Store — VoiceInView
 
-Actualizado 2026-10-13 · paquete de preparación, **no enviado a App Review**. Fuente 0.1.0 (24); evidencia técnica en [checkpoint](live-bilingual-checkpoint.md). Registro existente 6820599198, bundle `com.dafermen.vReader`, equipo `7799N4RYUG`. Conservar esta identidad y sus sesiones.
+Actualizado 2026-10-13 · paquete de preparación, **no enviado a App Review**. Fuente 0.1.0 (25); evidencia técnica en [checkpoint](live-bilingual-checkpoint.md). Registro existente 6820599198, bundle `com.dafermen.vReader`, equipo `7799N4RYUG`. Conservar esta identidad y sus sesiones.
 
 ## Material preparado
 
