@@ -276,3 +276,9 @@ Una preferencia de presentación no debe cambiar la captura. `LiveCaptionDisplay
 Cada párrafo tiene un UUID. `LiveTranslationBuffer.translated[id]` permite dibujar la traducción debajo del original correspondiente aunque llegue después. Mientras falta, se muestra un aviso, no una segunda copia del original que pueda confundirse con traducción. Solo se envía texto confirmado al motor; el provisional aparece como texto que puede cambiar. Cambiar Traducción↔Ambos mantiene la misma vista/cola; volver a Original desmonta la vista previa y cancela su tarea sin tocar el micrófono.
 
 Las pruebas UI usan respuestas prefijadas dentro de `#if DEBUG`. Verifican parejas, selector y continuidad de la sesión, no la calidad ni latencia del motor de Apple. El build Release no contiene ese proveedor simulado. Ver [evidencia](live-bilingual-checkpoint.md).
+
+### Tarjetas bilingües (fuente 27)
+
+`LiveLanguageCard` es un `ViewModifier`: decora una vista sin cambiar sus datos ni la traducción. Recibe `CaptureLanguage`, por eso inglés siempre usa azul y español verde aunque se invierta la captura. `LiveSpanishView` aplica el mismo modifier al original, a la traducción pendiente y al provisional en modo Ambos. Los modos de un solo idioma conservan su presentación.
+
+El contenido usa `ReaderParagraph`, que ya resuelve tamaño, interlineado, selección y renglones. Un fondo `RoundedRectangle` añade relleno, borde y sombra sin añadir elementos a VoiceOver. Las etiquetas de idioma evitan depender del color. La preferencia de alto contraste llega desde `CaptionScreen`; también se respeta el contraste aumentado del sistema. En esos casos el fondo es blanco/negro y el borde más marcado. `@ViewBuilder` permite devolver vistas distintas al activar/desactivar la tarjeta; no omitirlo en helpers condicionales (ver incidente de fuente 26).

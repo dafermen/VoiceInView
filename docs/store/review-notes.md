@@ -17,6 +17,6 @@ Before copying these notes to App Store Connect, append:
 - Actual tested device models and OS versions (PENDING).
 - Public support/privacy URLs (PENDING publication and verification on innovalogic.tech, hosted by Hostinger). Public support/privacy email confirmed: dariofernandomeneses@gmail.com.
 - Reviewer contact name, phone and email, entered privately in App Store Connect (PENDING; do not commit personal phone numbers here).
-- Exact final version/build selected for public review (PENDING; source build 26 is a development delivery).
+- Exact final version/build selected for public review (PENDING; source build 27 is a development delivery).
 
 Do not distribute the DEBUG synthetic test fixtures as reviewer functionality. Never provide an internal-testing-only build for public App Review; archive a build eligible for TestFlight and App Store.

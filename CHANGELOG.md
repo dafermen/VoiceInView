@@ -1,3 +1,9 @@
+## Source build 27 — 2026-10-13
+
+- Present live Both mode as compact rounded cards: blue for English, green for Spanish, with a subtle border and shadow.
+- Retain explicit original/translation language labels, selectable text and reading styles. Dark appearance adapts the fills; increased/high contrast uses a strong monochrome outline.
+- Include provisional original text and waiting translations in matching language cards.
+
 ## Source build 26 — 2026-10-13
 
 - Fix the modern-SDK translation runner compilation by explicitly applying ViewBuilder to the extracted helper view. Restores Cloud compilation eligibility for the live bilingual update; distribution is verified separately.

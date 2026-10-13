@@ -347,3 +347,7 @@ Traducción en vivo Original/Traducción/Ambos. Pasaron 13 tests de traducción,
 ## Corrección fuente 26 — 2026-10-13
 
 Release local pasó (`/private/tmp/VoiceInView26-release.log`). Xcode Cloud confirmó Archive - iOS del SHA `2da928440decb7c7d4da2bdac58dcce2b5ae10b0`, check `115263454589`, success: 0 errores y 4 advertencias. Se corrigió el result builder de la vista auxiliar moderna; no se volvieron a ejecutar recorridos UI por este cambio de compilación. Ver [checkpoint bilingüe](live-bilingual-checkpoint.md) para pruebas previas, fallos y disponibilidad aún no confirmada en TestFlight.
+
+### 2026-10-13 — Tarjetas bilingües, fuente 27
+
+Ambos separa los párrafos en tarjetas por idioma, con modo oscuro y alto contraste. Pasaron dos recorridos bilingües iPhone y dos revisiones iPad (oscuro / contraste aumentado), con screenshots inspeccionados; Release sin firma y validadores de localización/metadatos correctos. Ver rutas, límites y estado remoto en [checkpoint bilingüe](live-bilingual-checkpoint.md#tarjetas--fuente-27-2026-10-13). El usuario confirmó funcionamiento de la vista bilingüe anterior en su iPhone; esa confirmación no valida todavía las nuevas tarjetas.

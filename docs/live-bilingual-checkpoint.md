@@ -33,3 +33,15 @@ El 2026-10-13, el SHA `2da928440decb7c7d4da2bdac58dcce2b5ae10b0` pasó Archive -
 Procesamiento y disponibilidad del build en TestFlight pendientes de confirmación. El número fuente 26 no debe confundirse con el número que asigne el flujo Cloud. El commit posterior únicamente registra este resultado y puede disparar otra compilación con el mismo código.
 
 Para acceder: Subtítulos → bocadillo con A junto a pantalla completa → Ambos. En pantalla completa, el mismo botón aparece en la barra inferior. El idioma hablado se mantiene según la voz a reconocer; no se cambia a español solo para leer una traducción española.
+
+## Tarjetas — fuente 27, 2026-10-13
+
+El usuario confirmó que ya funciona la vista bilingüe en su iPhone, pero pidió distinguir mejor los párrafos. Ambos ahora usa tarjetas compactas redondeadas: inglés azul, español verde, etiquetas explícitas y sombra suave. La paleta depende del idioma, no de ser original/traducción. Se incluyen provisional y espera; modo oscuro adapta los fondos y alto contraste usa bordes fuertes sobre blanco/negro. No hay migración ni cambios de captura/traducción.
+
+Validación de esta entrega:
+- iPhone SE 3 / iOS 17.2: recorridos inglés y español pasaron (22.593 s / 21.780 s), incluyendo alternar vistas, pausar/reanudar y fullscreen horizontal. Bundle `/private/tmp/VoiceInView27-visual.xcresult`.
+- iPad Air 5 / iOS 17.2: recorrido inglés pasó en oscuro (26.073 s) y oscuro con contraste aumentado (26.981 s); capturas de ambos recorridos inspeccionadas. Bundles `/private/tmp/VoiceInView27-ipad-dark.xcresult` y `/private/tmp/VoiceInView27-ipad-contrast.xcresult`. Se restauró el aspecto inicial del simulador.
+- Release genérico iOS sin firma pasó: `/private/tmp/VoiceInView27-release.log`.
+- Validadores de localización (512 claves + 2 de permisos), metadatos y `git diff --check` pasaron.
+
+Los recorridos UI usan traducción prefijada DEBUG; no miden precisión ni latencia real. Las tarjetas todavía requieren comprobación en el teléfono. Compilación Cloud y disponibilidad TestFlight de fuente 27 pendientes al preparar este commit; verificar su SHA exacto antes de anunciar entrega.

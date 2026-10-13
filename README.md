@@ -4,9 +4,9 @@
 
 Native iPhone and iPad app for following spoken English or Spanish, reviewing conversations and practicing a language. Designed as a reading and learning aid in meetings, conferences, classes and everyday conversations, including support for people with hearing loss or low vision and supervised language practice for children. On-device recognition requires a compatible device and prepared language model.
 
-## Both languages during live capture — source build 24
+## Both languages during live capture — source build 27
 
-In Captions, open the speech-bubble language button and choose **Original**, **Translation** or **Both**. Both keeps each original paragraph above its translation, with language labels and an explicit waiting state. The choice is remembered and is independent of spoken language and menu language. Switching views never pauses the microphone. Available with the existing live-translation support (iOS/iPadOS 18+ and a compatible build). Confirmed paragraphs are translated; provisional words remain original. See [live bilingual reading](docs/translation.md) and [delivery evidence](docs/live-bilingual-checkpoint.md).
+In Captions, open the speech-bubble language button and choose **Original**, **Translation** or **Both**. Both keeps each original paragraph above its translation in rounded cards: soft blue for English and green for Spanish, with language labels and an explicit waiting state. Cards adapt to dark mode and high contrast. The choice is remembered and is independent of spoken language and menu language. Switching views never pauses the microphone. Available with the existing live-translation support (iOS/iPadOS 18+ and a compatible build). Confirmed paragraphs are translated; provisional words remain original. See [live bilingual reading](docs/translation.md) and [delivery evidence](docs/live-bilingual-checkpoint.md).
 
 ## Reading at your pace — source build 23
 

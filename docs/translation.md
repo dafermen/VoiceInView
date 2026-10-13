@@ -25,11 +25,11 @@ En **Settings → Names & translation terms**, escribe una entrada por línea: `
 
 Al traducir, coincidencias literales de términos completos se sustituyen por el español preferido; los fragmentos restantes se traducen mediante Apple. No hay sustituciones dentro de palabras. Se priorizan términos largos cuando coinciden al mismo inicio. Esto asegura términos consistentes, pero puede afectar la concordancia o el contexto de la frase: revisa el resultado. Cambiar el diccionario no invalida automáticamente traducciones anteriores; usa **Translate again** para aplicarlo a todo el texto.
 
-## Traducción durante la captura — actualización build 24
+## Traducción durante la captura — actualización build 27
 
 En Captions, el botón de bocadillo con caracteres abre **Idiomas en vivo / Live caption display**. Elige **Original**, **Traducción** o **Ambos**. Está disponible con iOS/iPadOS 18+ y SDK compatible; en sistemas anteriores se conserva el lector original. La elección se recuerda, sin cambiar el idioma hablado ni el idioma de los menús.
 
-**Ambos** muestra cada párrafo original y debajo su traducción, con etiquetas de idioma y, desde build 25, una línea fina entre original y traducción, en una sola columna para iPhone/iPad y pantalla completa. Se admite inglés→español y español→inglés. Cambiar la vista no pausa ni reinicia el micrófono. Original usa el lector completo anterior; Traducción y Ambos comparten el mismo panel y conservan los resultados al alternar entre ellos.
+**Ambos** muestra cada párrafo original y debajo su traducción, desde build 27 en tarjetas con bordes redondeados, sombra suave y etiquetas de idioma. Inglés usa azul y español verde, independientemente del sentido de traducción, en una sola columna para iPhone/iPad y pantalla completa. En modo oscuro se adaptan los fondos; alto contraste usa blanco/negro y bordes más marcados. Se admite inglés→español y español→inglés. Cambiar la vista no pausa ni reinicia el micrófono. Original usa el lector completo anterior; Traducción y Ambos comparten el mismo panel y conservan los resultados al alternar entre ellos.
 
 Se traducen únicamente párrafos confirmados: no es traducción palabra por palabra sin demora. En Ambos, las palabras provisionales siguen visibles en el idioma original. Si falta la traducción, se conserva el original con «Esperando traducción…», sin duplicarlo como si ya fuera el texto traducido. **Following / Follow latest** controla el seguimiento; arrastrar hacia textos anteriores lo pausa. Se respetan tamaño, negrita, interlineado, renglones, fondo y pantalla completa.
 

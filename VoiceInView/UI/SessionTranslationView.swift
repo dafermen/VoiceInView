@@ -386,6 +386,7 @@ struct LiveSpanishView: View {
     var lineSpacing: Double = 4
     var bold = false
     var ruled = false
+    var highContrast = false
     @Environment(\.scenePhase) private var phase
     @State private var buffer = LiveTranslationBuffer()
     @State private var job: TranslationJob?
@@ -407,10 +408,11 @@ struct LiveSpanishView: View {
                         }
                         if display == .both && !provisionalText.isEmpty {
                             VStack(alignment: .leading, spacing: 4) {
+                                Text("Original \(language.name)").font(.caption.weight(.semibold))
                                 Text("Live · may change").font(.caption).foregroundStyle(.secondary)
                                 readerText(provisionalText)
                                     .accessibilityIdentifier("liveBilingualProvisional")
-                            }
+                            }.modifier(LiveLanguageCard(language: language, highContrast: highContrast))
                         }
                         Color.clear.frame(height: 1).id("translationBottom")
                     }.padding()
@@ -460,25 +462,26 @@ struct LiveSpanishView: View {
         VStack(alignment: .leading, spacing: 8) {
             if display == .both || buffer.translated[paragraph.id] == nil {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Original \(language.name)").font(.caption).foregroundStyle(.secondary)
+                    Text("Original \(language.name)").font(.caption.weight(.semibold))
                     readerText(paragraph.text)
                         .accessibilityIdentifier("liveOriginal-" + paragraph.id.uuidString)
-                }
-            }
-            if display == .both {
-                // Separación visual que no añade ruido a la lectura con VoiceOver.
-                Divider().overlay(Color.primary.opacity(0.25)).accessibilityHidden(true)
+                }.modifier(LiveLanguageCard(language: language, highContrast: highContrast, enabled: display == .both))
             }
             if let translated = buffer.translated[paragraph.id] {
                 VStack(alignment: .leading, spacing: 4) {
                     if display == .both {
-                        Text("Translation \(language.opposite.name)").font(.caption).foregroundStyle(.secondary)
+                        Text("Translation \(language.opposite.name)").font(.caption.weight(.semibold))
                     }
                     readerText(translated)
                         .accessibilityIdentifier("liveTranslated-" + paragraph.id.uuidString)
-                }
+                }.modifier(LiveLanguageCard(language: language.opposite, highContrast: highContrast, enabled: display == .both))
             } else {
-                Text("Waiting for translation…").font(.caption).foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    if display == .both {
+                        Text("Translation \(language.opposite.name)").font(.caption.weight(.semibold))
+                    }
+                    Text("Waiting for translation…").font(.caption).foregroundStyle(.secondary)
+                }.modifier(LiveLanguageCard(language: language.opposite, highContrast: highContrast, enabled: display == .both))
             }
         }.frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .contain)
@@ -492,5 +495,50 @@ struct LiveSpanishView: View {
     private func schedule() {
         guard phase == .active, job == nil, failure == nil, !buffer.pending.isEmpty else { return }
         job = TranslationJob(plan: IncrementalTranslation(source: buffer.pending, previous: nil, language: language))
+    }
+}
+
+/// El color pertenece al idioma, no al rol original/traducción: inglés siempre azul,
+/// español siempre verde. Las etiquetas siguen distinguiéndolos sin depender del color.
+/// El modifier conserva el texto seleccionable, sus renglones y los elementos de VoiceOver.
+private struct LiveLanguageCard: ViewModifier {
+    let language: CaptureLanguage
+    let highContrast: Bool
+    var enabled = true
+    @Environment(\.colorScheme) private var scheme
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    private var strongContrast: Bool { highContrast || contrast == .increased }
+    private var accent: Color { language == .english ? .blue : .green }
+    private var fill: Color {
+        if strongContrast { return scheme == .dark ? .black : .white }
+        if scheme == .dark {
+            return language == .english
+                ? Color(red: 0.08, green: 0.16, blue: 0.24)
+                : Color(red: 0.08, green: 0.20, blue: 0.15)
+        }
+        return language == .english
+            ? Color(red: 0.89, green: 0.95, blue: 1)
+            : Color(red: 0.90, green: 0.97, blue: 0.91)
+    }
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if enabled {
+            content
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+                .background {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(fill)
+                        .shadow(color: .black.opacity(strongContrast ? 0 : 0.12), radius: 3, x: 0, y: 2)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .strokeBorder(strongContrast ? Color.primary : accent.opacity(0.4), lineWidth: strongContrast ? 2 : 1)
+                        }
+                        .accessibilityHidden(true)
+                }
+        } else {
+            content
+        }
     }
 }
