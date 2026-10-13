@@ -343,3 +343,7 @@ El SHA `40af9bd1310881a9d6c3cd37de9b38c2cf235ced` pasó Archive - iOS el 2026-10
 ## Build fuente 24 — 2026-10-13
 
 Traducción en vivo Original/Traducción/Ambos. Pasaron 13 tests de traducción, los recorridos UI de ambos sentidos en iPhone, el recorrido bilingüe en iPad y Release genérico sin firma. Se corrigió el selector y su anclaje antes de repetir las pruebas. Resultados exactos, capturas y límites del proveedor DEBUG en [checkpoint](live-bilingual-checkpoint.md). Cloud/TestFlight y motor Apple real se verifican por separado.
+
+## Corrección fuente 26 — 2026-10-13
+
+Release local pasó (`/private/tmp/VoiceInView26-release.log`). Xcode Cloud confirmó Archive - iOS del SHA `2da928440decb7c7d4da2bdac58dcce2b5ae10b0`, check `115263454589`, success: 0 errores y 4 advertencias. Se corrigió el result builder de la vista auxiliar moderna; no se volvieron a ejecutar recorridos UI por este cambio de compilación. Ver [checkpoint bilingüe](live-bilingual-checkpoint.md) para pruebas previas, fallos y disponibilidad aún no confirmada en TestFlight.

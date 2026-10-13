@@ -24,4 +24,12 @@ Línea fina entre original y traducción únicamente en Ambos, incluida la esper
 
 ## Recuperación de entrega — build fuente 26
 
-Confirmado fallo Cloud de `01f566d` (check `115246510250`, build remoto `102b9164-554f-4530-a62a-36f3d262696d`): faltaba @ViewBuilder en productionRunner. Ese cambio de fuente 25 no llegó por esa compilación a TestFlight. Corrección mínima de fuente 26: añadir el result builder a la propiedad auxiliar. Detalle en build-incidents.md. Release local pasó (`/private/tmp/VoiceInView26-release.log`, BUILD SUCCEEDED). Validación Cloud del nuevo SHA pendiente; no confundir los recorridos simulados locales con la compilación de la rama Apple Translation.
+Confirmado fallo Cloud de `01f566d` (check `115246510250`, build remoto `102b9164-554f-4530-a62a-36f3d262696d`): faltaba @ViewBuilder en productionRunner. Ese cambio de fuente 25 no llegó por esa compilación a TestFlight. Corrección mínima de fuente 26: añadir el result builder a la propiedad auxiliar. Detalle en build-incidents.md. Release local pasó (`/private/tmp/VoiceInView26-release.log`, BUILD SUCCEEDED). Cloud del SHA corregido pasó (ver resultado final abajo); no confundir los recorridos simulados locales con la compilación de la rama Apple Translation.
+
+### Resultado remoto de la corrección
+
+El 2026-10-13, el SHA `2da928440decb7c7d4da2bdac58dcce2b5ae10b0` pasó Archive - iOS en Xcode Cloud, check final `115263454589`: 0 errores, 0 fallos de tests reportados, 0 incidencias de análisis y 4 advertencias. [Compilación](https://appstoreconnect.apple.com/teams/6f8417db-fcfe-4f6e-99af-3d19a8ed6ceb/apps/6820599198/ci/builds/14063e8f-d630-45f2-908f-432faf98ecbc). Esto verifica compilación de la rama moderna de Translation; no evalúa traducción real ni instalación en el iPhone. Las advertencias de AVAudioPCMBuffer/AVAssetExportSession, preconcurrency y allowBluetooth permanecen.
+
+Procesamiento y disponibilidad del build en TestFlight pendientes de confirmación. El número fuente 26 no debe confundirse con el número que asigne el flujo Cloud. El commit posterior únicamente registra este resultado y puede disparar otra compilación con el mismo código.
+
+Para acceder: Subtítulos → bocadillo con A junto a pantalla completa → Ambos. En pantalla completa, el mismo botón aparece en la barra inferior. El idioma hablado se mantiene según la voz a reconocer; no se cambia a español solo para leer una traducción española.
