@@ -1,5 +1,8 @@
 # Documentación de VoiceInView
 
+- [Traducción bilingüe en vivo (build 24)](translation.md).
+- [Estado de entrega build 24](live-bilingual-checkpoint.md).
+
 - [Reducción de ruido: uso, límites y explicación para estudiantes](noise-reduction.md).
 - [Estado de entrega build 22](noise-checkpoint.md).
 

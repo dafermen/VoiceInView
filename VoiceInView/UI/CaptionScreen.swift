@@ -21,10 +21,11 @@ struct CaptionScreen: View {
     @GestureState private var pinchScale: CGFloat = 1
     @State private var readingStartID: UUID?
     @State private var isFullScreen = false
-    @State private var liveSpanish = false
+    @AppStorage("liveCaptionDisplay") private var liveDisplay: LiveCaptionDisplay = .original
     @State private var followLive = true
     @State private var confirmNewSession = false
     @State private var showingOptions = false
+    @State private var showingLiveDisplay = false
     @State private var showingCaptureOptions = false
     @State private var confirmDiscard = false
     @State private var showingStatus = false
@@ -47,11 +48,12 @@ struct CaptionScreen: View {
                 else if needsPreparation { preparationPanel }
                 else if let message = statusMessage { captureNotice(message) }
                 Group {
-                    if liveSpanish {
+                    if supportsLiveTranslation && liveDisplay != .original {
                         LiveSpanishView(paragraphs: model.transcript.finalized.suffix(40).map {
                             ReviewParagraph(id: $0.id, text: $0.text)
                         }, fontSize: Double(scaledSize) * settings.captionSize / 28,
-                           language: model.language, lineSpacing: settings.lineSpacing, bold: settings.boldCaptions, ruled: settings.ruledPaper && !settings.highContrast)
+                           language: model.language, display: liveDisplay, provisionalText: model.transcript.partial.map(\.text).joined(separator: "\n"),
+                           lineSpacing: settings.lineSpacing, bold: settings.boldCaptions, ruled: settings.ruledPaper && !settings.highContrast)
                             .id(model.language)
                     } else { transcript }
                 }
@@ -299,18 +301,32 @@ struct CaptionScreen: View {
         }
     }
 
-    @ViewBuilder private var translationButton: some View {
-        #if canImport(Translation)
-        if #available(iOS 18.0, *) {
-            Button { liveSpanish.toggle() } label: {
-                Image(systemName: "character.bubble").frame(width: 44, height: 44)
-                    .foregroundStyle(liveSpanish ? Color.accentColor : Color.primary)
-            }
-            .accessibilityLabel(uiKey(liveSpanish ? "Show original \(model.language.name)" : "Show live \(model.language.opposite.name)"))
-            .accessibilityValue(liveSpanish ? model.language.opposite.name : model.language.name)
-            .accessibilityIdentifier("liveSpanishButton")
-        }
+    private var supportsLiveTranslation: Bool {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--ui-test-live-translation") { return true }
         #endif
+        #if canImport(Translation)
+        if #available(iOS 18.0, *) { return true }
+        #endif
+        return false
+    }
+
+    @ViewBuilder private var translationButton: some View {
+        if supportsLiveTranslation {
+            Button { showingLiveDisplay = true } label: {
+                Image(systemName: "character.bubble").frame(width: 44, height: 44)
+                    .foregroundStyle(liveDisplay == .original ? Color.primary : Color.accentColor)
+            }
+            .accessibilityLabel("Live caption display")
+            .accessibilityValue(Text(uiKey(liveDisplay == .original ? "Original \(model.language.name)" : liveDisplay == .translation ? "Translation \(model.language.opposite.name)" : "Both")))
+            .accessibilityIdentifier("liveSpanishButton")
+            .confirmationDialog("Live caption display", isPresented: $showingLiveDisplay, titleVisibility: .visible) {
+                Button("Original \(model.language.name)") { liveDisplay = .original }
+                Button("Translation \(model.language.opposite.name)") { liveDisplay = .translation }
+                Button("Both") { liveDisplay = .both }
+                Button("Cancel", role: .cancel) { }
+            }
+        }
     }
 
     private var fullScreenButton: some View {

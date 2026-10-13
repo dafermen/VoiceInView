@@ -316,6 +316,21 @@ struct TranslationRunner: View {
     let progress: (Int) -> Void
     let finish: (Result<[ReviewParagraph], Error>) -> Void
     var body: some View {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--ui-test-live-translation") {
+            Color.clear.task {
+                do {
+                    try await Task.sleep(for: .milliseconds(400))
+                    finish(.success(job.source.map { ReviewParagraph(id: $0.id,
+                        text: job.plan.language == .english ? "Traducción de prueba. Leemos los dos idiomas juntos." : "Test translation. We read both languages together.") }))
+                } catch { finish(.failure(error)) }
+            }
+        } else { productionRunner }
+        #else
+        productionRunner
+        #endif
+    }
+    private var productionRunner: some View {
         #if canImport(Translation)
         if #available(iOS 18.0, *) {
             AppleTranslationRunner(job: job, progress: progress, finish: finish)
@@ -365,6 +380,8 @@ struct LiveSpanishView: View {
     let paragraphs: [ReviewParagraph]
     let fontSize: Double
     var language: CaptureLanguage = .english
+    var display: LiveCaptionDisplay = .translation
+    var provisionalText = ""
     var lineSpacing: Double = 4
     var bold = false
     var ruled = false
@@ -376,29 +393,42 @@ struct LiveSpanishView: View {
     var body: some View {
         VStack(spacing: 4) {
             HStack {
-                Text("Live \(language.opposite.name) · preview").font(.caption)
+                Text(display == .both ? "\(language.name) → \(language.opposite.name)" : "\(language.opposite.name)").font(.caption)
                 Spacer()
                 Button(uiKey(follow ? "Following" : "Follow latest")) { follow.toggle() }.font(.caption)
+                    .frame(minHeight: 44).accessibilityIdentifier("liveTranslationFollowButton")
             }.padding(.horizontal)
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 18) {
                         ForEach(buffer.source) { paragraph in
-                            ReaderParagraph(text: buffer.translated[paragraph.id] ?? paragraph.text, points: fontSize, spacing: lineSpacing, bold: bold, ruled: ruled)
-                                .foregroundStyle(buffer.translated[paragraph.id] == nil ? .secondary : .primary)
-                                .frame(maxWidth: .infinity, alignment: .leading).id(paragraph.id)
+                            paragraphPair(paragraph).id(paragraph.id)
                         }
+                        if display == .both && !provisionalText.isEmpty {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Live · may change").font(.caption).foregroundStyle(.secondary)
+                                readerText(provisionalText)
+                                    .accessibilityIdentifier("liveBilingualProvisional")
+                            }
+                        }
+                        Color.clear.frame(height: 1).id("translationBottom")
                     }.padding()
                 }
-                .onChange(of: buffer.translated) { _, _ in
-                    if follow, let id = buffer.source.last?.id { proxy.scrollTo(id, anchor: .bottom) }
-                }
+                .accessibilityIdentifier("liveTranslationReader")
+                .simultaneousGesture(DragGesture(minimumDistance: 10).onChanged { value in
+                    if value.translation.height > 10 { follow = false }
+                })
+                .onChange(of: buffer.translated) { _, _ in scrollIfFollowing(proxy) }
+                .onChange(of: paragraphs) { _, _ in scrollIfFollowing(proxy) }
+                .onChange(of: provisionalText) { _, _ in scrollIfFollowing(proxy) }
+                .onChange(of: display) { _, _ in scrollIfFollowing(proxy) }
+                .onChange(of: follow) { _, _ in scrollIfFollowing(proxy) }
             }
             if let failure {
                 Text(LocalizedStringKey(failure)).font(.caption).padding(.horizontal)
                 Button("Retry translation") { self.failure = nil; schedule() }
             } else {
-                Text(uiKey(job == nil ? "Waiting for confirmed text. Preview is not saved; translate the saved session to export." : "Translating… The original is shown while waiting."))
+                Text(uiKey(job == nil ? "Live preview is not saved. Translate the saved session to export." : "Translating confirmed text…"))
                     .font(.caption).foregroundStyle(.secondary).padding(.horizontal)
             }
         }
@@ -423,6 +453,36 @@ struct LiveSpanishView: View {
             if state == .active { schedule() } else { job = nil }
         }
         .onDisappear { job = nil }
+    }
+    // El UUID enlaza ambos textos. Cambiar la presentación no reinicia la cola ni el micrófono.
+    private func paragraphPair(_ paragraph: ReviewParagraph) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if display == .both || buffer.translated[paragraph.id] == nil {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Original \(language.name)").font(.caption).foregroundStyle(.secondary)
+                    readerText(paragraph.text)
+                        .accessibilityIdentifier("liveOriginal-" + paragraph.id.uuidString)
+                }
+            }
+            if let translated = buffer.translated[paragraph.id] {
+                VStack(alignment: .leading, spacing: 4) {
+                    if display == .both {
+                        Text("Translation \(language.opposite.name)").font(.caption).foregroundStyle(.secondary)
+                    }
+                    readerText(translated)
+                        .accessibilityIdentifier("liveTranslated-" + paragraph.id.uuidString)
+                }
+            } else {
+                Text("Waiting for translation…").font(.caption).foregroundStyle(.secondary)
+            }
+        }.frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .contain)
+    }
+    private func readerText(_ text: String) -> some View {
+        ReaderParagraph(text: text, points: fontSize, spacing: lineSpacing, bold: bold, ruled: ruled)
+    }
+    private func scrollIfFollowing(_ proxy: ScrollViewProxy) {
+        if follow { proxy.scrollTo("translationBottom", anchor: .bottom) }
     }
     private func schedule() {
         guard phase == .active, job == nil, failure == nil, !buffer.pending.isEmpty else { return }

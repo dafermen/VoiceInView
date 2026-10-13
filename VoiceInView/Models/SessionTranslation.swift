@@ -210,6 +210,11 @@ enum PersonalVocabulary {
 }
 
 
+/// Preferencia de lectura, independiente del idioma de captura y del idioma de los menús.
+enum LiveCaptionDisplay: String, CaseIterable {
+    case original, translation, both
+}
+
 /// Cola acotada para lectura en directo. Los resultados tardíos nunca sustituyen texto actualizado.
 /// Solo vive en memoria: cerrar la vista no modifica ni borra la transcripción inglesa guardada.
 struct LiveTranslationBuffer {

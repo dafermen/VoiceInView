@@ -1,0 +1,19 @@
+# Traducción bilingüe en vivo — build fuente 24
+
+Actualizado 2026-10-13. Objetivo: leer original y traducción simultáneamente durante la captura. Selector Original/Traducción/Ambos en el botón existente, sin controles permanentes adicionales. Preferencia recordada; idioma de captura y menús independientes.
+
+No cambia esquema V8, identidad com.dafermen.vReader, audio ni guardado. Vista previa temporal limitada a 40 párrafos; cuatro por lote, solo confirmados. Ambos presenta pares verticales, etiquetas, espera y provisional original. Traducción↔Ambos conserva el buffer; Original lo descarta sin detener captura.
+
+Estado: implementación y validación local terminadas. Entrega en main mediante el commit `feat: show original and translated live captions together`; resultado Cloud y disponibilidad TestFlight todavía no confirmados. Consultar el check del SHA exacto, no el resultado de una versión anterior. Pruebas del simulador usan texto y traducción prefijados DEBUG, no el motor real de Apple. Compilación moderna, TestFlight y prueba física se registrarán por separado.
+
+## Evidencia local
+
+- 13 tests de TranslationTests pasaron en `/private/tmp/VoiceInView24-tests.xcresult`. Ese bundle global falló por dos interacciones del menú luego corregidas; no presentarlo como éxito global.
+- iPhone SE 3 / iOS 17.2: ambos recorridos pasaron en `/private/tmp/VoiceInView24-ui.xcresult` (21.251 s y 20.441 s). Tras ajustar el anclaje del iPad, repetición final inglesa 22.587 s y española 22.063 s en `/private/tmp/VoiceInView24-iphone-final.xcresult`, TEST EXECUTE SUCCEEDED.
+- iPad Air 5 / iOS 17.2: recorrido final pasó en `/private/tmp/VoiceInView24-ipad-final.xcresult` (25.640 s), TEST SUCCEEDED. Primera ejecución con popover fuera de pantalla falló; se corrigió anclando al botón.
+- Los recorridos seleccionan Ambos con micrófono activo, comprueban que sigue activo, pausan expresamente, comparan UUID original/traducción, cambian las tres opciones, reanudan y giran en pantalla completa. Usan datos sintéticos DEBUG.
+- Release genérico iOS sin firma pasó: `/private/tmp/VoiceInView24-release.log`. Verificados versión de build 24, bundle `com.dafermen.vReader`, familias iPhone/iPad y ausencia de los textos/proveedor DEBUG de traducción en el ejecutable Release. No es un archivo firmado/subido.
+- Catálogos: 512 claves Localizable y 2 de permisos por idioma, claves/placeholders coincidentes. Metadata EN/ES dentro de límites.
+- Capturas originales en `/private/tmp/live24-iphone-final-shots` y `/private/tmp/live24-ipad-shots`; inspección de pares, etiquetas y pantalla completa.
+
+La compilación local con Xcode 15.2 no prueba la rama de Translation de Apple. Sigue pendiente probar los modelos reales, demora/calidad, texto provisional, VoiceOver/Dynamic Type, seguimiento de lectura, segundo plano y persistencia de la opción en un dispositivo compatible. No atribuir a los fixtures la evaluación del motor real. Sin cambios de política/servicios ni migración.

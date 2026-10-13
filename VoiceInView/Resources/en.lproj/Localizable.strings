@@ -510,3 +510,8 @@
 "Favorite protection stays on this device and does not make a backup. Remove protection before deleting a favorite session or its audio. Corrections change displayed and exported text; the original audio is unchanged." = "Favorite protection stays on this device and does not make a backup. Remove protection before deleting a favorite session or its audio. Corrections change displayed and exported text; the original audio is unchanged.";
 "Last updated: October 12, 2026." = "Last updated: October 12, 2026.";
 "Captions: %@. Audio remains in %@. Timing within each paragraph is approximate." = "Captions: %@. Audio remains in %@. Timing within each paragraph is approximate.";
+"Live caption display" = "Live caption display";
+"Translation %@" = "Translation %@";
+"Live preview is not saved. Translate the saved session to export." = "Live preview is not saved. Translate the saved session to export.";
+"Translating confirmed text…" = "Translating confirmed text…";
+"Waiting for translation…" = "Waiting for translation…";

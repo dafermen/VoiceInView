@@ -339,3 +339,7 @@ Se inspeccionaron las capturas de lectura/favoritas y el iPad. Los ajustes de lo
 ### Resultado Cloud de la entrega 23
 
 El SHA `40af9bd1310881a9d6c3cd37de9b38c2cf235ced` pasó Archive - iOS el 2026-10-13 a las 04:22:27 UTC. Check final `115127872696`: 0 errores, 0 fallos de tests reportados, 0 incidencias de análisis, 4 advertencias. La suite local es evidencia separada; el archivo Cloud no prueba ejecución de tests ni instalación en el teléfono. Estado general GitHub success. Detalles y límites en [checkpoint](pace-checkpoint.md). La API de anotaciones no incluyó el texto de las advertencias.
+
+## Build fuente 24 — 2026-10-13
+
+Traducción en vivo Original/Traducción/Ambos. Pasaron 13 tests de traducción, los recorridos UI de ambos sentidos en iPhone, el recorrido bilingüe en iPad y Release genérico sin firma. Se corrigió el selector y su anclaje antes de repetir las pruebas. Resultados exactos, capturas y límites del proveedor DEBUG en [checkpoint](live-bilingual-checkpoint.md). Cloud/TestFlight y motor Apple real se verifican por separado.

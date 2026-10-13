@@ -123,3 +123,9 @@ Para los catálogos de interfaz: `python3 scripts/validate-localization.py`. Tra
 ## Actualización 23 — 2026-10-12
 
 Build 23 añade tests para migración V7→V8/reapertura, impedir borrar sesión/audio, retirada de protección sin borrar, rango completo de párrafo, audio parcial, corte/repetición/callback obsoleto, edición directa y etiquetas de navegación EN/ES. Evidencia final en [checkpoint](pace-checkpoint.md).
+
+## Live bilingual reading — source build 24
+
+Run `HomeScreenTests/testLiveBilingualEnglishCapture` and `testLiveBilingualSpanishCapture` on iPhone/iPad. They select Both while capture is active, assert capture stays active, pause explicitly, verify original/translation pairing by UUID, switch to Translation and Original, then return to Both and rotate fullscreen. The DEBUG provider uses fixed translations; these tests do not validate Apple model downloads, latency or quality.
+
+On a physical device with the modern build, choose both directions, prepare languages, speak new sentences and compare original/translation pairs. Check provisional text, delayed translation/error retry, long sessions, background/foreground, reading earlier paragraphs without jumps, large Dynamic Type and VoiceOver. Confirm that changing display leaves audio/capture running and reopening retains the chosen display.

@@ -1,3 +1,10 @@
+## Source build 24 — 2026-10-13
+
+- Live captions offer Original, Translation and Both in one compact menu, independent of interface/capture language.
+- Pair original and translated paragraphs with language labels; show translation waiting state and provisional original text in Both.
+- Remember presentation preference; preserve microphone state when switching, plus fullscreen and reading styles.
+- Translate only confirmed text using the existing local engine. No new storage schema or translation service.
+
 ## 2026-10-11 — Local pronunciation practice (source build 19)
 
 ## Source build 22 — 2026-10-12

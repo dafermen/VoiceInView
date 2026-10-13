@@ -25,11 +25,15 @@ En **Settings → Names & translation terms**, escribe una entrada por línea: `
 
 Al traducir, coincidencias literales de términos completos se sustituyen por el español preferido; los fragmentos restantes se traducen mediante Apple. No hay sustituciones dentro de palabras. Se priorizan términos largos cuando coinciden al mismo inicio. Esto asegura términos consistentes, pero puede afectar la concordancia o el contexto de la frase: revisa el resultado. Cambiar el diccionario no invalida automáticamente traducciones anteriores; usa **Translate again** para aplicarlo a todo el texto.
 
-## Español durante la captura (experimental)
+## Traducción durante la captura — actualización build 24
 
-En Captions, el icono de bocadillo con caracteres alterna inglés/español en iOS 18+ con SDK compatible. Traduce únicamente párrafos confirmados; el texto parcial no se envía. Mientras espera, muestra el inglés con estilo secundario. **Following / Follow latest** activa o desactiva el desplazamiento automático.
+En Captions, el botón de bocadillo con caracteres abre **Idiomas en vivo / Live caption display**. Elige **Original**, **Traducción** o **Ambos**. Está disponible con iOS/iPadOS 18+ y SDK compatible; en sistemas anteriores se conserva el lector original. La elección se recuerda, sin cambiar el idioma hablado ni el idioma de los menús.
 
-La ventana conserva los últimos 40 párrafos y procesa lotes de hasta cuatro; en conversaciones largas se prioriza la ventana reciente. Los anteriores permanecen en la transcripción original. Es una vista previa temporal: se pierde al volver a inglés/cerrar la pantalla; para guardar/exportar español, guarda la sesión y tradúcela desde Sessions. No se traduce el audio interno de YouTube ni de otras apps.
+**Ambos** muestra cada párrafo original y debajo su traducción, con etiquetas de idioma, en una sola columna para iPhone/iPad y pantalla completa. Se admite inglés→español y español→inglés. Cambiar la vista no pausa ni reinicia el micrófono. Original usa el lector completo anterior; Traducción y Ambos comparten el mismo panel y conservan los resultados al alternar entre ellos.
+
+Se traducen únicamente párrafos confirmados: no es traducción palabra por palabra sin demora. En Ambos, las palabras provisionales siguen visibles en el idioma original. Si falta la traducción, se conserva el original con «Esperando traducción…», sin duplicarlo como si ya fuera el texto traducido. **Following / Follow latest** controla el seguimiento; arrastrar hacia textos anteriores lo pausa. Se respetan tamaño, negrita, interlineado, renglones, fondo y pantalla completa.
+
+La ventana conserva los últimos 40 párrafos y procesa lotes de hasta cuatro. Los anteriores siguen en la transcripción original. La vista previa vive en memoria: se pierde al elegir Original o cerrar el panel. Para guardar/exportar la traducción, guarda la sesión y tradúcela desde Sessions. No captura audio interno de YouTube ni de otras apps.
 
 Cambiar a segundo plano cancela la traducción en curso. La captura obedece su preferencia de Background, independiente de esta vista. Al volver se reanudan las traducciones pendientes. Un error muestra Retry sin detener el micrófono ni modificar la transcripción. Se requiere descargar idiomas inicialmente; probar latencia, batería y modo avión en un iPhone antes de depender de esta función durante una conferencia.
 
@@ -50,7 +54,7 @@ Las sesiones antiguas sin tiempos pueden traducirse y exportarse como texto/PDF,
 - `PersonalVocabulary`: valida entradas, escapa expresiones literales y conserva términos/espacios al traducir fragmentos. El reconocimiento usa contextualStrings (compatibilidad) o AnalysisContext (motor moderno).
 - `AppleTranslationRunner`: usa `TranslationSession` de Apple, prepara idiomas y procesa párrafos completos. Reporta progreso y comprueba cancelación. El UUID del intento impide guardar una respuesta tardía después de cancelar.
 - `TranslatedSubtitles`: función pura y comprobable; no llama al traductor ni al disco. Reutiliza tiempos originales y escapa texto al renderizar SRT/WebVTT.
-- `SessionTranslationView`: concentra selección de idioma, edición, exportación y reproducción. La captura ofrece un único icono opcional para alternar la vista previa española.
+- `SessionTranslationView`: concentra selección de idioma, edición, exportación y reproducción. La captura ofrece un único menú para Original/Traducción/Ambos. `LiveCaptionDisplay` es una preferencia de presentación; cada pareja se enlaza por UUID en `LiveTranslationBuffer`, no por posición visual.
 
 ## Compatibilidad y privacidad
 

@@ -510,3 +510,8 @@
 "Favorite protection stays on this device and does not make a backup. Remove protection before deleting a favorite session or its audio. Corrections change displayed and exported text; the original audio is unchanged." = "La protección de favoritas permanece en este dispositivo y no crea una copia de seguridad. Quita la protección antes de eliminar una sesión favorita o su audio. Las correcciones cambian el texto mostrado y exportado; el audio original permanece intacto.";
 "Last updated: October 12, 2026." = "Última actualización: 12 de octubre de 2026.";
 "Captions: %@. Audio remains in %@. Timing within each paragraph is approximate." = "Subtítulos: %@. El audio sigue en %@. Los tiempos dentro de cada párrafo son aproximados.";
+"Live caption display" = "Idiomas en vivo";
+"Translation %@" = "Traducción al %@";
+"Live preview is not saved. Translate the saved session to export." = "La vista previa no se guarda. Traduce la sesión guardada para exportarla.";
+"Translating confirmed text…" = "Traduciendo texto confirmado…";
+"Waiting for translation…" = "Esperando traducción…";

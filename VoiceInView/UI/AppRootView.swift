@@ -117,6 +117,10 @@ struct AppRootView: View {
                 let defaults = UserDefaults(suiteName: "VoiceInView.ReaderUITests")!
                 defaults.removePersistentDomain(forName: "VoiceInView.ReaderUITests")
                 let settings = AppSettings(defaults: defaults)
+                if ProcessInfo.processInfo.arguments.contains("--ui-test-live-translation") {
+                    UserDefaults.standard.removeObject(forKey: "liveCaptionDisplay")
+                    if ProcessInfo.processInfo.arguments.contains("--ui-test-spanish") { settings.captureLanguage = .spanish }
+                }
                 settings.saveAudio = false
                 coordinator = SessionCoordinator(repository: try TranscriptRepository(inMemory: true),
                     caption: CaptionViewModel(microphone: ReaderPreviewMicrophone(), speech: ReaderPreviewSpeech()),
@@ -188,7 +192,7 @@ private final class ReaderPreviewSpeech: SpeechTranscribing {
             let count = ProcessInfo.processInfo.arguments.contains("--ui-test-session-flow") ? 8 : 320
             for index in 1...count {
                 continuation?.yield(.init(runID: run, start: Double(index), end: Double(index + 1),
-                    text: "Paragraph \(index). Clear captions make every conversation easier to follow.", isFinal: true))
+                    text: ProcessInfo.processInfo.arguments.contains("--ui-test-spanish") ? "Párrafo \(index). Los subtítulos nos ayudan a seguir la conversación." : "Paragraph \(index). Clear captions make every conversation easier to follow.", isFinal: true))
             }
             nextParagraph = count + 1
         }
@@ -198,7 +202,7 @@ private final class ReaderPreviewSpeech: SpeechTranscribing {
                 guard let self else { return }
                 let index = self.nextParagraph
                 self.continuation?.yield(.init(runID: run, start: Double(index), end: Double(index + 1),
-                    text: "Paragraph \(index). New captions keep arriving while you read.", isFinal: true))
+                    text: ProcessInfo.processInfo.arguments.contains("--ui-test-spanish") ? "Párrafo \(index). Seguimos leyendo juntos mientras llegan nuevas palabras." : "Paragraph \(index). New captions keep arriving while you read.", isFinal: true))
                 if ProcessInfo.processInfo.arguments.contains("--ui-test-interruption"), !self.interrupted {
                     self.interrupted = true
                     self.continuation?.finish(throwing: TranscriptionFailure.interrupted("Alarm interrupted the microphone."))

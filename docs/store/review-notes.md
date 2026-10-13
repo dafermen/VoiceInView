@@ -7,7 +7,7 @@ No sign-in, purchase, subscription or demo account is needed. VoiceInView is an 
 3. Tap the microphone and speak nearby. Saving audio initially defaults on in new installations, but can be turned off before starting. Pause/Resume retains the session. Stop ends capture and presents Save Session/Discard. Save moves the recovery draft into the saved-session library without changing its identity; Discard deletes its text and recorded audio.
 4. Open Sessions → saved session → Audio & subtitles. Choose At my pace, play one paragraph, wait for it to stop, then use Repeat or Next. Correct paragraph saves reviewed text while original audio remains unchanged.
 5. Choose Favorite & protect in session details. Favorites filter lists it; deletion of session/audio requires removing protection first and a separate deletion confirmation.
-6. Translation requires a compatible modern build on iOS/iPadOS 18+ and Apple language downloads. Choose translation preparation if requested, then translate saved text. On iOS 17 the app explains unavailability while captioning/review remain available.
+6. Translation requires a compatible modern build on iOS/iPadOS 18+ and Apple language downloads. Choose translation preparation if requested, then translate saved text. During capture, the language bubble offers Original, Translation and Both; Both pairs confirmed original paragraphs with their translations. The preview is temporary and does not automatically save translations. On iOS 17 the app explains unavailability while captioning/review remain available.
 7. Language practice offers examples and short temporary pronunciation takes. Optional on-device word recognition is not pronunciation scoring. Voice/model preparation is indicated in the UI.
 8. Background continuation is explicit and initially off. With it enabled, the audio background mode supports microphone recording/recognition after switching apps or locking the screen. A call/alarm may still interrupt it. Resume is always explicit. There is no silent background microphone restart.
 
@@ -17,6 +17,6 @@ Before copying these notes to App Store Connect, append:
 - Actual tested device models and OS versions (PENDING).
 - Public support/privacy URLs (PENDING publication and verification on innovalogic.tech, hosted by Hostinger). Public support/privacy email confirmed: dariofernandomeneses@gmail.com.
 - Reviewer contact name, phone and email, entered privately in App Store Connect (PENDING; do not commit personal phone numbers here).
-- Exact final version/build selected for public review (PENDING; source build 23 is a development delivery).
+- Exact final version/build selected for public review (PENDING; source build 24 is a development delivery).
 
 Do not distribute the DEBUG synthetic test fixtures as reviewer functionality. Never provide an internal-testing-only build for public App Review; archive a build eligible for TestFlight and App Store.

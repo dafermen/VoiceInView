@@ -4,13 +4,17 @@
 
 Native iPhone and iPad app for following spoken English or Spanish, reviewing conversations and practicing a language. Designed as a reading and learning aid in meetings, conferences, classes and everyday conversations, including support for people with hearing loss or low vision and supervised language practice for children. On-device recognition requires a compatible device and prepared language model.
 
+## Both languages during live capture — source build 24
+
+In Captions, open the speech-bubble language button and choose **Original**, **Translation** or **Both**. Both keeps each original paragraph above its translation, with language labels and an explicit waiting state. The choice is remembered and is independent of spoken language and menu language. Switching views never pauses the microphone. Available with the existing live-translation support (iOS/iPadOS 18+ and a compatible build). Confirmed paragraphs are translated; provisional words remain original. See [live bilingual reading](docs/translation.md) and [delivery evidence](docs/live-bilingual-checkpoint.md).
+
 ## Reading at your pace — source build 23
 
 Choose **Audio & subtitles → At my pace** to play one complete paragraph, keep it visible, repeat it or manually play the next. Correct the selected paragraph directly while playback is paused. Corrections update captions/exports and preserve the original recording. The mode is remembered; continuous playback remains available.
 
 **Favorite & protect** keeps important sessions together under **Sessions → Favorites** and prevents deleting either the session or its audio until protection is explicitly removed. This is not a backup. The English/Spanish interface now refreshes tab labels without recreating the session.
 
-See the [user/developer guide](docs/at-my-pace.md), [delivery checkpoint](docs/pace-checkpoint.md), and [App Store preparation package](docs/app-store.md). Public release still requires owner contact/URLs and final device acceptance.
+See the [user/developer guide](docs/at-my-pace.md), [delivery checkpoint](docs/pace-checkpoint.md), and [App Store preparation package](docs/app-store.md). Public release still requires published policy/support URLs and final device acceptance.
 
 ## Optional noise reduction — source build 22
 

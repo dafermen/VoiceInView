@@ -268,3 +268,11 @@ Práctica: ejecuta `testV7MigrationFavoriteProtectionAndExplicitRemovalSurviveRe
 El cambio de idioma conserva el `TabView`: recrearlo con `.id(idioma)` podría perder navegación/estado. Se resuelven explícitamente sus etiquetas y el título de Ajustes. Prueba alternar EN→ES→EN con una sesión pausada y confirmar que Reanudar sigue disponible.
 
 Para publicar, código correcto no equivale a una app disponible. Se necesitan archivo firmado, subida procesada, grupo TestFlight, prueba física y revisión pública aparte. Lee [la guía de App Store](app-store.md) antes de marcar una entrega como publicada.
+
+## Lección: dos idiomas en el mismo lector (build 24)
+
+Una preferencia de presentación no debe cambiar la captura. `LiveCaptionDisplay` contiene original/translation/both y se conserva con `@AppStorage`. `CaptionScreen` muestra el lector original o pasa la opción al panel de traducción, sin llamar a start/stop. Idioma del micrófono, idioma de interfaz y forma de mostrar el texto son tres decisiones distintas.
+
+Cada párrafo tiene un UUID. `LiveTranslationBuffer.translated[id]` permite dibujar la traducción debajo del original correspondiente aunque llegue después. Mientras falta, se muestra un aviso, no una segunda copia del original que pueda confundirse con traducción. Solo se envía texto confirmado al motor; el provisional aparece como texto que puede cambiar. Cambiar Traducción↔Ambos mantiene la misma vista/cola; volver a Original desmonta la vista previa y cancela su tarea sin tocar el micrófono.
+
+Las pruebas UI usan respuestas prefijadas dentro de `#if DEBUG`. Verifican parejas, selector y continuidad de la sesión, no la calidad ni latencia del motor de Apple. El build Release no contiene ese proveedor simulado. Ver [evidencia](live-bilingual-checkpoint.md).

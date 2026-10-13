@@ -2,6 +2,62 @@ import XCTest
 
 final class HomeScreenTests: XCTestCase {
     @MainActor
+    func testLiveBilingualEnglishCapture() throws { try checkLiveBilingual(spanish: false) }
+
+    @MainActor
+    func testLiveBilingualSpanishCapture() throws { try checkLiveBilingual(spanish: true) }
+
+    @MainActor
+    private func checkLiveBilingual(spanish: Bool) throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-reader", "--ui-test-session-flow", "--ui-test-live-translation"]
+        if spanish { app.launchArguments.append("--ui-test-spanish") }
+        app.launch()
+        let action = app.buttons["primaryCaptionAction"]
+        XCTAssertTrue(action.waitForExistence(timeout: 20))
+        action.tap()
+        expectation(for: NSPredicate(format: "label == 'Pause'"), evaluatedWith: action)
+        waitForExpectations(timeout: 10)
+        let selector = app.buttons["liveSpanishButton"]
+        selector.tap(); app.buttons["Both"].tap()
+        XCTAssertEqual(action.label, "Pause", "Changing presentation must not stop capture")
+        action.tap()
+        XCTAssertTrue(app.buttons["resumeCaptureButton"].waitForExistence(timeout: 5))
+        let originals = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH 'liveOriginal-'"))
+        let translations = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH 'liveTranslated-'"))
+        XCTAssertTrue(translations.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(originals.firstMatch.exists)
+        let translated = translations.firstMatch
+        let sourceID = translated.identifier.replacingOccurrences(of: "liveTranslated-", with: "liveOriginal-")
+        XCTAssertTrue(app.staticTexts[sourceID].exists, "Original and translation must remain paired by paragraph")
+        XCTAssertTrue(translated.label.contains(spanish ? "Test translation" : "Traducción de prueba"))
+        XCTAssertTrue(app.staticTexts[sourceID].label.contains(spanish ? "Párrafo" : "Paragraph"))
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = spanish ? "Live-both-Spanish" : "Live-both-English"; shot.lifetime = .keepAlways; add(shot)
+        selector.tap(); app.buttons[spanish ? "Translation English" : "Translation Español"].tap()
+        expectation(for: NSPredicate { _, _ in originals.count == 0 }, evaluatedWith: app)
+        waitForExpectations(timeout: 10)
+        XCTAssertTrue(translations.firstMatch.exists)
+        selector.tap(); app.buttons[spanish ? "Original Español" : "Original English"].tap()
+        XCTAssertTrue(app.scrollViews["captionScrollView"].exists)
+        XCTAssertFalse(app.scrollViews["liveTranslationReader"].exists)
+        selector.tap(); app.buttons["Both"].tap()
+        XCTAssertTrue(translations.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["resumeCaptureButton"].exists)
+        app.buttons["resumeCaptureButton"].tap()
+        expectation(for: NSPredicate(format: "label == 'Pause'"), evaluatedWith: action)
+        waitForExpectations(timeout: 5)
+        app.buttons["fullScreenButton"].tap()
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        expectation(for: NSPredicate { _, _ in app.frame.width > app.frame.height && selector.isHittable }, evaluatedWith: app)
+        waitForExpectations(timeout: 12)
+        XCTAssertTrue(translations.firstMatch.exists)
+        let landscape = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        landscape.name = "Live-both-landscape"; landscape.lifetime = .keepAlways; add(landscape)
+    }
+
+    @MainActor
     func testAtMyPaceEditingAndProtectedFavorites() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--ui-test-review", "--ui-test-media"]
