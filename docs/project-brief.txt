@@ -1,3 +1,6 @@
+ACTUALIZACIÓN 2026-10-12 — build fuente 23
+Reproducción A mi ritmo por párrafo completo, corrección directa, favoritas protegidas (V8), pestañas EN/ES sin reiniciar sesión. Material bilingüe de App Store en docs/app-store.md; publicación pendiente del titular y aceptación final. Entrega y pruebas en docs/pace-checkpoint.md.
+
 # PROJECT: Offline Live Caption for iPhone
 
 Act as a senior iOS software architect and developer.

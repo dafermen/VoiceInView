@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import SwiftData
 import UniformTypeIdentifiers
 
 @MainActor
@@ -51,66 +52,126 @@ struct CaptureOptionsView: View {
     }
 }
 
+/// Reproduce un intervalo de muestras, no un temporizador que corta tarde el siguiente párrafo.
+/// El temporizador solo actualiza la pantalla; scheduleSegment limita el audio en el motor.
 @MainActor
 @Observable
 final class SessionPlayer {
-    private var player: AVAudioPlayer?
+    private var engine = AVAudioEngine()
+    private var node = AVAudioPlayerNode()
+    private var file: AVAudioFile?
     private var timer: Task<Void, Never>?
     private var interruption: NSObjectProtocol?
+    private var generation = UUID()
+    private var anchor = 0.0
     private(set) var playing = false
     private(set) var time = 0.0
     private(set) var duration = 0.0
+    private(set) var range: ClosedRange<Double>?
     var failure: String?
+    var bounds: ClosedRange<Double> { range ?? 0...max(duration, 0.001) }
 
     func load(_ url: URL) {
-        stop()
+        stop(); failure = nil
         do {
-            player = try AVAudioPlayer(contentsOf: url)
-            duration = player?.duration ?? 0
-            player?.prepareToPlay()
+            let file = try AVAudioFile(forReading: url)
+            self.file = file
+            duration = Double(file.length) / file.processingFormat.sampleRate
+            engine = AVAudioEngine(); node = AVAudioPlayerNode()
+            engine.attach(node)
+            engine.connect(node, to: engine.mainMixerNode, format: file.processingFormat)
             interruption = NotificationCenter.default.addObserver(forName: AVAudioSession.interruptionNotification,
                 object: nil, queue: .main) { [weak self] _ in
                 Task { @MainActor [weak self] in self?.pause() }
             }
         } catch { failure = "This recording could not be opened. The transcript is still available." }
     }
+    func select(range: ClosedRange<Double>?) {
+        pause()
+        if let range {
+            guard range.lowerBound.isFinite, range.upperBound.isFinite,
+                  range.lowerBound >= 0, range.lowerBound < duration,
+                  range.upperBound > range.lowerBound else { return }
+            self.range = range.lowerBound...min(range.upperBound, duration)
+            time = range.lowerBound
+        } else { self.range = nil }
+    }
     func toggle() {
         if playing { pause(); return }
+        guard let file else { return }
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
             try AVAudioSession.sharedInstance().setActive(true)
-            if time >= duration { seek(0) }
-            guard player?.play() == true else { throw RecordingFailure.unavailable }
-            playing = true
-            timer = Task { @MainActor [weak self] in
-                while !Task.isCancelled {
-                    do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
-                    guard let self, let player = self.player else { return }
-                    self.time = player.currentTime
-                    if !player.isPlaying { self.time = self.duration; self.pause(); return }
+            if time >= bounds.upperBound || time < bounds.lowerBound { time = bounds.lowerBound }
+            let rate = file.processingFormat.sampleRate
+            let first = AVAudioFramePosition(time * rate)
+            let last = min(file.length, AVAudioFramePosition(bounds.upperBound * rate))
+            guard last > first, last - first <= Int64(UInt32.max) else { throw RecordingFailure.unavailable }
+            node.stop()
+            let token = UUID(); generation = token
+            anchor = time
+            let end = bounds.upperBound
+            node.scheduleSegment(file, startingFrame: first, frameCount: AVAudioFrameCount(last - first), at: nil,
+                completionCallbackType: .dataPlayedBack) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    guard let self, self.generation == token else { return }
+                    self.pause(); self.time = end
                 }
             }
-        } catch { failure = "Audio playback could not start. Please try again." }
+            engine.prepare()
+            try engine.start()
+            node.play(); playing = true
+            timer = Task { @MainActor [weak self] in
+                while !Task.isCancelled {
+                    do { try await Task.sleep(for: .milliseconds(60)) } catch { return }
+                    self?.updateTime()
+                }
+            }
+        } catch { pause(); failure = "Audio playback could not start. Please try again." }
+    }
+    private func updateTime() {
+        guard playing, let render = node.lastRenderTime, let position = node.playerTime(forNodeTime: render) else { return }
+        time = min(bounds.upperBound, anchor + Double(position.sampleTime) / position.sampleRate)
     }
     func play(from value: Double) {
-        guard value.isFinite, value >= 0, value < duration else { return }
+        guard value.isFinite, value >= bounds.lowerBound, value < bounds.upperBound else { return }
         seek(value)
         if !playing { toggle() }
     }
     func seek(_ value: Double) {
         guard value.isFinite else { return }
-        time = min(max(value, 0), duration)
-        player?.currentTime = time
+        let resume = playing
+        pause()
+        time = min(max(value, bounds.lowerBound), bounds.upperBound)
+        // Scrubbing to the end leaves playback paused rather than unexpectedly restarting.
+        if resume && time < bounds.upperBound { toggle() }
     }
     func pause() {
+        updateTime(); generation = UUID()
         timer?.cancel(); timer = nil
-        player?.pause(); playing = false
+        node.stop(); engine.pause(); playing = false
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
     func stop() {
         if let interruption { NotificationCenter.default.removeObserver(interruption) }
         interruption = nil
-        pause(); player = nil; time = 0; duration = 0
+        pause(); engine.stop(); file = nil; time = 0; duration = 0; range = nil
+    }
+}
+
+/// Un párrafo puede generar varios subtítulos breves. La lectura pausada conserva su rango completo.
+struct PlaybackParagraph: Identifiable, Equatable {
+    let id: UUID
+    let text: String
+    let start: Double
+    let end: Double
+    static func make(_ paragraphs: [ReviewParagraph], timings: [String: CaptionTiming], duration: Double) -> [Self] {
+        guard duration.isFinite, duration > 0 else { return [] }
+        return paragraphs.compactMap { paragraph in
+            guard let timing = timings[paragraph.id.uuidString], timing.start.isFinite, timing.end.isFinite,
+                  timing.start >= 0, timing.start < duration, timing.end > timing.start else { return nil }
+            return Self(id: paragraph.id, text: paragraph.text, start: timing.start, end: min(timing.end, duration))
+        }
     }
 }
 
@@ -137,6 +198,15 @@ struct SessionMediaView: View {
     @State private var exportTask: Task<Void, Never>?
     @State private var fullScreen = false
     @State private var editing = false
+    @State private var editingParagraph: ReviewParagraph?
+    @State private var selectedParagraphID: UUID?
+    @State private var playbackParagraphs: [PlaybackParagraph] = []
+    @AppStorage("playbackAtMyPace") private var atMyPace = false
+    @Query private var favorites: [SessionFavorite]
+    private var protected: Bool { favorites.contains { $0.sessionID == session.id } }
+    private var selectedParagraph: PlaybackParagraph? { playbackParagraphs.first { $0.id == selectedParagraphID } }
+    private var activeParagraphID: UUID? { atMyPace ? selectedParagraphID : currentCue?.paragraphID ?? selectedParagraphID }
+    private var captionText: String? { atMyPace ? selectedParagraph?.text : currentCue?.text }
     @State private var reviewed: [ReviewParagraph] = []
     @State private var edited = false
     @Environment(\.scenePhase) private var phase
@@ -146,31 +216,65 @@ struct SessionMediaView: View {
         NavigationStack {
             VStack(spacing: 12) {
                 if audioURL != nil {
+                    if !fullScreen {
+                    Picker("Playback mode", selection: $atMyPace) {
+                        Text("Continuous").tag(false)
+                        Text("At my pace").tag(true)
+                    }.pickerStyle(.segmented).accessibilityIdentifier("playbackModePicker")
+                    }
                     if captions {
-                        (currentCue.map { Text(verbatim: $0.text) } ?? Text(uiKey(player.playing ? "…" : "Play to read synchronized captions")))
+                        ScrollView {
+                        (captionText.map { Text(verbatim: $0) } ?? Text(uiKey(player.playing ? "…" : "Play to read synchronized captions")))
                             .font(.title2.weight(.medium)).multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity, maxHeight: fullScreen ? .infinity : 160)
+                            .frame(maxWidth: .infinity).fixedSize(horizontal: false, vertical: true)
                             .padding().background(.black, in: RoundedRectangle(cornerRadius: 16))
                             .foregroundStyle(.white).accessibilityIdentifier("playbackCaption")
+                        }.id(activeParagraphID)
+                            .frame(maxHeight: fullScreen ? .infinity : 160)
+                            .background(.black, in: RoundedRectangle(cornerRadius: 16))
                     }
+                    if !fullScreen {
                     Slider(value: Binding(get: { player.time }, set: { player.seek($0) }),
-                           in: 0...max(player.duration, 0.001))
+                           in: player.bounds)
                         .accessibilityLabel("Playback position")
                         .accessibilityValue(SessionClock.format(player.time))
                     HStack {
                         Text(SessionClock.format(player.time)).monospacedDigit()
                         Spacer()
-                        Text(SessionClock.format(player.duration)).monospacedDigit()
+                        Text(SessionClock.format(atMyPace ? player.bounds.upperBound : player.duration)).monospacedDigit()
                     }.font(.caption).foregroundStyle(.secondary)
-                    HStack(spacing: 28) {
-                        Button("Back 10 seconds", systemImage: "gobackward.10") { player.seek(player.time - 10) }
+                    }
+                    HStack(spacing: fullScreen ? 20 : 28) {
+                        if atMyPace {
+                            Button("Repeat paragraph", systemImage: "arrow.counterclockwise") {
+                                if let selectedParagraph { playParagraph(selectedParagraph) }
+                            }.disabled(selectedParagraph == nil)
+                                .accessibilityIdentifier("repeatParagraphButton")
+                        } else {
+                            Button("Back 10 seconds", systemImage: "gobackward.10") { player.seek(player.time - 10) }
+                        }
                         Button(uiKey(player.playing ? "Pause" : "Play"), systemImage: player.playing ? "pause.fill" : "play.fill") { player.toggle() }
                             .accessibilityIdentifier("recordingPlayButton")
-                        Button("Forward 10 seconds", systemImage: "goforward.10") { player.seek(player.time + 10) }
+                            .disabled(atMyPace && selectedParagraph == nil)
+                        if atMyPace {
+                            Button("Next paragraph", systemImage: "forward.end.fill") { nextParagraph() }
+                                .disabled(nextPlaybackParagraph == nil).accessibilityIdentifier("nextParagraphButton")
+                        } else {
+                            Button("Forward 10 seconds", systemImage: "goforward.10") { player.seek(player.time + 10) }
+                        }
                         Button("Subtitles", systemImage: captions ? "captions.bubble.fill" : "captions.bubble") { captions.toggle() }
                             .accessibilityValue(uiKey(captions ? "On" : "Off"))
+                        if fullScreen, let activeParagraphID {
+                            Button("Correct paragraph", systemImage: "pencil") { beginParagraphEdit(activeParagraphID) }
+                                .accessibilityIdentifier("editPlaybackParagraphButton")
+                        }
                     }.labelStyle(.iconOnly).font(.title2).buttonStyle(PlaybackButtonStyle())
                         .frame(minHeight: 44)
+                    if !fullScreen, let activeParagraphID {
+                        Button(uiKey(translatedCues != nil && translationLanguage != sessionSourceLanguage ? "Edit translation" : "Correct paragraph"), systemImage: "pencil") {
+                            beginParagraphEdit(activeParagraphID)
+                        }.frame(minHeight: 44).accessibilityIdentifier("editPlaybackParagraphButton")
+                    }
                 }
                 if !fullScreen {
                     List {
@@ -182,26 +286,31 @@ struct SessionMediaView: View {
                         }
                         }
                         if let translationLanguage {
-                            Text(uiKey("Captions: \(translationLanguage). Audio remains in \(CaptureLanguage(rawValue: session.language)?.name ?? "English"). Edit translated text from Translation. Timing within each paragraph is approximate.")).font(.caption)
+                            Text(uiKey("Captions: \(translationLanguage). Audio remains in \(CaptureLanguage(rawValue: session.language)?.name ?? "English"). Timing within each paragraph is approximate.")).font(.caption)
                         }
                         if audioURL != nil && !cues.isEmpty {
                             Section {
+                                if atMyPace {
+                                    Text("One paragraph at a time. Repeat it or choose Next when you are ready.")
+                                        .font(.caption).foregroundStyle(.secondary)
+                                }
                                 Button(uiKey(showingPhrases ? "Hide phrases" : "Listen by phrase"),
                                        systemImage: showingPhrases ? "chevron.up" : "chevron.down") { showingPhrases.toggle() }
                                     .accessibilityValue(uiKey(showingPhrases ? "Expanded" : "Collapsed"))
                                     .accessibilityIdentifier("phraseListButton")
                                 if showingPhrases {
-                                ForEach(cues) { cue in
-                                    Button { player.play(from: cue.start) } label: {
+                                ForEach(Array(playbackParagraphs.enumerated()), id: \.element.id) { index, paragraph in
+                                    Button { playParagraph(paragraph) } label: {
                                         VStack(alignment: .leading, spacing: 4) {
-                                            Text(cue.text).foregroundStyle(.primary)
-                                            Label(SessionClock.format(cue.start), systemImage: "play.circle")
+                                            (paragraph.text.isEmpty ? Text("Empty paragraph") : Text(verbatim: paragraph.text))
+                                                .foregroundStyle(.primary)
+                                            Label(SessionClock.format(paragraph.start), systemImage: "play.circle")
                                                 .font(.caption)
-                                        }.frame(maxWidth: .infinity, alignment: .leading)
+                                        }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 6)
                                     }
-                                    .listRowBackground(currentCue?.id == cue.id ? Color.accentColor.opacity(0.12) : Color.clear)
-                                    .accessibilityHint("Play the recording from this phrase")
-                                    .accessibilityIdentifier("listenCue-\(cue.id)")
+                                    .listRowBackground(activeParagraphID == paragraph.id ? Color.accentColor.opacity(0.12) : Color.clear)
+                                    .accessibilityHint(uiKey(atMyPace ? "Play only this paragraph" : "Listen from this paragraph"))
+                                    .accessibilityIdentifier("listenPlaybackParagraph-\(index)")
                                 }
                                 }
                             }
@@ -220,10 +329,11 @@ struct SessionMediaView: View {
                         if audioURL != nil {
                             Section {
                                 Button("Delete audio, keep text", role: .destructive) { player.pause(); deleting = true }
-                            }.disabled(busy)
+                                if protected { Text("Remove protection before deleting the session or its audio.").font(.caption) }
+                            }.disabled(busy || protected)
                         }
                         if busy { HStack { ProgressView(); Text("Preparing files…") } }
-                    }.listStyle(.insetGrouped)
+                    }.listStyle(.insetGrouped).accessibilityIdentifier("mediaActionsList")
                 }
             }
             .padding(.horizontal)
@@ -247,14 +357,31 @@ struct SessionMediaView: View {
                     try rebuildCues()
                 }
             }
+            .sheet(item: $editingParagraph) { paragraph in
+                ParagraphEditorView(paragraph: paragraph, savesImmediately: true,
+                    translation: translatedCues != nil && translationLanguage != sessionSourceLanguage) { text in
+                    try saveParagraph(paragraph, text: text)
+                }
+            }
             .task { reviewed = paragraphs; load() }
+            .onChange(of: atMyPace) { _, _ in
+                player.pause()
+                if atMyPace {
+                    let match = playbackParagraphs.first { $0.start <= player.time && player.time < $0.end }
+                    if let paragraph = match ?? selectedParagraph ?? playbackParagraphs.first {
+                        selectedParagraphID = paragraph.id
+                        player.select(range: paragraph.start...paragraph.end)
+                    }
+                    showingPhrases = true
+                } else { player.select(range: nil) }
+            }
             .onDisappear { player.stop(); exportTask?.cancel(); cleanup() }
             .onChange(of: phase) { _, phase in if phase != .active { player.pause() } }
             .confirmationDialog(uiKey("Delete the recording permanently? Your text and subtitles will stay."), isPresented: $deleting, titleVisibility: .visible) {
                 Button("Delete audio", role: .destructive) {
                     player.stop()
                     do { try repository.deleteAudio(for: session.id); audioURL = nil; try rebuildCues() }
-                    catch { failure = "Could not delete the recording. Please try again." }
+                    catch { failure = error is SessionProtectionFailure ? error.localizedDescription : "Could not delete the recording. Please try again." }
                 }
             }
             .sheet(item: $export, onDismiss: { cleanup() }) { item in MediaActivityView(urls: item.urls) }
@@ -270,15 +397,27 @@ struct SessionMediaView: View {
                 audioURL = url; player.load(url)
             }
             try rebuildCues()
-            if let initialParagraphID, let cue = cues.first(where: { $0.paragraphID == initialParagraphID }) {
-                player.play(from: cue.start)
+            if let paragraph = playbackParagraphs.first(where: { $0.id == initialParagraphID }) {
+                showingPhrases = true
+                playParagraph(paragraph)
+            } else if atMyPace, let paragraph = playbackParagraphs.first {
+                selectedParagraphID = paragraph.id
+                player.select(range: paragraph.start...paragraph.end)
+                showingPhrases = true
             }
         } catch { failure = "Could not open session media. Your transcript is unchanged." }
     }
 
     private func rebuildCues() throws {
         let times = try repository.media(for: session.id)?.decodedTimings() ?? [:]
-        let generated = translatedCues ?? SubtitleExport.cues(paragraphs: reviewed, timings: times)
+        playbackParagraphs = PlaybackParagraph.make(reviewed, timings: times, duration: player.duration)
+        var generated = SubtitleExport.cues(paragraphs: reviewed, timings: times)
+        if translatedCues != nil, let mode = translationLanguage.flatMap(TranscriptLanguage.init(rawValue:)),
+           let snapshot = try repository.translation(for: session.id)?.decoded() {
+            reviewed = snapshot.paragraphs(mode: mode)
+            playbackParagraphs = PlaybackParagraph.make(reviewed, timings: times, duration: player.duration)
+            generated = TranslatedSubtitles.cues(snapshot: snapshot, timings: times, mode: mode)
+        }
         // A failed recording may retain only a prefix. Never display captions past that prefix.
         if audioURL != nil, player.duration > 0 {
             cues = generated.compactMap { cue in
@@ -287,6 +426,46 @@ struct SessionMediaView: View {
                     end: min(cue.end, player.duration), text: cue.text)
             }
         } else { cues = generated }
+    }
+
+    private var sessionSourceLanguage: String { (CaptureLanguage(rawValue: session.language) ?? .english).mode.rawValue }
+    private var nextPlaybackParagraph: PlaybackParagraph? {
+        guard let index = playbackParagraphs.firstIndex(where: { $0.id == selectedParagraphID }),
+              index + 1 < playbackParagraphs.count else { return nil }
+        return playbackParagraphs[index + 1]
+    }
+    private func playParagraph(_ paragraph: PlaybackParagraph) {
+        selectedParagraphID = paragraph.id
+        player.select(range: atMyPace ? paragraph.start...paragraph.end : nil)
+        player.play(from: paragraph.start)
+    }
+    private func nextParagraph() {
+        if let next = nextPlaybackParagraph { playParagraph(next) }
+    }
+    private func beginParagraphEdit(_ id: UUID) {
+        player.pause(); selectedParagraphID = id
+        do {
+            if translatedCues != nil && translationLanguage != sessionSourceLanguage {
+                editingParagraph = try repository.translation(for: session.id)?.decoded().translated.first { $0.id == id }
+            } else { editingParagraph = reviewed.first { $0.id == id } }
+        } catch { failure = error.localizedDescription }
+    }
+    /// Guardar corrige texto por UUID, conserva audio y selección, y nunca reinicia la reproducción.
+    private func saveParagraph(_ paragraph: ReviewParagraph, text: String) throws {
+        if translatedCues != nil && translationLanguage != sessionSourceLanguage {
+            guard var snapshot = try repository.translation(for: session.id)?.decoded(),
+                  snapshot.translated.contains(paragraph) else { throw ReviewFailure.sessionChanged }
+            snapshot.edits[paragraph.id.uuidString] = text
+            try repository.saveTranslation(snapshot, for: session)
+        } else {
+            var updated = try repository.reviewedParagraphs(for: session)
+            guard let index = updated.firstIndex(of: paragraph) else { throw ReviewFailure.sessionChanged }
+            updated[index].text = text
+            try repository.saveCorrections(updated, for: session)
+            reviewed = updated
+        }
+        edited = true
+        try rebuildCues()
     }
 
     private func cleanup() {

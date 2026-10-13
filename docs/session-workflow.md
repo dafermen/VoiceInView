@@ -52,3 +52,7 @@ Sessions → sesión → Translate to Spanish abre la lectura en español, ingl�
 ## Actualización build 21
 
 Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).
+
+## Actualización 23 — 2026-10-12
+
+Build 23 protege sesiones guardadas con Favorita y añade un filtro sin copiar archivos. Quitar protección no elimina; se requiere un borrado posterior confirmado. Los borradores deben publicarse antes de protegerlos.

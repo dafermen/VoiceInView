@@ -77,7 +77,7 @@ struct TranscriptEditorView: View {
                 }
             }
             .sheet(item: $selected) { paragraph in
-                ParagraphEditorView(paragraph: paragraph) { text in
+                ParagraphEditorView(paragraph: paragraph, translation: translation) { text in
                     var edited = history.value
                     if let index = edited.firstIndex(where: { $0.id == paragraph.id }) {
                         edited[index].text = text
@@ -105,15 +105,20 @@ struct TranscriptEditorView: View {
 }
 
 @MainActor
-private struct ParagraphEditorView: View {
+struct ParagraphEditorView: View {
     let paragraph: ReviewParagraph
-    let apply: (String) -> Void
+    let apply: (String) throws -> Void
+    var savesImmediately = false
+    var translation = false
+    @State private var failure: String?
     @Environment(\.dismiss) private var dismiss
     @State private var history: EditHistory<String>
     @FocusState private var focused: Bool
     @State private var confirmingDiscard = false
 
-    init(paragraph: ReviewParagraph, apply: @escaping (String) -> Void) {
+    init(paragraph: ReviewParagraph, savesImmediately: Bool = false, translation: Bool = false, apply: @escaping (String) throws -> Void) {
+        self.savesImmediately = savesImmediately
+        self.translation = translation
         self.paragraph = paragraph
         self.apply = apply
         _history = State(initialValue: EditHistory(paragraph.text))
@@ -132,7 +137,7 @@ private struct ParagraphEditorView: View {
                     .font(.title3).padding(.horizontal, 12).focused($focused)
                     .accessibilityLabel("Paragraph text").accessibilityIdentifier("paragraphEditor")
             }
-            .navigationTitle("Correct paragraph").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(uiKey(translation ? "Edit translation" : "Correct paragraph")).navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -140,13 +145,19 @@ private struct ParagraphEditorView: View {
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Apply") { apply(history.value); dismiss() }
+                    Button(uiKey(savesImmediately ? "Save" : "Apply")) {
+                        do { try apply(history.value); dismiss() }
+                        catch { failure = error.localizedDescription }
+                    }.accessibilityIdentifier("saveParagraphCorrection")
                 }
             }
             .confirmationDialog(uiKey("Discard this paragraph's changes?"), isPresented: $confirmingDiscard, titleVisibility: .visible) {
                 Button("Discard changes", role: .destructive) { dismiss() }
                 Button("Keep editing", role: .cancel) {}
             }
+            .alert("Could not save corrections", isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) {
+                Button("OK") { failure = nil }
+            } message: { Text(LocalizedStringKey(failure ?? "")) }
             .task { focused = true }
         }
         .interactiveDismissDisabled(history.value != paragraph.text)

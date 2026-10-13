@@ -1,5 +1,7 @@
 # VoiceInView para estudiantes y desarrolladores junior
 
+Estado actual: **build fuente 23, esquema V8**. Ver [A mi ritmo y favoritas](at-my-pace.md) y [entrega/verificación](pace-checkpoint.md). Las secciones con otros números describen etapas anteriores.
+
 ## Build 22: filtrar antes de repartir el audio
 
 La reducción de ruido es una preferencia global que se copia al iniciar la sesión. El motor procesa la entrada antes del tap; ese tap entrega la misma señal al archivo y al reconocimiento. No basta con modificar el reproductor: hacerlo allí no cambiaría el audio exportado ni la entrada de Speech. Mantener la opción fija al reanudar evita mezclar tratamientos/formato en un archivo. Lee el [recorrido explicado de reducción de ruido](noise-reduction.md), sus límites y las pruebas con dobles frente a pruebas acústicas reales.
@@ -248,3 +250,21 @@ Lee [cómo se conectan voz sintética, grabador, reproductor y reconocimiento lo
 ## Actualización build 21
 
 Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).
+
+## Lección: reproducir un párrafo y proteger una sesión (build 23)
+
+Imagina un cuaderno con audio: cada párrafo tiene una etiqueta UUID y dos números, inicio y fin. Corregir “casa” por “clase” cambia las letras, no la etiqueta ni el audio. `PlaybackParagraph.make` une texto y tiempos por esa etiqueta. No usa el índice de pantalla: filtrar una lista no debe cambiar qué grabación corresponde al texto.
+
+El audio digital contiene muestras. Para reproducir desde el segundo 2 hasta el 4 a 16 000 muestras por segundo, se programan 32 000 muestras comenzando en la muestra 32 000. `scheduleSegment` limita la reproducción a ese intervalo. El reloj de pantalla se actualiza aparte. Al terminar, el texto sigue seleccionado: quien lee decide cuándo continuar.
+
+Los callbacks llegan después. Si se toca otro párrafo antes de recibir el callback anterior, no queremos que ese callback detenga el nuevo audio. Por eso cada reproducción tiene un UUID temporal (`generation`); solo el callback con el UUID actual puede finalizarla. Pausar cambia ese UUID y cancela el temporizador.
+
+El editor tiene un borrador. Cancelar no escribe en la base. Guardar llama al repositorio y solo cierra cuando la operación termina bien. La corrección se guarda separada del reconocimiento original; SRT, TXT y la pantalla reutilizan el texto revisado. Traducir produce otra copia, también separada. No confundir “editar el subtítulo” con “editar la voz grabada”.
+
+Una favorita es una fila `SessionFavorite(sessionID)`, no otra copia de la sesión. Agregar esta tabla requiere migración V7→V8; redefinir modelos antiguos puede romper la apertura del almacén. El repositorio comprueba la protección antes de tocar archivos, incluso si alguien llama a borrar sin pasar por el botón. La interfaz deshabilita el botón para explicarlo, pero la regla vive también en el repositorio.
+
+Práctica: ejecuta `testV7MigrationFavoriteProtectionAndExplicitRemovalSurviveReopen`. Crea un almacén anterior, lo abre con la nueva versión, protege, cierra, vuelve a abrir e intenta borrar. Comprueba texto y audio reales: no basta con verificar que un icono sea amarillo.
+
+El cambio de idioma conserva el `TabView`: recrearlo con `.id(idioma)` podría perder navegación/estado. Se resuelven explícitamente sus etiquetas y el título de Ajustes. Prueba alternar EN→ES→EN con una sesión pausada y confirmar que Reanudar sigue disponible.
+
+Para publicar, código correcto no equivale a una app disponible. Se necesitan archivo firmado, subida procesada, grupo TestFlight, prueba física y revisión pública aparte. Lee [la guía de App Store](app-store.md) antes de marcar una entrega como publicada.

@@ -10,6 +10,9 @@ struct SessionHistoryView: View {
     @Query private var reviews: [SessionReview]
     @Query private var drafts: [SessionDraft]
     @Query private var translations: [SessionTranslation]
+    @Query private var favorites: [SessionFavorite]
+    @State private var onlyFavorites = false
+    @State private var unprotecting: ConferenceSession?
     @State private var query = ""
     @State private var deleting: ConferenceSession?
     @State private var failure: String?
@@ -23,12 +26,21 @@ struct SessionHistoryView: View {
         return (english + spanish).filter { $0.text.localizedStandardContains(query) }
     }
     private var filtered: [ConferenceSession] {
+        let sessions = onlyFavorites ? sessions.filter { isFavorite($0) } : sessions
         guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return sessions }
         return sessions.filter { $0.title.localizedStandardContains(query) || !matches($0).isEmpty }
     }
 
     var body: some View {
         List {
+            Picker("Show sessions", selection: $onlyFavorites) {
+                Text("All sessions").tag(false)
+                Text("Favorites").tag(true)
+            }.pickerStyle(.segmented).accessibilityIdentifier("sessionFavoritesFilter")
+            if onlyFavorites {
+                Text("Favorites protect sessions and audio from accidental deletion. They are not backups; export a copy to keep elsewhere.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             if filtered.isEmpty {
                 ContentUnavailableView("No sessions", systemImage: "text.bubble",
                                        description: Text("Saved sessions will appear here."))
@@ -58,6 +70,14 @@ struct SessionHistoryView: View {
         }
         .searchable(text: $query, prompt: "Titles, English or Spanish")
         .navigationTitle("Sessions")
+        .confirmationDialog(uiKey("Remove favorite protection?"), isPresented: Binding(
+            get: { unprotecting != nil }, set: { if !$0 { unprotecting = nil } }), titleVisibility: .visible) {
+                Button("Remove protection", role: .destructive) {
+                    if let unprotecting { setFavorite(false, session: unprotecting) }
+                    unprotecting = nil
+                }
+                Button("Cancel", role: .cancel) { unprotecting = nil }
+            } message: { Text("The session stays saved. Deleting it later will require a separate confirmation.") }
         .confirmationDialog(uiKey("Delete this session permanently?"), isPresented: Binding(
             get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
                 Button("Delete", role: .destructive) {
@@ -66,7 +86,7 @@ struct SessionHistoryView: View {
                             Task { await coordinator.discardCurrent() }
                         } else {
                             do { try coordinator.repository.delete(deleting) }
-                            catch { failure = "The session could not be deleted." }
+                            catch { failure = error is SessionProtectionFailure ? error.localizedDescription : "The session could not be deleted." }
                         }
                     }
                     deleting = nil
@@ -76,6 +96,12 @@ struct SessionHistoryView: View {
             get: { failure != nil }, set: { if !$0 { failure = nil } })) {
                 Button("OK") { failure = nil }
             } message: { Text(LocalizedStringKey(failure ?? "")) }
+    }
+
+    private func isFavorite(_ session: ConferenceSession) -> Bool { favorites.contains { $0.sessionID == session.id } }
+    private func setFavorite(_ enabled: Bool, session: ConferenceSession) {
+        do { try coordinator.repository.setFavorite(enabled, for: session) }
+        catch { failure = "Could not update favorite protection. Please try again." }
     }
 
     private func saveDraft(_ session: ConferenceSession) {
@@ -97,6 +123,7 @@ struct SessionHistoryView: View {
         } label: {
             VStack(alignment: .leading) {
                 Text(session.title).font(.headline)
+                if isFavorite(session) { Label("Protected favorite", systemImage: "star.fill").font(.caption) }
                 if !query.isEmpty, let match = matches(session).first {
                     Text(match.text).font(.subheadline).lineLimit(3)
                 }
@@ -104,8 +131,16 @@ struct SessionHistoryView: View {
                 (session.endedAt == nil ? Text("Unfinished or interrupted session") : Text(verbatim: SessionClock.format(session.duration))).font(.caption)
             }
         }
-        .swipeActions {
+        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+            if !drafts.contains(where: { $0.sessionID == session.id }) {
+                Button(uiKey(isFavorite(session) ? "Remove protection" : "Favorite & protect"), systemImage: "star") {
+                    if isFavorite(session) { unprotecting = session } else { setFavorite(true, session: session) }
+                }.tint(.orange)
+            }
+        }
+        .swipeActions(allowsFullSwipe: false) {
             Button("Delete", role: .destructive) { deleting = session }
+                .disabled(isFavorite(session))
                 .disabled(coordinator.currentSession?.id == session.id && coordinator.caption.state != .ended)
         }
     }
@@ -119,6 +154,10 @@ struct SessionDetailView: View {
     let canEdit: Bool
     let canPlay: Bool
     var initialSearch: String
+    @Query private var favorites: [SessionFavorite]
+    @State private var removingProtection = false
+    @State private var isDraft = true
+    private var protected: Bool { favorites.contains { $0.sessionID == session.id } }
     @State private var showingMedia = false
     @State private var playbackParagraphID: UUID?
     @State private var playableParagraphIDs: Set<UUID> = []
@@ -194,6 +233,16 @@ struct SessionDetailView: View {
                     else if session.endedAt == nil { Text("Saved final captions from an unfinished session.") }
                     if !(corrections ?? [:]).isEmpty { Label("Edited transcript", systemImage: "pencil").font(.caption) }
                 }.font(.subheadline).foregroundStyle(.secondary)
+                if !isDraft {
+                    Button(uiKey(protected ? "Protected favorite" : "Favorite & protect"), systemImage: protected ? "star.fill" : "star") {
+                        if protected { removingProtection = true }
+                        else {
+                            do { try repository.setFavorite(true, for: session) }
+                            catch { failure = "Could not update favorite protection. Please try again." }
+                        }
+                    }.accessibilityIdentifier("favoriteSessionButton")
+                    if protected { Text("Remove protection before deleting the session or its audio.").font(.caption) }
+                }
                 Button("Audio & subtitles", systemImage: "waveform") { playbackParagraphID = nil; showingMedia = true }
                     .disabled(!canPlay || corrections == nil).accessibilityIdentifier("sessionMediaButton")
                 Button(uiKey("Translate to \(CaptureLanguage(rawValue: session.language)?.opposite.name ?? "Español")"), systemImage: "character.bubble") { showingTranslation = true }
@@ -235,6 +284,14 @@ struct SessionDetailView: View {
             }
         }
         .task(id: showingMedia) { refreshPlayableParagraphs() }
+        .task { isDraft = (try? repository.draft(for: session.id)) != nil }
+        .confirmationDialog(uiKey("Remove favorite protection?"), isPresented: $removingProtection, titleVisibility: .visible) {
+            Button("Remove protection", role: .destructive) {
+                do { try repository.setFavorite(false, for: session) }
+                catch { failure = "Could not update favorite protection. Please try again." }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("The session stays saved. Deleting it later will require a separate confirmation.") }
         .sheet(isPresented: $showingMedia) {
             SessionMediaView(session: session, repository: repository, paragraphs: paragraphs,
                              hasCorrections: !(corrections ?? [:]).isEmpty, initialParagraphID: playbackParagraphID)

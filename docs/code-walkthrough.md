@@ -1,5 +1,7 @@
 # Recorrido del código para estudiantes
 
+Estado actual: **build fuente 23, esquema V8**. Ver [A mi ritmo y favoritas](at-my-pace.md) y [entrega/verificación](pace-checkpoint.md). Las secciones con otros números describen etapas anteriores.
+
 ## Build 22: entrada de voz procesada
 
 `AppSettings.reduceBackgroundNoise` → `SessionCoordinator.applyCapturePreferences` → `CaptionViewModel.reduceBackgroundNoise` → `AudioCapturing.configureNoiseReduction` → `AudioCaptureService.start`. La configuración se realiza antes de crear el tap y leer el formato. `CaptureOptionsView` muestra preferencia futura y estado actual; `CaptionScreen.quickPreferences` ofrece el filtro antes de empezar. Consulta [ruido](noise-reduction.md) para el orden de llamadas, AGC, rutas y limitaciones.
@@ -160,3 +162,11 @@ Escucha/repite fragmentos a 0.75× o 1×, revela el español y conserva expresio
 ## Actualización build 21
 
 Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).
+
+## Build 23: recorrido de lectura pausada
+
+`SessionDetailView` → `SessionMediaView` → `PlaybackParagraph.make` → `SessionPlayer.select(range:)` → `scheduleSegment`. Al finalizar, el reproductor conserva el extremo final y la vista conserva el UUID seleccionado; Repetir vuelve a su inicio y Siguiente exige una acción explícita.
+
+Corrección: `beginParagraphEdit` pausa → `ParagraphEditorView` modifica un borrador con Undo/Redo → `saveParagraph` verifica que el párrafo todavía corresponde al texto almacenado → `saveCorrections` o `saveTranslation` persiste → `rebuildCues` actualiza lectura/exportación. No se reescribe el CAF.
+
+Protección: botón o swipe → `setFavorite` → fila única V8. Borrado de sesión o audio → `requireUnprotected` antes de cualquier efecto. Para quitar protección se confirma primero; borrar conserva su propia confirmación posterior. Los datos antiguos no se convierten automáticamente en favoritos.

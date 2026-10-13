@@ -1,12 +1,20 @@
 # VoiceInView
 
-## Optional noise reduction — source build 22
-
-Enable **Settings → Capture preferences → Reduce background noise**, or use the filter icon before starting a session. The choice is remembered and stays fixed through pause/resume; changes during a session apply to the next one. Initially off, because distant speakers and loudspeaker audio may be attenuated. Processing happens on-device before recording and recognition. Saved recordings are unchanged; new recordings/exports contain the processed audio when enabled. See the [noise reduction guide](docs/noise-reduction.md) and [validation report](docs/validation-report.md).
-
 **See what's being said.** Captions, translation and language practice.
 
 Native iPhone and iPad app for following spoken English or Spanish, reviewing conversations and practicing a language. Designed as a reading and learning aid in meetings, conferences, classes and everyday conversations, including support for people with hearing loss or low vision and supervised language practice for children. On-device recognition requires a compatible device and prepared language model.
+
+## Reading at your pace — source build 23
+
+Choose **Audio & subtitles → At my pace** to play one complete paragraph, keep it visible, repeat it or manually play the next. Correct the selected paragraph directly while playback is paused. Corrections update captions/exports and preserve the original recording. The mode is remembered; continuous playback remains available.
+
+**Favorite & protect** keeps important sessions together under **Sessions → Favorites** and prevents deleting either the session or its audio until protection is explicitly removed. This is not a backup. The English/Spanish interface now refreshes tab labels without recreating the session.
+
+See the [user/developer guide](docs/at-my-pace.md), [delivery checkpoint](docs/pace-checkpoint.md), and [App Store preparation package](docs/app-store.md). Public release still requires owner contact/URLs and final device acceptance.
+
+## Optional noise reduction — source build 22
+
+Enable **Settings → Capture preferences → Reduce background noise**, or use the filter icon before starting a session. The choice is remembered and stays fixed through pause/resume; changes during a session apply to the next one. Initially off, because distant speakers and loudspeaker audio may be attenuated. Processing happens on-device before recording and recognition. Saved recordings are unchanged; new recordings/exports contain the processed audio when enabled. See the [noise reduction guide](docs/noise-reduction.md) and [validation report](docs/validation-report.md).
 
 ## Interface language and clearer preparation — source build 21
 
@@ -43,13 +51,13 @@ Build **16** introduced translation of saved English transcripts: Spanish or bil
 
 ## Current status
 Implementation and release-preparation source through Phase 9 are present. This is a DEVELOPMENT BUILD, not a certified release candidate.
-The project now targets iOS 17 and builds with Xcode 15.2 on macOS Ventura. A compatibility speech engine uses SFSpeechRecognizer with on-device recognition required. The modern iOS 26 engine is retained behind compiler/OS availability checks. See [validation results](docs/validation-report.md) for executed checks; real-device accuracy and offline behavior remain unverified.
+The project now targets iOS 17 and builds with Xcode 15.2 on macOS Ventura. A compatibility speech engine uses SFSpeechRecognizer with on-device recognition required. The modern iOS 26 engine is retained behind compiler/OS availability checks. Build 23 uses additive storage schema V8; earlier numbered sections below describe prior milestones. See [validation results](docs/validation-report.md) for executed checks; real-device accuracy and offline behavior remain unverified.
 On 2026-10-09, the user confirmed successful installation and basic operation of TestFlight builds 0.1.0 (5) and (6) on their iPhone. This does not establish offline accuracy or extended reliability.
 On 2026-10-10, the Cloud Build 11 archive (Xcode 26.6 / iOS SDK 26.5) was successfully exported and uploaded from the Mac using Xcode 15.2. Screenshots confirm the first local upload processed as 0.1.0 (1), assigned to Dev. It appeared below older builds 5–8. The same feature archive was subsequently re-signed and uploaded as 0.1.0 (13) with explicit numbering; the user subsequently confirmed the update on the iPhone and that the audio/background switches work. Extended audio/subtitle and offline acceptance tests remain pending. At that time Cloud export failed with HTTP 502; changing Xcode 27 to 26.6 did not fix it. See the distribution runbook before retrying.
 Phase 10 online AI is not implemented.
 
 ## Capture and audio review (build 15 source)
-Tap a timed paragraph to listen to its recording, pause/resume capture or playback, see a microphone meter and a red indicator only for active audio recording, rename the suggested date/time title while saving, and pinch live captions to resize text. Interrupted capture offers explicit Resume while retaining saved draft content. No automatic microphone restart. See [session workflow](docs/session-workflow.md) and [audio review](docs/media-and-subtitles.md). Build 15 still requires a new TestFlight delivery.
+Tap a timed paragraph to listen to its recording, pause/resume capture or playback, see a microphone meter and a red indicator only for active audio recording, rename the suggested date/time title while saving, and pinch live captions to resize text. Interrupted capture offers explicit Resume while retaining saved draft content. No automatic microphone restart. See [session workflow](docs/session-workflow.md) and [audio review](docs/media-and-subtitles.md). Historical delivery evidence for build 15 is recorded in the validation report.
 
 ## Session controls (introduced in build 14)
 Remembered Audio/Background preferences, quick controls beside capture, circular microphone/pause/stop buttons, one-tap + after saving, and explicit Save/Discard with recovery drafts. See [the session workflow](docs/session-workflow.md). The user subsequently reported that the app was working well; the exact installed build number was not independently inspected. New source changes require their own TestFlight delivery.

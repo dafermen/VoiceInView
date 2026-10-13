@@ -5,6 +5,56 @@ import SwiftData
 
 @MainActor
 final class SessionMediaTests: XCTestCase {
+    func testParagraphRangesRetainWholeParagraphAndClampDamagedAudio() throws {
+        let a = ReviewParagraph(id: UUID(), text: String(repeating: "word ", count: 100))
+        let b = ReviewParagraph(id: UUID(), text: "next")
+        let c = ReviewParagraph(id: UUID(), text: "bad")
+        let times = [a.id.uuidString: CaptionTiming(start: 0, end: 10, words: []),
+                     b.id.uuidString: CaptionTiming(start: 10, end: 20, words: []),
+                     c.id.uuidString: CaptionTiming(start: .nan, end: 50, words: [])]
+        XCTAssertGreaterThan(SubtitleExport.cues(paragraphs: [a], timings: times).count, 1)
+        let ranges = PlaybackParagraph.make([a, b, c], timings: times, duration: 15)
+        XCTAssertEqual(ranges.map(\.id), [a.id, b.id])
+        XCTAssertEqual(ranges[0].end, 10)
+        XCTAssertEqual(ranges[1].end, 15)
+        XCTAssertEqual(ranges[0].text, a.text)
+        XCTAssertTrue(PlaybackParagraph.make([a], timings: times, duration: .nan).isEmpty)
+    }
+
+    func testBoundedPlaybackStopsRepeatsSeeksAndIgnoresOldCompletion() async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".caf")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1))
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 32000))
+        buffer.frameLength = 32000; buffer.floatChannelData?[0].initialize(repeating: 0, count: 32000)
+        try autoreleasepool { try AVAudioFile(forWriting: url, settings: format.settings).write(from: buffer) }
+        let player = SessionPlayer(); player.load(url)
+        defer { player.stop() }
+        player.select(range: 0.1...0.4); player.toggle()
+        XCTAssertTrue(player.playing)
+        try await Task.sleep(for: .seconds(1))
+        XCTAssertFalse(player.playing)
+        XCTAssertEqual(player.time, 0.4, accuracy: 0.01)
+        player.toggle() // repeat starts at the chosen paragraph, not the next one
+        XCTAssertTrue(player.playing)
+        XCTAssertEqual(player.time, 0.1, accuracy: 0.03)
+        player.select(range: 0.6...1.4); player.toggle()
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertTrue(player.playing, "An old completion must not stop the newly selected paragraph")
+        player.pause(); let paused = player.time
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertEqual(player.time, paused)
+        player.seek(10)
+        XCTAssertEqual(player.time, 1.4)
+        player.seek(-10)
+        XCTAssertEqual(player.time, 0.6)
+        player.select(range: nil)
+        player.play(from: 1.8)
+        try await Task.sleep(for: .seconds(1))
+        XCTAssertFalse(player.playing)
+        XCTAssertEqual(player.time, 2, accuracy: 0.01)
+    }
+
     func testAudioPauseAppendsWithoutGapsAndM4AExportDecodes() async throws {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

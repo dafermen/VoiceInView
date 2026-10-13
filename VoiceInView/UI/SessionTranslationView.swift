@@ -130,9 +130,9 @@ struct SessionTranslationView: View {
                     }
                 }
             }
-            .sheet(item: $playback) { selection in
+            .sheet(item: $playback, onDismiss: { load() }) { selection in
                 SessionMediaView(session: session, repository: repository, paragraphs: displayed,
-                    hasCorrections: true, initialParagraphID: selection.paragraphID, translatedCues: cues, translationLanguage: mode.rawValue)
+                    hasCorrections: true, initialParagraphID: selection.paragraphID, translatedCues: mode == language.mode ? nil : cues, translationLanguage: mode == language.mode ? nil : mode.rawValue)
             }
             .sheet(item: $share, onDismiss: cleanup) { item in MediaActivityView(urls: item.urls) }
             .sheet(isPresented: $exportMenu, onDismiss: {

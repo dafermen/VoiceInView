@@ -2,6 +2,68 @@ import XCTest
 
 final class HomeScreenTests: XCTestCase {
     @MainActor
+    func testAtMyPaceEditingAndProtectedFavorites() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-review", "--ui-test-media"]
+        app.launch()
+        XCTAssertTrue(app.tabBars.buttons["Sessions"].waitForExistence(timeout: 20))
+        app.tabBars.buttons["Sessions"].tap()
+        app.staticTexts["Review sample"].tap()
+        app.buttons["favoriteSessionButton"].tap()
+        XCTAssertEqual(app.buttons["favoriteSessionButton"].label, "Protected favorite")
+        app.buttons["sessionMediaButton"].tap()
+        XCTAssertTrue(app.buttons["At my pace"].waitForExistence(timeout: 5))
+        app.buttons["At my pace"].tap()
+        app.buttons["recordingPlayButton"].tap()
+        expectation(for: NSPredicate(format: "label == 'Play'"), evaluatedWith: app.buttons["recordingPlayButton"])
+        waitForExpectations(timeout: 8)
+        let caption = app.staticTexts["playbackCaption"]
+        XCTAssertTrue(caption.label.contains("Acmee"), "Finished paragraphs must stay visible")
+        app.buttons["editPlaybackParagraphButton"].tap()
+        let editor = app.textViews["paragraphEditor"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 5))
+        editor.tap(); editor.typeText(" Reviewed at my pace.")
+        app.buttons["saveParagraphCorrection"].tap()
+        XCTAssertTrue(caption.waitForExistence(timeout: 5))
+        XCTAssertTrue(caption.label.contains("Reviewed at my pace."))
+        XCTAssertEqual(app.buttons["recordingPlayButton"].label, "Play")
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = "Pace-corrected-paragraph"; shot.lifetime = .keepAlways; add(shot)
+        app.buttons["nextParagraphButton"].tap()
+        expectation(for: NSPredicate(format: "label CONTAINS 'Paragraph 2'"), evaluatedWith: caption)
+        waitForExpectations(timeout: 5)
+        app.buttons["Full screen"].tap()
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        expectation(for: NSPredicate { _, _ in
+            app.frame.width > app.frame.height && app.buttons["editPlaybackParagraphButton"].isHittable
+        }, evaluatedWith: app)
+        waitForExpectations(timeout: 12)
+        let landscape = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        landscape.name = "Pace-fullscreen-landscape"; landscape.lifetime = .keepAlways; add(landscape)
+        app.buttons["Exit full screen"].tap()
+        XCUIDevice.shared.orientation = .portrait
+        app.buttons["phraseListButton"].tap()
+        // Protected audio cannot be deleted, even from the media screen.
+        let delete = app.buttons["Delete audio, keep text"]
+        for _ in 0..<18 { if delete.exists { break }; app.collectionViews["mediaActionsList"].swipeUp() }
+        XCTAssertTrue(delete.exists)
+        XCTAssertFalse(delete.isEnabled)
+        app.buttons["Done"].tap()
+        app.buttons["favoriteSessionButton"].tap()
+        if app.frame.width > 600 {
+            // iPad confirmation popovers cancel by tapping outside, without a Cancel row.
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.8)).tap()
+        } else { app.buttons["Cancel"].tap() }
+        XCTAssertEqual(app.buttons["favoriteSessionButton"].label, "Protected favorite")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.buttons["Favorites"].tap()
+        XCTAssertTrue(app.staticTexts["Review sample"].exists)
+        let favorite = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        favorite.name = "Pace-favorites"; favorite.lifetime = .keepAlways; add(favorite)
+    }
+
+    @MainActor
     func testProminentPreparationDoesNotStartCapture() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--ui-test-reader", "--ui-test-preparation"]
@@ -35,6 +97,7 @@ final class HomeScreenTests: XCTestCase {
         app.buttons["interfaceLanguagePicker"].tap()
         app.buttons["Español"].tap()
         XCTAssertTrue(app.tabBars.buttons["Ajustes"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Ajustes"].exists)
         XCTAssertTrue(app.buttons["captureLanguagePicker"].label.contains("English"))
         let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         shot.name = "Separate-interface-and-capture-languages"; shot.lifetime = .keepAlways; add(shot)
@@ -43,6 +106,7 @@ final class HomeScreenTests: XCTestCase {
         app.buttons["interfaceLanguagePicker"].tap()
         app.buttons["English"].tap()
         XCTAssertTrue(app.tabBars.buttons["Settings"].exists)
+        XCTAssertTrue(app.navigationBars["Settings"].exists)
         XCTAssertTrue(app.buttons["captureLanguagePicker"].label.contains("Español"))
         app.tabBars.buttons["Captions"].tap()
         XCTAssertTrue(app.staticTexts["captionPlaceholder"].label.contains("Español"))
@@ -279,7 +343,30 @@ final class HomeScreenTests: XCTestCase {
         play.tap()
         XCTAssertEqual(play.label, "Play")
         XCTAssertTrue(app.staticTexts["playbackCaption"].exists)
+        app.buttons["At my pace"].tap()
+        // Changing mode selects the paragraph at the current audio time. Explicitly choose the first.
+        let firstPlaybackParagraph = app.buttons["listenPlaybackParagraph-0"]
+        let playbackActions = app.collectionViews["mediaActionsList"]
+        for _ in 0..<24 {
+            if firstPlaybackParagraph.exists && firstPlaybackParagraph.isHittable { break }
+            playbackActions.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)).press(forDuration: 0.1,
+                thenDragTo: playbackActions.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
+                withVelocity: .slow, thenHoldForDuration: 0.1)
+        }
+        firstPlaybackParagraph.tap()
+        app.buttons["editPlaybackParagraphButton"].tap()
+        let playbackEditor = app.textViews["paragraphEditor"]
+        XCTAssertTrue(playbackEditor.waitForExistence(timeout: 5))
+        playbackEditor.tap(); playbackEditor.typeText(" Corrección durante audio.")
+        app.buttons["saveParagraphCorrection"].tap()
+        XCTAssertTrue(app.staticTexts["playbackCaption"].label.contains("Corrección durante audio."))
+        app.buttons["editPlaybackParagraphButton"].tap()
+        playbackEditor.tap(); playbackEditor.typeText(" DESCARTAR")
+        app.navigationBars["Edit translation"].buttons["Cancel"].tap()
+        app.buttons["Discard changes"].tap()
+        XCTAssertFalse(app.staticTexts["playbackCaption"].label.contains("DESCARTAR"))
         app.navigationBars["Audio & subtitles"].buttons["Done"].tap()
+        XCTAssertTrue(paragraph.label.contains("Corrección durante audio."))
         let afterPlayer = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         afterPlayer.name = "Translation-after-player"; afterPlayer.lifetime = .keepAlways; add(afterPlayer)
         let sharing = app.buttons["shareTranslationButton"]
@@ -561,7 +648,16 @@ final class HomeScreenTests: XCTestCase {
         app.buttons["Apply"].tap()
         app.buttons["saveTranscriptEdits"].tap()
         XCTAssertTrue(app.navigationBars["Audio & subtitles"].waitForExistence(timeout: 5))
-        app.buttons["Subtitles (SRT)"].tap()
+        let subtitles = app.buttons["Subtitles (SRT)"]
+        let actions = app.collectionViews["mediaActionsList"]
+        for _ in 0..<24 {
+            if subtitles.exists && subtitles.isHittable { break }
+            actions.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)).press(forDuration: 0.1,
+                thenDragTo: actions.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
+                withVelocity: .slow, thenHoldForDuration: 0.1)
+        }
+        XCTAssertTrue(subtitles.exists && subtitles.isHittable)
+        subtitles.tap()
         let save = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Save to Files")).firstMatch
         XCTAssertTrue(save.waitForExistence(timeout: 10))
         // Dismiss the native activity controller explicitly, without sending files.
@@ -569,7 +665,7 @@ final class HomeScreenTests: XCTestCase {
         XCTAssertTrue(close.waitForExistence(timeout: 5))
         close.tap()
         let delete = app.buttons["Delete audio, keep text"]
-        for _ in 0..<5 { if delete.isHittable { break }; app.swipeUp() }
+        for _ in 0..<5 { if delete.isHittable { break }; app.collectionViews["mediaActionsList"].swipeUp() }
         XCTAssertTrue(delete.isHittable)
         delete.tap()
         app.buttons["Delete audio"].tap()

@@ -1,4 +1,6 @@
 # Architecture through Phase 9
+
+Estado actual: **build fuente 23, esquema V8**. Ver [A mi ritmo y favoritas](at-my-pace.md) y [entrega/verificación](pace-checkpoint.md). Las secciones con otros números describen etapas anteriores.
 App -> AppRootView -> SessionCoordinator -> CaptionViewModel -> SpeechTranscribing.
 CaptionViewModel selects LegacySpeechTranscriber for Xcode 15.2 builds and older iOS versions. Swift 6.2+ builds select AppleSpeechTranscriber on iOS 26+. Both use AudioCaptureService and never fall back to server recognition. Modern conversion stays in its AudioConversion actor.
 MainActor owns observable UI state, capture/session control and SwiftData context. Conversion runs on its own actor.
@@ -83,3 +85,7 @@ Build 18 adds LearningExpression snapshots associated by session/paragraph UUID.
 ## Build 20 — per-session language and presentation
 
 CaptureLanguage is a persisted global default copied into the existing session language. Recognition configuration is locked after start; a pause is not a new session. Translation payloads add optional sourceLocale (old missing values mean English). Translation/learning views derive direction from session language, never the current global default. V7 schema and bundle identity are retained. Paper/rules are presentation preferences only; ReaderSurface uses a simple CoreGraphics ruling layer, cannot intercept input and is hidden from accessibility. Universal target family and iPad orientations enable native tablet layouts. See [inclusive guide](inclusive-use.md).
+
+## Actualización 23 — 2026-10-12
+
+El esquema actual es V8: SessionSchemaV7.models + SessionFavorite. El reproductor de sesiones usa segmentos de muestras limitados en AVAudioPlayerNode; el reproductor de práctica sigue separado. Ver [flujo y decisiones](at-my-pace.md).

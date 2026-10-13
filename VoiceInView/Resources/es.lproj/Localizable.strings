@@ -486,3 +486,27 @@
 "Noise reduction in this session" = "Reducción de ruido en esta sesión";
 "Audio saving and noise reduction changes apply to your next session. Background listening can change during this session." = "Los cambios de guardado de audio y reducción de ruido se aplicarán a tu próxima sesión. La escucha en segundo plano puede cambiar durante esta sesión.";
 "Noise reduction could not start. Turn it off in Capture preferences, then stop and create a new session if needed. Existing audio and text are kept." = "No se pudo iniciar la reducción de ruido. Desactívala en Preferencias de captura; si es necesario, detén la sesión y crea una nueva. Se conservan el audio y el texto existentes.";
+
+/* Playback at your pace and protected favorites */
+"Remove favorite protection before deleting this session or its audio." = "Quita la protección de favorita antes de eliminar esta sesión o su audio.";
+"Show sessions" = "Mostrar sesiones";
+"All sessions" = "Todas";
+"Favorites" = "Favoritas";
+"Favorites protect sessions and audio from accidental deletion. They are not backups; export a copy to keep elsewhere." = "Las favoritas protegen las sesiones y su audio frente al borrado accidental. No son copias de seguridad; exporta una copia para conservarla en otro lugar.";
+"Remove favorite protection?" = "¿Quitar la protección de favorita?";
+"Remove protection" = "Quitar protección";
+"The session stays saved. Deleting it later will require a separate confirmation." = "La sesión seguirá guardada. Para eliminarla después tendrás que confirmarlo por separado.";
+"Could not update favorite protection. Please try again." = "No se pudo actualizar la protección de favorita. Inténtalo de nuevo.";
+"Protected favorite" = "Favorita protegida";
+"Favorite & protect" = "Añadir a favoritas y proteger";
+"Remove protection before deleting the session or its audio." = "Quita la protección antes de eliminar la sesión o su audio.";
+"Playback mode" = "Modo de reproducción";
+"Continuous" = "Continua";
+"At my pace" = "A mi ritmo";
+"Repeat paragraph" = "Repetir párrafo";
+"Next paragraph" = "Siguiente párrafo";
+"One paragraph at a time. Repeat it or choose Next when you are ready." = "Un párrafo a la vez. Repítelo o pulsa Siguiente cuando quieras continuar.";
+"Play only this paragraph" = "Reproducir solo este párrafo";
+"Favorite protection stays on this device and does not make a backup. Remove protection before deleting a favorite session or its audio. Corrections change displayed and exported text; the original audio is unchanged." = "La protección de favoritas permanece en este dispositivo y no crea una copia de seguridad. Quita la protección antes de eliminar una sesión favorita o su audio. Las correcciones cambian el texto mostrado y exportado; el audio original permanece intacto.";
+"Last updated: October 12, 2026." = "Última actualización: 12 de octubre de 2026.";
+"Captions: %@. Audio remains in %@. Timing within each paragraph is approximate." = "Subtítulos: %@. El audio sigue en %@. Los tiempos dentro de cada párrafo son aproximados.";

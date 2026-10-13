@@ -322,3 +322,16 @@ Validation on Xcode 15.2 / iOS 17.2 iPhone SE (3rd generation) simulator:
 - Real screenshots reviewed for player portrait/landscape and caption fullscreen. Local evidence is in ignored `build/media-20261009/`.
 
 Device-only validation remains: speech recognition accuracy and timing across long sessions, microphone coexistence with the actual source apps, screen-lock/background operation, calls/route changes, storage exhaustion, protection/backup and battery use. This implementation does not capture internal audio from other apps. Subtitle timing after text changes can be estimated within the original paragraph range. See media-and-subtitles.md.
+
+## Build fuente 23 — 2026-10-13
+
+- 99 tests unitarios pasaron, incluida migración V7→V8, reapertura/protección, audio limitado y exportaciones. Evidencia: `/private/tmp/VoiceInView23-final.xcresult` (bundle global fallido por dos recorridos UI luego corregidos; no atribuirle éxito total).
+- iPhone SE 3 / iOS 17.2: A mi ritmo, corrección y favoritas pasó (48.547 s); idioma conservando sesión pausada pasó (19.241 s), en ese bundle.
+- Exportación SRT y borrado independiente pasó (65.656 s) en `/private/tmp/VoiceInView23-review.xcresult`; ese bundle conserva un fallo anterior del selector de traducción.
+- Traducción: edición desde playback, Cancelar/descartar borrador, retorno al mismo párrafo y compartir pasó (92.960 s) en `/private/tmp/VoiceInView23-translation.xcresult`, TEST SUCCEEDED. Usa traducción prefijada; no mide el motor real de Apple.
+- iPad Air 5 / iOS 17.2: idioma pasó (21.944 s) en el bundle ipad; A mi ritmo/favoritas pasó en ipad-final (45.475 s) y se confirmó rotación con espera de ancho>alto en ipad-rotation (46.861 s), TEST SUCCEEDED.
+- Release genérico iOS sin firma pasó: `/private/tmp/VoiceInView23-release-final.log`. Se verificó build 23, bundle original, familias iPhone/iPad, mínimo iOS 17, modo audio de fondo y presencia del manifiesto.
+- Catálogos: 507 claves + 2 propósitos de permisos por idioma; sin diferencias de claves/placeholders. No se generaron stringsdata para comprobación por extracción.
+- Metadata de tienda EN/ES dentro de límites; enlaces locales de Markdown válidos. El modo --ready rechaza correctamente la publicación aún incompleta.
+
+Se inspeccionaron las capturas de lectura/favoritas y el iPad. Los ajustes de los fixtures, desplazamiento de listas y popover están en build-incidents.md. Evidencia de entrega y límites: [checkpoint](pace-checkpoint.md). Pruebas físicas de audición/VoiceOver, operación larga, protección con bloqueo, ruido y modelos reales siguen pendientes antes de publicar.

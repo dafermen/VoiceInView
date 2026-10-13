@@ -486,3 +486,27 @@
 "Noise reduction in this session" = "Noise reduction in this session";
 "Audio saving and noise reduction changes apply to your next session. Background listening can change during this session." = "Audio saving and noise reduction changes apply to your next session. Background listening can change during this session.";
 "Noise reduction could not start. Turn it off in Capture preferences, then stop and create a new session if needed. Existing audio and text are kept." = "Noise reduction could not start. Turn it off in Capture preferences, then stop and create a new session if needed. Existing audio and text are kept.";
+
+/* Playback at your pace and protected favorites */
+"Remove favorite protection before deleting this session or its audio." = "Remove favorite protection before deleting this session or its audio.";
+"Show sessions" = "Show sessions";
+"All sessions" = "All sessions";
+"Favorites" = "Favorites";
+"Favorites protect sessions and audio from accidental deletion. They are not backups; export a copy to keep elsewhere." = "Favorites protect sessions and audio from accidental deletion. They are not backups; export a copy to keep elsewhere.";
+"Remove favorite protection?" = "Remove favorite protection?";
+"Remove protection" = "Remove protection";
+"The session stays saved. Deleting it later will require a separate confirmation." = "The session stays saved. Deleting it later will require a separate confirmation.";
+"Could not update favorite protection. Please try again." = "Could not update favorite protection. Please try again.";
+"Protected favorite" = "Protected favorite";
+"Favorite & protect" = "Favorite & protect";
+"Remove protection before deleting the session or its audio." = "Remove protection before deleting the session or its audio.";
+"Playback mode" = "Playback mode";
+"Continuous" = "Continuous";
+"At my pace" = "At my pace";
+"Repeat paragraph" = "Repeat paragraph";
+"Next paragraph" = "Next paragraph";
+"One paragraph at a time. Repeat it or choose Next when you are ready." = "One paragraph at a time. Repeat it or choose Next when you are ready.";
+"Play only this paragraph" = "Play only this paragraph";
+"Favorite protection stays on this device and does not make a backup. Remove protection before deleting a favorite session or its audio. Corrections change displayed and exported text; the original audio is unchanged." = "Favorite protection stays on this device and does not make a backup. Remove protection before deleting a favorite session or its audio. Corrections change displayed and exported text; the original audio is unchanged.";
+"Last updated: October 12, 2026." = "Last updated: October 12, 2026.";
+"Captions: %@. Audio remains in %@. Timing within each paragraph is approximate." = "Captions: %@. Audio remains in %@. Timing within each paragraph is approximate.";

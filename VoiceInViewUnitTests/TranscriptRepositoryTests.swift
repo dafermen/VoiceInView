@@ -4,6 +4,70 @@ import SwiftData
 
 @MainActor
 final class TranscriptRepositoryTests: XCTestCase {
+    func testV7MigrationFavoriteProtectionAndExplicitRemovalSurviveReopen() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Favorites-\(UUID())")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let id = try autoreleasepool { () throws -> UUID in
+            let schema = Schema(versionedSchema: SessionSchemaV7.self)
+            let config = ModelConfiguration("Sessions", schema: schema,
+                url: directory.appendingPathComponent("Sessions.store"), cloudKitDatabase: .none)
+            let container = try ModelContainer(for: schema, configurations: [config])
+            let session = ConferenceSession(title: "Keep this meeting")
+            container.mainContext.insert(session)
+            let caption = StoredCaption(segment: CaptionSegment(runID: UUID(), start: 0, end: 2, text: "Keep my words"), order: 0)
+            container.mainContext.insert(caption); session.captions.append(caption)
+            let review = SessionReview(sessionID: session.id)
+            review.corrections = try JSONEncoder().encode([caption.id.uuidString: "Keep my corrected words"])
+            container.mainContext.insert(review)
+            try container.mainContext.save()
+            return session.id
+        }
+        try autoreleasepool {
+            let repo = try TranscriptRepository(directory: directory)
+            let session = try XCTUnwrap(repo.container.mainContext.fetch(FetchDescriptor<ConferenceSession>()).first)
+            XCTAssertEqual(session.id, id)
+            XCTAssertEqual(try repo.reviewedParagraphs(for: session).first?.text, "Keep my corrected words")
+            XCTAssertNil(try repo.favorite(for: id))
+            let url = try repo.prepareRecording(for: session)
+            try Data("audio must survive".utf8).write(to: url)
+            try repo.setFavorite(true, for: session)
+            try repo.setFavorite(true, for: session)
+            XCTAssertEqual(try repo.container.mainContext.fetch(FetchDescriptor<SessionFavorite>()).count, 1)
+        }
+        try autoreleasepool {
+            let repo = try TranscriptRepository(directory: directory)
+            let session = try XCTUnwrap(repo.container.mainContext.fetch(FetchDescriptor<ConferenceSession>()).first)
+            let url = try XCTUnwrap(repo.audioURL(for: id))
+            XCTAssertNotNil(try repo.favorite(for: id))
+            XCTAssertThrowsError(try repo.deleteAudio(for: id)) { XCTAssertTrue($0 is SessionProtectionFailure) }
+            XCTAssertThrowsError(try repo.delete(session)) { XCTAssertTrue($0 is SessionProtectionFailure) }
+            XCTAssertEqual(try Data(contentsOf: url), Data("audio must survive".utf8))
+            XCTAssertEqual(session.fullTranscript, "Keep my words")
+            try repo.setFavorite(false, for: session)
+            XCTAssertTrue(FileManager.default.fileExists(atPath: url.path), "Unprotecting must never delete data")
+        }
+        try autoreleasepool {
+            let repo = try TranscriptRepository(directory: directory)
+            let session = try XCTUnwrap(repo.container.mainContext.fetch(FetchDescriptor<ConferenceSession>()).first)
+            XCTAssertNil(try repo.favorite(for: id))
+            let url = try XCTUnwrap(repo.audioURL(for: id))
+            try repo.delete(session)
+            XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+            XCTAssertTrue(try repo.container.mainContext.fetch(FetchDescriptor<ConferenceSession>()).isEmpty)
+            XCTAssertNil(try repo.review(for: id))
+        }
+    }
+
+    func testRecoveryDraftCannotBeProtectedBeforePublishing() throws {
+        let repo = try TranscriptRepository(inMemory: true)
+        let session = try repo.create(title: "Draft", draft: true)
+        XCTAssertThrowsError(try repo.setFavorite(true, for: session))
+        try repo.publish(session)
+        try repo.setFavorite(true, for: session)
+        XCTAssertThrowsError(try repo.delete(session))
+    }
+
     func testV4MigrationAndDraftRecoveryPublishAndAudioDiscard() throws {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("DraftMigration-\(UUID())")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

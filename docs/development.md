@@ -1,4 +1,6 @@
 # Development and validation
+
+Estado actual: **build fuente 23, esquema V8**. Ver [A mi ritmo y favoritas](at-my-pace.md) y [entrega/verificación](pace-checkpoint.md). Las secciones con otros números describen etapas anteriores.
 The source is checked out at /Users/dariomeneses/Projects/VoiceInView on macOS Ventura 13.7.8 with Xcode 15.2. The compatibility target is iOS 17.0 with Swift 5 language mode (Swift 5.9 compiler).
 Required: Xcode 15.2+ and a compatible iOS 17+ SDK/runtime. The project uses explicit file references and build phases; add new files to their target in Xcode. The modern speech files are conditionally compiled with compiler(>=6.2) and gated to iOS 26; older compilers use LegacySpeechTranscriber. See [ADR-006](decisions/ADR-006-xcode-15-compatibility.md) for the compatibility decision.
 A device running a much newer iOS can need newer Xcode developer services. Earlier USB installation attempts failed first while locked, then with “Could not support development.” Later, the user installed TestFlight builds 5 and 6 successfully. Do not confuse a USB debugging limitation with TestFlight installation. See [incident history](build-incidents.md) and [validation report](validation-report.md).
@@ -65,3 +67,7 @@ References: [Apple's initial setup](https://developer.apple.com/documentation/xc
 ## Actualización build 21
 
 Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).
+
+## Actualización 23 — 2026-10-12
+
+Para trabajar en build 23, leer [A mi ritmo](at-my-pace.md) y [checkpoint](pace-checkpoint.md). Ejecutar migración V7→V8, suite unitaria y escenarios UI de reproducción/favoritas/idioma. Nunca borrar almacenes del usuario para resolver una migración.

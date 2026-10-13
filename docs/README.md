@@ -65,3 +65,9 @@ Escucha/repite fragmentos a 0.75× o 1×, revela el español y conserva expresio
 ## Actualización build 21
 
 Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).
+
+## Actualización 23
+
+- [A mi ritmo, edición directa y favoritas](at-my-pace.md): uso y arquitectura.
+- [Checkpoint de entrega](pace-checkpoint.md): resultados y pendientes reales.
+- [Preparación de App Store](app-store.md): índice de política, soporte, textos EN/ES, notas para revisión y decisiones del titular.

@@ -234,3 +234,13 @@ El primer Debug detectó una referencia a PlaybackButtonStyle, privado en Sessio
 Práctica local autorizada sin cuenta Azure: no crear dependencia de un servicio ausente ni presentar reconocimiento como evaluación de pronunciación. Mantener numeración fuente 19 y comprobar Cloud/TestFlight por separado; no reutilizar una compilación anterior como evidencia de entrega. La primera compilación Debug local terminó bien; resultados posteriores en el [checkpoint](pronunciation-checkpoint.md).
 
 Las pruebas iniciales UI de build 19 pasaron; una prueba unitaria falló por URL con barra final y atributo de protección no expuesto en el simulador. La comparación de rutas y condición de dispositivo fueron corregidas; las 83 pruebas unitarias finales y Release pasaron. Comprobar protección con bloqueo real en iPhone. Se compactó el selector tras inspección visual.
+
+## Actualización 23 — 2026-10-12
+
+Build 23: no confundir la reproducción anterior “desde una frase” con reproducción limitada. La nueva limita muestras mediante scheduleSegment. No resuelvas etiquetas UIKit congeladas recreando el TabView ni borres datos para habilitar V8. Los modelos V1–V7 se conservan. Registrar por separado resultado local, check Cloud del SHA exacto, procesamiento y disponibilidad TestFlight. Historial de exportación 502/builds 9–12 sigue siendo evidencia histórica, no un fallo confirmado en esta entrega.
+
+### Validación UI de build 23
+
+El primer fixture imponía `-playbackAtMyPace NO` mediante argumentos de lanzamiento. Ese dominio de preferencias sobreescribía la elección al reconstruir la vista después de guardar. Se cambió por limpiar solo esa preferencia al iniciar el fixture DEBUG; la app normal conserva la elección. Las pruebas posteriores confirmaron parada, edición y selección. Al aumentar el lector, los tests de exportación deben desplazar la lista de acciones, no el lector, con movimientos pequeños para no saltarse filas. Ver evidencia final en el checkpoint. No presentar un fallo del selector de XCTest como fallo de exportación sin revisar la pantalla.
+
+La repetición final de exportación pasó usando desplazamientos lentos dentro de la lista. La prueba de traducción debe seleccionar expresamente el primer párrafo: cambiar a A mi ritmo selecciona el párrafo en la posición actual del audio. Edición, cancelación y exportación traducida pasaron. En iPad, confirmationDialog se presenta como popover sin fila Cancelar; tocar fuera cancela y conserva la protección. Esperar que la ventana sea realmente horizontal antes de tomar capturas: encontrar un botón ya visible no prueba que haya terminado la rotación.

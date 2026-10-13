@@ -1,34 +1,78 @@
-# VoiceInView Privacy Policy — publication draft
-Last updated: 2026-10-10.
+# VoiceInView — Privacy policy / Política de privacidad
 
-VoiceInView creates English captions using your iPhone microphone and on-device speech recognition. Microphone access is requested when you choose to listen. Audio is processed on-device and is never uploaded by VoiceInView. Saving audio is initially off. Your audio and background choices are remembered for future sessions. If audio is enabled when you start, the recording and transcript are stored locally in a recovery draft. You can replay/export the recording or delete audio while keeping text and subtitle timing. Recordings are excluded from backup. By default, leaving or locking the app stops listening; the optional Continue in background setting keeps the microphone active until you pause, stop or iOS interrupts it. The app captures the microphone, not internal audio from other apps.
+**Publication draft · 2026-10-12.** Replace the pending publisher/contact fields and publish this text at a publicly accessible URL before App Store submission. This file is the consolidated policy; older build notes are not the public policy.
 
-Final captions and session details are saved locally as recovery drafts while listening. After Stop, Save Session keeps the draft in your library; Discard deletes the draft and its recorded audio. Unfinished drafts remain separately accessible in Sessions after reopening. You can open, rename, export or delete sessions. Local sessions are excluded from device backup. Deleting the app removes its local sessions; export anything you want to keep.
+Publisher / Responsable: **PENDING: confirmed legal publisher name**.
+Privacy contact / Contacto: **PENDING: public email**.
 
-Preparing English Dictation or installing a supported speech model may require Internet through Apple's system services. The compatibility engine requires Speech Recognition permission, checks on-device support, and requires local processing for every request; it has no in-app model installation API. Installed compatible models allow captioning to be used without Internet. Model/device readiness and actual offline behavior should be tested before a conference.
+## English
 
-Exporting, copying or sharing is your choice. The destination application or service may transmit or sync the transcript, recording or subtitle files according to its own terms and privacy policy. Copies you export are not removed when you delete a session from VoiceInView.
+### What the app does
+VoiceInView uses your iPhone or iPad microphone when you explicitly start listening, resume a session or record a pronunciation exercise. It creates English or Spanish captions using supported on-device recognition. VoiceInView does not upload microphone recordings or transcripts to a developer server and has no remote recognition fallback.
 
-VoiceInView has no required account, advertising, tracking or analytics. App preferences are stored locally. Local storage capacity is checked to display readiness and prevent write failures; the capacity value is not transmitted.
+Saving session audio is initially enabled on a new installation. You can turn it off before starting; existing choices are remembered. Saving and noise-reduction choices apply to the next session once recording has begun. Background continuation is initially off. If enabled, the microphone may remain active while the screen is locked or another app is open, until you pause, stop or the system interrupts it. The app captures nearby microphone sound, not other apps' internal audio.
 
-Provisional captions may change or be incomplete. Speech recognition accuracy varies with device, environment and speakers.
+### Information kept on your device
+Final captions, optional recordings, titles, dates, language, caption timing, corrections, translations, reading position, bookmarks, study expressions and favorite protection are stored locally. Provisional captions and the live translation preview are temporary; the live translation preview is not automatically saved. App preferences and personal vocabulary use device preferences.
 
-Privacy questions: [OWNER MUST PROVIDE CONTACT BEFORE PUBLICATION].
-Publisher identity: [OWNER MUST PROVIDE].
-Public policy URL: [OWNER MUST PROVIDE].
-This draft must be reviewed against the final binary and published before App Store submission.
+Sessions are saved incrementally as recovery drafts. After stopping, Save Session keeps the draft in your library; Discard deletes it. Unfinished drafts remain available after reopening. Corrections keep original recognition separately and never change the recording. Favorites protect against deletion through the app until you explicitly remove protection; they are not backups.
 
-Optional translation of saved text and confirmed live English captions uses Apple’s Translation framework on supported devices. Apple may ask to download language models; installed languages allow on-device translation. English, Spanish and Spanish edits are stored locally and removed when you delete the session. Apple may collect API usage and performance metrics, but not the original or translated content. Live Spanish preview stays in memory and is not automatically saved. Personal vocabulary is stored as a device preference and used as recognition hints and preferred translation terms; clearing its entries removes it. Device preference backups follow iOS settings. VoiceInView adds no third-party translation service.
+Session files and pronunciation takes are excluded from device backup. Preferences may follow system backup settings. Uninstalling VoiceInView or losing the device can remove local sessions, including favorites. Export copies you need to keep.
 
+### Pronunciation practice
+Practice takes are short, temporary recordings started by you. They stay on your device and are removed on retry, exercise change, leaving practice or entering the background. Abandoned takes are cleaned up on the next launch. Optional local word recognition shows recognized words; no online pronunciation assessment service receives the recording.
 
-Build 18 stores study expressions and optional Spanish notes in the same local, backup-excluded session database (V7). Study copies keep their original context when transcripts are edited. Deleting a session also deletes its learning collection; removing a learning expression does not modify the transcript. Original phrase playback uses saved session audio. The separate pronunciation practice introduced in build 19 records temporary takes as described below.
+### Apple services and permissions
+Microphone permission is required to capture speech. Speech Recognition permission is requested when required by the recognition engine. Preparing speech, translation or synthetic voice resources may require Internet through Apple's system services. Installed compatible resources allow local processing, subject to device and language availability. Check readiness before relying on offline use.
 
+Optional translation uses Apple's Translation framework. Apple documents that it may collect API usage/performance metrics, but not original or translated content. VoiceInView adds no third-party translation provider. System services are also governed by Apple's privacy practices.
 
-## Pronunciation practice — October 11, 2026
+### Sharing, retention and deletion
+Copying, exporting and sharing happen when you choose them. The destination app or service may transmit, retain or sync the exported text, audio or subtitles under its own policies. Deleting a VoiceInView session does not delete exported copies or clipboard contents.
 
-Short practice recordings stay on this iPhone, are protected and excluded from backup. They are deleted on retry, exercise change, leaving practice or entering the background; abandoned takes are removed at next launch. Optional word recognition requires on-device support. No pronunciation assessment provider receives these recordings. Session audio settings do not apply to these temporary takes.
+Local sessions stay until you delete/discard them or remove the app. To delete a favorite or its audio, remove its protection first, then confirm deletion. You may delete audio while keeping text and subtitle timing. Personal vocabulary can be cleared in Settings. Deletion is logical deletion, not a promise of forensic secure erasure.
 
+### Tracking, children and support
+VoiceInView has no required account, advertising, tracking or developer analytics. Reading and language practice can be used with adult guidance by children; there are no social profiles or public sharing feeds inside the app. Device permissions and exported content should be managed by the supervising adult.
 
-## Actualización build 21
+If you contact support outside the app, we receive the information you choose to send and use it to answer your request. Please do not send private recordings or other people's personal information. The publisher must confirm the support provider and retention process before publishing this policy.
 
-Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).
+Policy changes will be reflected in the updated date. Contact the publisher above for privacy questions.
+
+## Español
+
+### Qué hace la aplicación
+VoiceInView usa el micrófono del iPhone o iPad cuando inicias la escucha, reanudas una sesión o grabas un ejercicio de pronunciación. Crea subtítulos en inglés o español mediante reconocimiento local compatible. VoiceInView no sube grabaciones ni transcripciones a un servidor del desarrollador y no recurre al reconocimiento remoto.
+
+Guardar audio está activado inicialmente en una instalación nueva. Puedes desactivarlo antes de empezar; las elecciones anteriores se conservan. Una vez iniciada la sesión, los cambios de guardado y reducción de ruido se aplican a la siguiente. Continuar en segundo plano está desactivado inicialmente. Al activarlo, el micrófono puede seguir funcionando con pantalla bloqueada u otra app abierta, hasta que pauses, detengas o el sistema interrumpa la escucha. Se capta sonido cercano por el micrófono, no el audio interno de otras apps.
+
+### Información que permanece en el dispositivo
+Se guardan localmente subtítulos definitivos, grabaciones opcionales, títulos, fechas, idioma, tiempos, correcciones, traducciones, posición de lectura, marcadores, expresiones de estudio y protección de favoritas. Los subtítulos provisionales y la vista de traducción en vivo son temporales; esta última no se guarda automáticamente. Las preferencias y el vocabulario personal se almacenan como ajustes del dispositivo.
+
+Durante la escucha se conserva un borrador de recuperación. Tras detener, Guardar sesión lo incorpora a la biblioteca; Descartar lo elimina. Los borradores interrumpidos siguen disponibles al reabrir. Las correcciones conservan el reconocimiento original por separado y no modifican el audio. Las favoritas bloquean el borrado desde la app hasta retirar su protección; no son copias de seguridad.
+
+Los archivos de sesiones y las tomas de pronunciación se excluyen del respaldo del dispositivo. Las preferencias pueden seguir los ajustes de respaldo del sistema. Desinstalar VoiceInView o perder el dispositivo puede eliminar las sesiones, incluidas las favoritas. Exporta las copias que necesites conservar.
+
+### Práctica de pronunciación
+Las tomas de práctica son grabaciones breves y temporales que tú inicias. Permanecen en el dispositivo y se eliminan al repetir, cambiar de ejercicio, salir de práctica o pasar a segundo plano. Las tomas abandonadas se limpian al siguiente inicio. El reconocimiento local opcional muestra las palabras entendidas; ningún servicio de evaluación de pronunciación en línea recibe el audio.
+
+### Servicios de Apple y permisos
+Capturar voz requiere permiso de micrófono. Se pide permiso de reconocimiento de voz cuando el motor lo necesita. Preparar modelos de voz, traducción o voces sintéticas puede requerir Internet mediante servicios de Apple. Los recursos compatibles instalados permiten procesamiento local, según el dispositivo e idioma. Comprueba la preparación antes de depender del uso sin conexión.
+
+La traducción opcional usa Translation de Apple. Apple indica que puede recoger métricas de uso/rendimiento de la API, pero no el contenido original ni traducido. VoiceInView no añade otro proveedor de traducción. Los servicios del sistema también se rigen por las prácticas de privacidad de Apple.
+
+### Compartir, conservar y eliminar
+Copiar, exportar y compartir dependen de tu acción. La app o servicio de destino puede transmitir, conservar o sincronizar texto, audio y subtítulos conforme a sus políticas. Eliminar una sesión de VoiceInView no elimina las copias exportadas ni el portapapeles.
+
+Las sesiones permanecen hasta que las elimines/descartes o desinstales la app. Para borrar una favorita o su audio, quita primero la protección y confirma después el borrado. Puedes eliminar audio conservando texto y tiempos. Puedes vaciar el vocabulario personal en Ajustes. El borrado es lógico; no se promete eliminación forense segura.
+
+### Seguimiento, menores y soporte
+VoiceInView no exige cuenta ni incluye publicidad, rastreo o analítica del desarrollador. Los menores pueden usar lectura y práctica con acompañamiento adulto; la app no incluye perfiles sociales ni publicaciones públicas. El adulto debe supervisar permisos y contenido exportado.
+
+Si contactas al soporte fuera de la app, recibimos lo que decidas enviar y lo usamos para responder. Evita enviar grabaciones privadas o información personal de terceros. Antes de publicar esta política, el titular debe confirmar el proveedor y el procedimiento de conservación del soporte.
+
+Los cambios se reflejarán en la fecha de actualización. Para consultas de privacidad, utiliza el contacto del titular indicado arriba.
+
+---
+
+**Editorial references (remove this footer from the published policy):** [Apple TranslationSession](https://developer.apple.com/documentation/translation/translationsession), [Apple App Privacy](https://developer.apple.com/app-store/app-privacy-details/). Verify the final binary, actual support handling and the publisher's jurisdiction-specific disclosures before publishing.

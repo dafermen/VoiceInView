@@ -32,3 +32,7 @@ Timed paragraph/phrase playback, explicit capture and playback pause/resume, lev
 ## Source build 16
 
 Saved-session Spanish translation, bilingual review and translated subtitle sharing are implemented. Build 17 adds optional experimental foreground live Spanish preview; synthesized Spanish audio remains outside this delivery. See [translation limits](translation.md) and [the implementation checkpoint](implementation-checkpoint.md). Real translation quality, on-device downloads/offline behavior and TestFlight delivery are separate acceptance steps.
+
+## Actualización 23 — 2026-10-12
+
+Build 23 incorpora lectura A mi ritmo, corrección desde reproducción, favoritas protegidas y actualización de etiquetas de idioma. Preparación App Store en curso; publicación pública, URLs/contactos y aceptación física siguen pendientes hasta verificarse.

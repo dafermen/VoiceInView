@@ -126,3 +126,11 @@ iOS 17 compatibility builds with Xcode 15.2; the user confirmed basic operation 
 
 ## Earlier foundation
 Phases 0–1 added SwiftUI/Xcode structure, microphone capture, permissions, states, initial tests and documentation.
+
+## 0.1.0 — source build 23 (2026-10-12)
+
+- At my pace: bounded whole-paragraph playback, repeat/manual next and persistent selected text.
+- Direct paragraph correction from original/translated playback, preserving recorded audio.
+- Protected favorites, library filter and additive V8 migration; protection checked before session/audio deletion.
+- Explicit interface-language refresh for tab labels and Settings title, retaining session state.
+- Student/developer guides and bilingual App Store preparation materials. Delivery evidence: docs/pace-checkpoint.md.

@@ -119,3 +119,7 @@ Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El
 
 
 Para los catálogos de interfaz: `python3 scripts/validate-localization.py`. Tras compilar con `SWIFT_EMIT_LOC_STRINGS=YES`, añadir `--extracted <carpeta Objects-normal/arquitectura>` contrasta las claves que Swift detectó. Esto complementa las pruebas UI: no detecta por sí solo textos String que se presenten sin LocalizedStringKey.
+
+## Actualización 23 — 2026-10-12
+
+Build 23 añade tests para migración V7→V8/reapertura, impedir borrar sesión/audio, retirada de protección sin borrar, rango completo de párrafo, audio parcial, corte/repetición/callback obsoleto, edición directa y etiquetas de navegación EN/ES. Evidencia final en [checkpoint](pace-checkpoint.md).

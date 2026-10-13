@@ -1,5 +1,7 @@
 # Próxima compilación y distribución a TestFlight
 
+Entrega actual en preparación: **fuente 23, esquema V8**. Consultar [checkpoint](pace-checkpoint.md) antes de escoger un archivo/número. Para publicación pública, completar [App Store](app-store.md); una compilación Internal Testing Only no sirve para enviarla a revisión pública.
+
 Última verificación: 10 de octubre de 2026, zona America/New_York. Esta guía describe lo que funcionó para VoiceInView; los requisitos y las versiones admitidas por Apple pueden cambiar.
 
 ## 1. Datos que deben conservarse

@@ -1,61 +1,45 @@
-# App Store preparation — Phase 9
-Status updated 2026-10-10: app registered, earlier TestFlight builds used on iPhone, and latest Cloud archive exported/uploaded from the Mac. The first local upload processed as 0.1.0 (1), assigned to Dev. A re-signed copy was uploaded as 0.1.0 (13); its processing/tester availability is unconfirmed. Not submitted for public App Review and not a certified release candidate. See [distribution runbook](distribution-runbook.md).
-Current Apple guidelines, privacy details and metadata/icon documentation checked 2026-10-07.
+# Preparación de App Store — VoiceInView
 
-## Build 20 positioning update
+Actualizado 2026-10-12 · paquete de preparación, **no enviado a App Review**. Fuente 0.1.0 (23); evidencia técnica en [checkpoint](pace-checkpoint.md). Registro existente 6820599198, bundle `com.dafermen.vReader`, equipo `7799N4RYUG`. Conservar esta identidad y sus sesiones.
 
-Use [inclusive-use.md](inclusive-use.md) for hearing/low-vision support, supervised child learning and two-language copy. Native iPad support is enabled in source. This does not change the store category to Kids or assert medical/accessibility certification. Public metadata remains a draft; verify physical acceptance before submission.
+## Material preparado
 
-## Positioning and metadata
-Name: VoiceInView. App Store Connect app record exists (6820599198); the earlier name vReader was unavailable.
-Subtitle draft: Captions & language practice (28 characters).
-Tagline: See what's being said.
-Draft description, keywords, version/build and release notes: app-store-metadata.json.
-Do not publish draft claims until the feature, offline and supported-device tests pass.
+| Material | Archivo | Estado |
+|---|---|---|
+| Descripción, subtítulo, palabras clave y novedades EN/ES | [Metadata JSON](app-store-metadata.json) | Borrador listo para revisar/copiar |
+| Política de privacidad consolidada EN/ES | [Política](privacy-policy-draft.md) | Falta titular/contacto/proceso de soporte y URL pública |
+| Soporte y preguntas frecuentes EN/ES | [Soporte](store/support.md) | Falta correo público y alojamiento |
+| Instrucciones para el revisor | [Notas](store/review-notes.md) | Falta dispositivo probado, contacto privado y build final |
+| Datos tratados y manifiesto | [Privacidad técnica](privacy.md) | Revisar informe del archivo final |
+| Compilación, firma y recuperación | [Runbook](distribution-runbook.md) / [incidencias](build-incidents.md) | Consultar antes de repetir exportación |
+| Evidencia y aceptación | [Checklist](release-checklist.md) / [validación](validation-report.md) | Separar simulador, Cloud, TestFlight y prueba física |
 
-## Owner inputs still required
-Publisher/copyright/license decision, public Support URL with contact, published Privacy Policy URL, privacy contact. App Store Connect access and distribution signing have been exercised.
-Signing uses team `7799N4RYUG` and the existing bundle identifier `com.dafermen.vReader`. The display-name change does not change that identity. No signing material or secrets are stored in source.
+## Decisiones del titular pendientes
 
-## Supported device and offline representation
-iOS 17 minimum. The compatibility engine requires on-device English support and Speech Recognition permission; builds with Xcode 26+ use the modern speech engine on iOS 26+ when available. Establish a real tested device matrix before submission. OS version alone does not guarantee compatibility.
-Prepare English Dictation or install the modern engine's English model while online, then validate Airplane Mode with Wi-Fi off. Initial model preparation is not offline. No cloud fallback or online AI is present.
-Captions can be wrong due to distance, noise, accent, speed, obstruction, simultaneous speakers and device hardware.
-Capture stops on lock/background by default. Continue in background is explicit remembered opt-in. Calls and other interruptions still stop capture; no automatic resume. Optional recording, playback and subtitle export work entirely on-device. Other-app audio must reach the microphone acoustically; do not claim internal system-audio capture.
+Confirmar nombre editorial/legal y correo público para soporte/privacidad; dónde publicar ambas páginas sin acceso privado. Revisar el manejo real de mensajes de soporte (proveedor, acceso y conservación) y adaptar la política antes de publicarla. El correo o teléfono de contacto privado de App Review se completa directamente en App Store Connect.
 
-## Screenshots and icon
-Prepared 1024x1024 opaque caption-bubble icon in the AppIcon asset catalog; design approval and Xcode asset validation pending. Check system-generated dark/tinted appearance.
-Capture actual app screens from a validated build at current App Store Connect-required iPhone and iPad sizes:
-- Live captions with a non-sensitive sample speech source.
-- Paused/readable history and text-size controls.
-- Saved sessions and transcript.
-- Offline Readiness and selected-language model setup.
-- Settings/privacy.
-Do not use fabricated feature screenshots or imply live captioning is validated while it is not.
+Elegir versión pública, precio, territorios, categoría principal/secundaria, copyright y disponibilidad por plataforma. Propuesta editorial: Education/Educación; no marcar Kids Category solo por ofrecer práctica supervisada a niños. Si no se ofrece un EULA personalizado, revisar el [acuerdo estándar de Apple](https://www.apple.com/legal/internet-services/itunes/dev/stdeula/) y confirmar su uso. No inventar datos fiscales, condición de comerciante ni declaraciones legales.
 
-## Launch and versioning
-Generated native launch screen, explicit store-loading/failure/retry states and no first-launch microphone prompt.
-Project version 0.1.0, build 1. Cloud build numbers, archive CFBundleVersion and the final TestFlight build number are distinct. The successful local upload used manageAppVersionAndBuildNumber=true; confirm its effective build in App Store Connect. Ensure a valid unused build number for each upload and choose the final public version before submission.
+## Pasos antes de enviar
 
-## App Privacy draft
-Based on current source: no developer collection or tracking, no account/advertising/analytics. Local audio/transcripts are not transmitted by the app; user sharing uses the chosen destination.
-Confirm this against the built binary, Apple's asset service behavior and the final archive privacy report. The publisher must submit accurate answers; draft notes are not filed declarations.
+1. Terminar la aceptación en iPhone e iPad reales: permisos denegados/concedidos, descarga de modelos, ambas lenguas, modo avión después de preparación, interrupción y Reanudar, audio largo, exportaciones, migración, favoritas y correcciones.
+2. Preparar un archivo con SDK admitido por Apple el día del envío. Xcode 15.2 local sirve para comprobar compatibilidad iOS 17; no sustituye el archivo moderno de distribución. Revisar [requisitos de envío](https://developer.apple.com/app-store/submitting/) al preparar el archivo final. No asumir que un número de build Cloud es el número efectivo en TestFlight.
+3. Configurar Archive para **TestFlight and App Store** si el flujo actual es Internal Testing Only. Compilar una versión elegible para revisión pública y verificar número único, firma, entitlements e informe de privacidad del archivo. Cambiar el flujo no convierte builds internos ya existentes en públicos.
+4. Publicar y verificar sin iniciar sesión la política y el soporte; completar sus URLs en App Store Connect. Añadir el contacto confirmado a la política dentro de la app en la siguiente revisión del texto. No usar marcadores PENDING como contenido público.
+5. Revisar App Privacy contra el binario: la propuesta es **Data Not Collected** porque el contenido se procesa/guarda localmente y no hay servidor del desarrollador. Verificar prácticas del soporte, Apple y cualquier SDK antes de presentar esa respuesta. Apple distingue tratamiento local de recogida fuera del dispositivo; requiere política pública. [App Privacy](https://developer.apple.com/app-store/app-privacy-details/).
+6. Completar el cuestionario de edad para las funciones reales, sin fijar una edad antes de sus respuestas. Completar cifrado según el archivo; el proyecto usa protección del sistema, no un algoritmo propio. No añadir una exención automática sin confirmar sus condiciones. [Edad](https://developer.apple.com/help/app-store-connect/manage-app-information/set-an-app-age-rating), [cifrado](https://developer.apple.com/help/app-store-connect/manage-app-information/overview-of-export-compliance).
+7. Capturar pantallas reales con contenido de ejemplo propio: lectura en vivo, A mi ritmo/corrección, favoritas, traducción/práctica y ajustes separados. Entregar juegos EN/ES para iPhone e iPad con tamaños aceptados actualmente. Los screenshots de tests en iPhone SE/iPad Air sirven para QA; no se anuncian como el juego comercial definitivo. [Especificaciones](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications).
+8. Evaluar VoiceOver, Voice Control, texto grande, contraste y orientación en cada plataforma antes de declarar etiquetas de accesibilidad. Tener botones etiquetados o pasar XCTest no prueba soporte integral. [Criterios de Apple](https://developer.apple.com/help/app-store-connect/manage-app-accessibility/overview-of-accessibility-nutrition-labels/).
+9. Seleccionar el build aprobado internamente, pegar metadata/notas y revisar todo con el titular. **Enviar a App Review y publicar requieren una instrucción explícita posterior.**
 
-## Age rating / export compliance
-Complete the current age-rating questionnaire for actual features; no public feed, messaging, ads or developer-provided mature content exists.
-No custom cryptography implementation is included; storage protection uses OS facilities. Review the actual encryption questionnaire and applicable requirements before setting export-compliance declarations. No automatic exemption statement is added to Info.plist.
+## Posicionamiento honesto
 
-## App Review notes draft
-No login. On a supported iPhone, Settings > Offline Readiness checks microphone, English model and storage. Install the model with Internet, then use Captions > Start Listening. Audio stays local. Pause/Resume retains earlier captions; Stop finishes a recovery draft; explicit Save Session adds it to the library, and Discard removes it. Sessions supports rename/delete/export. Locking or leaving stops capture by default; remembered Continue in background can retain an active capture. Interruptions still stop it.
-Provide exact tested device/OS details, permission setup instructions and known limitations after validation.
+Herramienta de apoyo para comprender conversaciones, leer a su ritmo y practicar idiomas, incluida ayuda para personas con pérdida auditiva o baja visión y actividades infantiles supervisadas. No prometer precisión perfecta, diagnóstico, tratamiento, interpretación profesional ni compatibilidad absoluta. Audio de micrófono; no extracción del audio interno de YouTube. Traducción requiere iOS/iPadOS 18+, build compatible y modelos preparados; iOS 17 conserva las funciones compatibles. Reducción de ruido puede atenuar voces distantes.
 
-## Validation
-Run scripts/validate-macos.sh and the relevant iPhone scenarios. For delivery, follow the current distribution runbook; scripts/archive-macos.sh uses the selected local SDK and does not upload. Internal TestFlight delivery is distinct from public release approval. Complete release-checklist.md before public submission.
-The original Windows-only validation could not compile/archive. Later Mac/Cloud results are recorded in [validation-report.md](validation-report.md).
+## Estado histórico
 
-Sources:
-https://developer.apple.com/app-store/review/guidelines/
-https://developer.apple.com/app-store/app-privacy-details/
-https://developer.apple.com/help/app-store-connect/reference/app-information/app-information
-https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information
-https://developer.apple.com/documentation/xcode/configuring-your-app-icon
+El usuario confirmó uso de TestFlight y traducción en su iPhone. Los fallos de exportación 9–12 y recuperación local están en el runbook; no deben presentarse como el estado actual sin consultar el SHA/build concreto. La nueva funcionalidad y esta documentación se validan por separado; estar en GitHub no demuestra instalación en el teléfono.
+
+## Comprobación de los textos
+
+Ejecuta `python3 scripts/validate-store-metadata.py` para verificar límites de campos EN/ES. `--ready` rechaza los datos pendientes antes de envío; actualmente debe rechazarlos. Pasarlo no sustituye verificar URLs públicas, binario, declaraciones ni aceptación física.

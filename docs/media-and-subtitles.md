@@ -31,3 +31,7 @@ Device checks: tap early and late paragraphs, pause/resume, switch phrases while
 ## Spanish and bilingual captions
 
 Open Translation from a saved session. Its language selector controls text export and the player opened from that screen. The recording remains English. Spanish words are distributed approximately across existing English cue windows; bilingual cues include both languages. Missing timing is never invented for old sessions. See [translation](translation.md).
+
+## Actualización 23 — 2026-10-12
+
+Build 23 añade Continua/A mi ritmo, párrafos completos con parada, Repetir/Siguiente y corrección directa. Una favorita bloquea también Delete audio. El original CAF permanece intacto al corregir. Ver [guía completa](at-my-pace.md).

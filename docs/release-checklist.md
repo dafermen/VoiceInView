@@ -97,3 +97,7 @@ Phase 10 online AI is excluded and remains unimplemented.
 ## Build 19 — práctica local
 
 Validar permiso denegado y respuesta tardía tras cerrar; silencio y límite de 15 s; voz normal/lenta; comparar/regrabar; interrupciones, Bluetooth y background; limpieza temporal tras salir/reiniciar; VoiceOver/letra grande/landscape. Sin evaluación fonética ni servicio remoto. Ver [punto de reanudación](pronunciation-checkpoint.md).
+
+## Actualización 23 — 2026-10-12
+
+Para build 23: comprobar migración de una instalación con sesiones; favorita protege sesión/audio; Cancelar edición no cambia texto; Save cambia exportación sin alterar audio; párrafo se detiene sin avanzar; traducción editada vuelve al padre; EN/ES mantiene captura. Completar [paquete App Store](app-store.md), datos del titular y aceptación física antes de solicitar revisión pública.

@@ -84,14 +84,15 @@ enum SessionSchemaV2: VersionedSchema {
 }
 
 enum SessionMigrationPlan: SchemaMigrationPlan {
-    static var schemas: [any VersionedSchema.Type] { [SessionSchemaV1.self, SessionSchemaV2.self, SessionSchemaV3.self, SessionSchemaV4.self, SessionSchemaV5.self, SessionSchemaV6.self, SessionSchemaV7.self] }
+    static var schemas: [any VersionedSchema.Type] { [SessionSchemaV1.self, SessionSchemaV2.self, SessionSchemaV3.self, SessionSchemaV4.self, SessionSchemaV5.self, SessionSchemaV6.self, SessionSchemaV7.self, SessionSchemaV8.self] }
     static var stages: [MigrationStage] {
         [.lightweight(fromVersion: SessionSchemaV1.self, toVersion: SessionSchemaV2.self),
          .lightweight(fromVersion: SessionSchemaV2.self, toVersion: SessionSchemaV3.self),
          .lightweight(fromVersion: SessionSchemaV3.self, toVersion: SessionSchemaV4.self),
          .lightweight(fromVersion: SessionSchemaV4.self, toVersion: SessionSchemaV5.self),
          .lightweight(fromVersion: SessionSchemaV5.self, toVersion: SessionSchemaV6.self),
-         .lightweight(fromVersion: SessionSchemaV6.self, toVersion: SessionSchemaV7.self)]
+         .lightweight(fromVersion: SessionSchemaV6.self, toVersion: SessionSchemaV7.self),
+         .lightweight(fromVersion: SessionSchemaV7.self, toVersion: SessionSchemaV8.self)]
     }
 }
 
@@ -118,4 +119,22 @@ enum SessionSchemaV3: VersionedSchema {
     static var models: [any PersistentModel.Type] {
         [ConferenceSession.self, StoredCaption.self, CaptionBookmark.self, SessionReview.self]
     }
+}
+
+/// Marcador independiente: migrar agrega una tabla, no modifica ni duplica las sesiones V7.
+/// Ser favorita implica protección contra borrado de sesión y audio; no es una copia de seguridad.
+@Model
+final class SessionFavorite {
+    @Attribute(.unique) var sessionID: UUID
+    init(sessionID: UUID) { self.sessionID = sessionID }
+}
+
+enum SessionSchemaV8: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(8, 0, 0) }
+    static var models: [any PersistentModel.Type] { SessionSchemaV7.models + [SessionFavorite.self] }
+}
+
+enum SessionProtectionFailure: LocalizedError {
+    case protected
+    var errorDescription: String? { "Remove favorite protection before deleting this session or its audio." }
 }

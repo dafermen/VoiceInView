@@ -57,7 +57,7 @@ struct SettingsView: View {
                 Text("No accounts, analytics or tracking. Session audio is optional; pronunciation practice records temporary attempts only when you tap its microphone.")
             }
         }
-        .navigationTitle("Settings")
+        .navigationTitle(Text(verbatim: InterfaceLocalization.string("Settings", language: settings.interfaceLanguage)))
         .onChange(of: settings.captureLanguage) { _, _ in Task { await coordinator.changeCaptureLanguage() } }
     }
 }

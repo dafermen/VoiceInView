@@ -18,11 +18,11 @@ struct AppRootView: View {
                     NavigationStack {
                         LiveCaptionView(coordinator: coordinator)
                     }
-                    .tabItem { Label("Captions", systemImage: "captions.bubble") }
+                    .tabItem { Label { Text(verbatim: InterfaceLocalization.string("Captions", language: coordinator.settings.interfaceLanguage)) } icon: { Image(systemName: "captions.bubble") } }
                     NavigationStack { SessionHistoryView(coordinator: coordinator) }
-                        .tabItem { Label("Sessions", systemImage: "clock") }
+                        .tabItem { Label { Text(verbatim: InterfaceLocalization.string("Sessions", language: coordinator.settings.interfaceLanguage)) } icon: { Image(systemName: "clock") } }
                     NavigationStack { SettingsView(settings: coordinator.settings, coordinator: coordinator) }
-                        .tabItem { Label("Settings", systemImage: "gear") }
+                        .tabItem { Label { Text(verbatim: InterfaceLocalization.string("Settings", language: coordinator.settings.interfaceLanguage)) } icon: { Image(systemName: "gear") } }
                 }
                 .modelContainer(coordinator.repository.container)
                 .preferredColorScheme(coordinator.settings.colorScheme)
@@ -61,6 +61,7 @@ struct AppRootView: View {
         do {
             #if DEBUG
             if ProcessInfo.processInfo.arguments.contains("--ui-test-review") {
+                UserDefaults.standard.removeObject(forKey: "playbackAtMyPace")
                 let repository = try TranscriptRepository(inMemory: true)
                 let spanishSample = ProcessInfo.processInfo.arguments.contains("--ui-test-spanish")
                 let sample = try repository.create(title: "Review sample", language: spanishSample ? .spanish : .english)

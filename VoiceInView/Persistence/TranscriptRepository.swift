@@ -15,7 +15,7 @@ final class TranscriptRepository {
     let storageURL: URL?
 
     init(inMemory: Bool = false, directory: URL? = nil) throws {
-        let schema = Schema(versionedSchema: SessionSchemaV7.self)
+        let schema = Schema(versionedSchema: SessionSchemaV8.self)
         let configuration: ModelConfiguration
         if inMemory {
             storageURL = nil
@@ -135,7 +135,28 @@ final class TranscriptRepository {
         do { try context.save() } catch { context.rollback(); cacheSessionID = nil; throw error }
     }
 
+    func favorite(for sessionID: UUID) throws -> SessionFavorite? {
+        var request = FetchDescriptor<SessionFavorite>(predicate: #Predicate { $0.sessionID == sessionID })
+        request.fetchLimit = 1
+        return try context.fetch(request).first
+    }
+
+    func setFavorite(_ enabled: Bool, for session: ConferenceSession) throws {
+        // Los borradores deben guardarse antes de protegerse: Discard siempre conserva su significado.
+        guard try draft(for: session.id) == nil else { throw ReviewFailure.sessionChanged }
+        if let existing = try favorite(for: session.id) {
+            if !enabled { context.delete(existing) }
+        } else if enabled { context.insert(SessionFavorite(sessionID: session.id)) }
+        do { try context.save() } catch { context.rollback(); throw error }
+    }
+
+    /// Validar en persistencia protege también llamadas futuras (por ejemplo borrado por lotes).
+    private func requireUnprotected(_ sessionID: UUID) throws {
+        if try favorite(for: sessionID) != nil { throw SessionProtectionFailure.protected }
+    }
+
     func delete(_ session: ConferenceSession) throws {
+        try requireUnprotected(session.id)
         let identifier = session.id
         let savedBookmarks = try bookmarks(for: identifier)
         let savedReview = try review(for: identifier)
@@ -254,6 +275,7 @@ final class TranscriptRepository {
 
     /// Elimina el archivo y su referencia; conserva transcripción, correcciones y tiempos de subtítulos.
     func deleteAudio(for sessionID: UUID) throws {
+        try requireUnprotected(sessionID)
         guard let record = try media(for: sessionID) else { return }
         if let url = try audioURL(for: sessionID), FileManager.default.fileExists(atPath: url.path) {
             try FileManager.default.removeItem(at: url)

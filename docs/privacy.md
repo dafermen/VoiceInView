@@ -69,3 +69,7 @@ Build 19 permite grabaciones temporales explícitas de hasta 15 segundos. Se pro
 ## Actualización build 21
 
 Ver [interfaz bilingüe y primera preparación](interface-and-onboarding.md). El idioma de menús es independiente del idioma hablado. Guardar audio está activado inicialmente solo en instalaciones nuevas; las elecciones anteriores se conservan. Los renglones se calculan con el texto de cada párrafo. Estado de entrega: [checkpoint](interface-checkpoint.md).
+
+## Actualización 23 — 2026-10-12
+
+Build 23 añade el marcador local SessionFavorite (V8) y la preferencia local playbackAtMyPace. No añade destinatarios ni servicios de red. Protección no significa backup: bloquea borrado desde la app hasta quitarla, sin impedir desinstalación/pérdida del dispositivo. La política consolidada EN/ES sustituye el borrador histórico: [política](privacy-policy-draft.md).
