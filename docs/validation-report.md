@@ -335,3 +335,7 @@ Device-only validation remains: speech recognition accuracy and timing across lo
 - Metadata de tienda EN/ES dentro de límites; enlaces locales de Markdown válidos. El modo --ready rechaza correctamente la publicación aún incompleta.
 
 Se inspeccionaron las capturas de lectura/favoritas y el iPad. Los ajustes de los fixtures, desplazamiento de listas y popover están en build-incidents.md. Evidencia de entrega y límites: [checkpoint](pace-checkpoint.md). Pruebas físicas de audición/VoiceOver, operación larga, protección con bloqueo, ruido y modelos reales siguen pendientes antes de publicar.
+
+### Resultado Cloud de la entrega 23
+
+El SHA `40af9bd1310881a9d6c3cd37de9b38c2cf235ced` pasó Archive - iOS el 2026-10-13 a las 04:22:27 UTC. Check final `115127872696`: 0 errores, 0 fallos de tests reportados, 0 incidencias de análisis, 4 advertencias. La suite local es evidencia separada; el archivo Cloud no prueba ejecución de tests ni instalación en el teléfono. Estado general GitHub success. Detalles y límites en [checkpoint](pace-checkpoint.md). La API de anotaciones no incluyó el texto de las advertencias.
