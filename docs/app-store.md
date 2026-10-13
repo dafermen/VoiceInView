@@ -7,7 +7,7 @@ Actualizado 2026-10-13 · paquete de preparación, **no enviado a App Review**. 
 | Material | Archivo | Estado |
 |---|---|---|
 | Descripción, subtítulo, palabras clave y novedades EN/ES | [Metadata JSON](app-store-metadata.json) | Borrador listo para revisar/copiar |
-| Política de privacidad consolidada EN/ES | [Política](privacy-policy-draft.md) | Correo confirmado; falta titular/proceso de soporte y URL pública |
+| Política de privacidad consolidada EN/ES | [Política](privacy-policy-draft.md) | Responsable y correo confirmados; falta proceso de soporte y URL pública |
 | Soporte y preguntas frecuentes EN/ES | [Soporte](store/support.md) | Correo, dominio y Hostinger confirmados; página pendiente |
 | Instrucciones para el revisor | [Notas](store/review-notes.md) | Falta dispositivo probado, contacto privado y build final |
 | Datos tratados y manifiesto | [Privacidad técnica](privacy.md) | Revisar informe del archivo final |
@@ -16,7 +16,7 @@ Actualizado 2026-10-13 · paquete de preparación, **no enviado a App Review**. 
 
 ## Decisiones del titular pendientes
 
-El titular confirmó `dafermen@gmail.com` para soporte/privacidad y `https://innovalogic.tech/` como sitio, alojado en Hostinger. El nombre editorial/legal todavía no fue confirmado. Proponemos `/voiceinview/privacy/` y `/voiceinview/support/`; esas rutas no se consideran publicadas ni verificadas. Los campos definitivos de URL de la metadata permanecen vacíos hasta comprobar las páginas públicas. Revisar el manejo real de mensajes de soporte (proveedor, acceso y conservación) y adaptar la política antes de publicarla. El correo o teléfono de contacto privado de App Review se completa directamente en App Store Connect.
+El titular confirmó `dariofernandomeneses@gmail.com` para soporte/privacidad y `https://innovalogic.tech/` como sitio, alojado en Hostinger. Responsable confirmado por el titular: **Dario Fernando Meneses Ceron**, persona natural. Esta confirmación documental no verifica ni modifica la identidad registrada en Apple Developer. Proponemos `/voiceinview/privacy/` y `/voiceinview/support/`; esas rutas no se consideran publicadas ni verificadas. Los campos definitivos de URL de la metadata permanecen vacíos hasta comprobar las páginas públicas. Revisar el manejo real de mensajes de soporte (proveedor, acceso y conservación) y adaptar la política antes de publicarla. El correo o teléfono de contacto privado de App Review se completa directamente en App Store Connect.
 
 Elegir versión pública, precio, territorios, categoría principal/secundaria, copyright y disponibilidad por plataforma. Propuesta editorial: Education/Educación; no marcar Kids Category solo por ofrecer práctica supervisada a niños. Si no se ofrece un EULA personalizado, revisar el [acuerdo estándar de Apple](https://www.apple.com/legal/internet-services/itunes/dev/stdeula/) y confirmar su uso. No inventar datos fiscales, condición de comerciante ni declaraciones legales.
 
@@ -46,9 +46,9 @@ Ejecuta `python3 scripts/validate-store-metadata.py` para verificar límites de 
 
 ## Publicación de las páginas en Hostinger
 
-1. Revisar el nombre legal y el manejo/conservación de mensajes antes de usar el texto como política definitiva. No convertir una decisión pendiente en una promesa pública.
+1. Revisar el manejo/conservación de mensajes antes de usar el texto como política definitiva. No convertir una decisión pendiente en una promesa pública.
 2. Identificar cómo está construido el sitio existente (WordPress, constructor u otro). Conocer Hostinger como proveedor no identifica el editor ni concede acceso al panel. No cambiar DNS ni reemplazar el sitio para añadir estas páginas.
-3. Añadir páginas de privacidad y soporte de VoiceInView usando los borradores EN/ES enlazados arriba. Mantener el correo `dafermen@gmail.com` visible y utilizable. Las rutas propuestas pueden adaptarse al sitio real. Retirar las notas editoriales y todos los marcadores pendientes solo después de resolverlos.
+3. Añadir páginas de privacidad y soporte de VoiceInView usando los borradores EN/ES enlazados arriba. Mantener el correo `dariofernandomeneses@gmail.com` visible y utilizable. Las rutas propuestas pueden adaptarse al sitio real. Retirar las notas editoriales y todos los marcadores pendientes solo después de resolverlos.
 4. Abrir ambas páginas sin iniciar sesión, desde móvil, y comprobar HTTPS, contenido completo EN/ES, enlaces y correo. La portada del dominio no sustituye la página de privacidad de esta app.
 5. Solo entonces completar `privacyPolicyURL` y `supportURL` en la metadata y App Store Connect. `websiteURL` identifica la portada; `proposedPublicURLs` documenta las rutas previstas sin afirmar que existan.
 

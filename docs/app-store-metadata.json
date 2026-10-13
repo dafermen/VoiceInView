@@ -8,7 +8,7 @@
   "releaseNotes": "Read one paragraph at your pace, repeat or manually choose the next, and correct text directly during audio review. Protect favorite sessions and their audio from accidental deletion. Interface tabs refresh when switching English and Spanish.",
   "privacyPolicyURL": null,
   "supportURL": null,
-  "publisher": null,
+  "publisher": "Dario Fernando Meneses Ceron",
   "status": "DRAFT — do not submit until release validation and owner inputs are complete",
   "localizations": {
     "en-US": {
@@ -27,7 +27,6 @@
     }
   },
   "ownerPending": [
-    "publisher/legal identity",
     "published privacyPolicyURL",
     "published supportURL",
     "support message handling and retention",
@@ -38,12 +37,13 @@
     "reviewer contact in App Store Connect",
     "final device acceptance and screenshots"
   ],
-  "supportEmail": "dafermen@gmail.com",
-  "privacyEmail": "dafermen@gmail.com",
+  "supportEmail": "dariofernandomeneses@gmail.com",
+  "privacyEmail": "dariofernandomeneses@gmail.com",
   "websiteURL": "https://innovalogic.tech/",
   "hostingProvider": "Hostinger",
   "proposedPublicURLs": {
     "privacyPolicyURL": "https://innovalogic.tech/voiceinview/privacy/",
     "supportURL": "https://innovalogic.tech/voiceinview/support/"
-  }
+  },
+  "publisherType": "individual"
 }

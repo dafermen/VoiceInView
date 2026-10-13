@@ -1,6 +1,6 @@
 # VoiceInView — Support / Soporte
 
-Publication draft · 2026-10-13. Support and privacy / Soporte y privacidad: [dafermen@gmail.com](mailto:dafermen@gmail.com). Publisher / Responsable: **PENDING: confirmed legal name**.
+Publication draft · 2026-10-13. Support and privacy / Soporte y privacidad: [dariofernandomeneses@gmail.com](mailto:dariofernandomeneses@gmail.com). Publisher / Responsable: **Dario Fernando Meneses Ceron** (individual / persona natural).
 
 Website / Sitio: [innovalogic.tech](https://innovalogic.tech/), hosted with / alojado en Hostinger. Proposed support page / Página propuesta: `https://innovalogic.tech/voiceinview/support/` (not yet published or verified / aún no publicada ni verificada).
 

@@ -68,8 +68,9 @@ This is a gate, not a claim that release is approved.
 
 ## Required owner inputs before public release
 - [x] Existing bundle ID com.dafermen.vReader and team 7799N4RYUG verified in successful export.
-- [ ] Licensing/copyright/publisher decision.
-- [x] Public support/privacy contact confirmed: `dafermen@gmail.com`; website `https://innovalogic.tech/`, hosting provider Hostinger (2026-10-13).
+- [x] Publisher confirmed by owner: Dario Fernando Meneses Ceron, individual (2026-10-13).
+- [ ] Licensing/copyright decision and consistency with Apple Developer account.
+- [x] Public support/privacy contact confirmed: `dariofernandomeneses@gmail.com`; website `https://innovalogic.tech/`, hosting provider Hostinger (2026-10-13).
 - [ ] Publish and verify dedicated support and privacy policy URLs; proposed routes in [App Store preparation](app-store.md).
 - [ ] Final App Privacy/age-rating/export-compliance answers.
 - [ ] Tested device compatibility statement.
