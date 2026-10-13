@@ -15,7 +15,7 @@ Privacy policy is accessible in Settings. Sessions/audio are local and excluded 
 
 Before copying these notes to App Store Connect, append:
 - Actual tested device models and OS versions (PENDING).
-- Public support/privacy URLs (PENDING).
+- Public support/privacy URLs (PENDING publication and verification on innovalogic.tech, hosted by Hostinger). Public support/privacy email confirmed: dafermen@gmail.com.
 - Reviewer contact name, phone and email, entered privately in App Store Connect (PENDING; do not commit personal phone numbers here).
 - Exact final version/build selected for public review (PENDING; source build 23 is a development delivery).
 

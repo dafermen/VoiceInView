@@ -1,9 +1,11 @@
 # VoiceInView — Privacy policy / Política de privacidad
 
-**Publication draft · 2026-10-12.** Replace the pending publisher/contact fields and publish this text at a publicly accessible URL before App Store submission. This file is the consolidated policy; older build notes are not the public policy.
+**Publication draft · 2026-10-13.** Confirm the pending publisher and support-handling details, then publish this text at a publicly accessible URL before App Store submission. This file is the consolidated policy; older build notes are not the public policy.
 
 Publisher / Responsable: **PENDING: confirmed legal publisher name**.
-Privacy contact / Contacto: **PENDING: public email**.
+Privacy contact / Contacto: [dafermen@gmail.com](mailto:dafermen@gmail.com).
+Website / Sitio web: [innovalogic.tech](https://innovalogic.tech/).
+Proposed policy page / Página propuesta: `https://innovalogic.tech/voiceinview/privacy/` — publication and access verification pending / pendiente de publicación y verificación.
 
 ## English
 

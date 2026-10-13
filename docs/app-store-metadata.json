@@ -28,7 +28,6 @@
   },
   "ownerPending": [
     "publisher/legal identity",
-    "public support and privacy email",
     "published privacyPolicyURL",
     "published supportURL",
     "support message handling and retention",
@@ -38,5 +37,13 @@
     "age questionnaire",
     "reviewer contact in App Store Connect",
     "final device acceptance and screenshots"
-  ]
+  ],
+  "supportEmail": "dafermen@gmail.com",
+  "privacyEmail": "dafermen@gmail.com",
+  "websiteURL": "https://innovalogic.tech/",
+  "hostingProvider": "Hostinger",
+  "proposedPublicURLs": {
+    "privacyPolicyURL": "https://innovalogic.tech/voiceinview/privacy/",
+    "supportURL": "https://innovalogic.tech/voiceinview/support/"
+  }
 }

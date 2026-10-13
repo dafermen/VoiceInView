@@ -69,7 +69,8 @@ This is a gate, not a claim that release is approved.
 ## Required owner inputs before public release
 - [x] Existing bundle ID com.dafermen.vReader and team 7799N4RYUG verified in successful export.
 - [ ] Licensing/copyright/publisher decision.
-- [ ] Real support URL/contact and published privacy policy URL.
+- [x] Public support/privacy contact confirmed: `dafermen@gmail.com`; website `https://innovalogic.tech/`, hosting provider Hostinger (2026-10-13).
+- [ ] Publish and verify dedicated support and privacy policy URLs; proposed routes in [App Store preparation](app-store.md).
 - [ ] Final App Privacy/age-rating/export-compliance answers.
 - [ ] Tested device compatibility statement.
 - [ ] Approved icon and genuine current screenshots.

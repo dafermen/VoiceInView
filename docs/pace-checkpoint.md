@@ -10,7 +10,7 @@ Repeticiones: A mi ritmo/favoritas e idioma pasaron en iPhone; exportación de S
 
 Catálogos: 507 claves Localizable y 2 de permisos, mismas claves/placeholders EN/ES. No se obtuvieron `.stringsdata`; no atribuir cobertura de extracción del compilador al chequeo de catálogos. Metadata EN/ES dentro de los límites, enlaces relativos de documentación válidos. `validate-store-metadata.py --ready` rechaza correctamente los campos de publicación todavía pendientes.
 
-Pendientes del titular: correo público de soporte/privacidad, identidad editorial, alojamiento/URLs públicas. Paquete listo para revisión en [App Store](app-store.md); no enviar formularios con marcadores pendientes. No revocar certificados ni cambiar bundle ID para solucionar una exportación fallida.
+Confirmados el 2026-10-13: correo público `dafermen@gmail.com`, sitio `https://innovalogic.tech/` y proveedor Hostinger. Pendientes del titular: identidad editorial/legal, manejo del soporte y publicación/verificación de las páginas de privacidad y soporte. Paquete listo para revisión en [App Store](app-store.md); no enviar formularios con marcadores pendientes. No revocar certificados ni cambiar bundle ID para solucionar una exportación fallida.
 
 Release verificado: versión 0.1.0, CFBundleVersion 23, bundle com.dafermen.vReader, iOS mínimo 17, familias 1 y 2, UIBackgroundModes=[audio], manifiesto presente sin tracking ni tipos declarados como recopilados. No equivale al informe de privacidad del archivo moderno final.
 
