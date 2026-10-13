@@ -1,3 +1,7 @@
+## Source build 26 — 2026-10-13
+
+- Fix the modern-SDK translation runner compilation by explicitly applying ViewBuilder to the extracted helper view. Restores Cloud compilation eligibility for the live bilingual update; distribution is verified separately.
+
 ## Source build 25 — 2026-10-13
 
 - Add a subtle separator between original and translated live captions in Both mode, retaining language labels and reading space. The decorative line is hidden from VoiceOver and follows light/dark appearance.

@@ -330,7 +330,8 @@ struct TranslationRunner: View {
         productionRunner
         #endif
     }
-    private var productionRunner: some View {
+    // A diferencia de body, una propiedad auxiliar no hereda el ViewBuilder del protocolo View.
+    @ViewBuilder private var productionRunner: some View {
         #if canImport(Translation)
         if #available(iOS 18.0, *) {
             AppleTranslationRunner(job: job, progress: progress, finish: finish)

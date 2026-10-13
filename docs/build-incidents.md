@@ -250,3 +250,9 @@ La repetición final de exportación pasó usando desplazamientos lentos dentro 
 La primera ejecución UI con Menu/Picker encontró `kAXErrorCannotComplete` al tocar el selector en iPhone SE/iOS 17.2, aunque el botón era visible en el video de XCTest. Se conservó el botón explícito anterior y se añadió un confirmationDialog nativo con tres opciones, para usar la misma interacción que los demás controles. La repetición debe verificar el acceso real, no sustituirlo por un toque ciego en coordenadas. La suite de 13 tests de traducción pasó en esa primera ejecución; el resultado global fue fallido por los dos recorridos UI. Ver el checkpoint para resultados posteriores.
 
 En iPad, anclar el confirmationDialog al lector completo posicionó parte del popover fuera de pantalla; se verificó en video de XCTest. El selector se ancla al propio botón, también cuando se mueve a la barra de pantalla completa. No se cambia el test por coordenadas para ocultar ese defecto.
+
+## Build fuente 25 — fallo Cloud y corrección fuente 26
+
+El check `115246510250` del SHA `01f566d` falló con `Branches have mismatching types 'AppleTranslationRunner' and 'some View'` en SessionTranslationView.swift:336. Al extraer `productionRunner` de `body`, faltó `@ViewBuilder`: body hereda ese result builder del protocolo View, pero una propiedad auxiliar no. La rama moderna usa dos tipos de vista, mientras Xcode 15.2 solo compila la alternativa sin Translation y por eso las pruebas locales no detectaron el fallo.
+
+Se añadió `@ViewBuilder` explícitamente en fuente 26. La vista y su selector no cambian. Verificar el check del SHA corregido antes de afirmar disponibilidad; el éxito local no cubre una rama eliminada por `#if canImport`. El fallo fue de compilación, no de firma ni configuración del usuario. No cambiar certificados ni modelos por este error. Cuatro advertencias de concurrencia/deprecación se reportaron aparte y no explican este fallo.

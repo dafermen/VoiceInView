@@ -21,3 +21,7 @@ La compilación local con Xcode 15.2 no prueba la rama de Translation de Apple. 
 ## Ajuste visual — build fuente 25
 
 Línea fina entre original y traducción únicamente en Ambos, incluida la espera de traducción. Conserva etiquetas e interlineado; usa el color primario adaptable al fondo claro/oscuro y se oculta a VoiceOver por ser decorativa. No cambia captura, traducción, cola ni almacenamiento. Compilación Debug y recorrido bilingüe existente pasaron en iPhone SE 3/iOS 17.2: `/private/tmp/VoiceInView25-visual.xcresult`, TEST SUCCEEDED (22.736 s). Capturas en `/private/tmp/live25-shots`; se inspeccionó la línea entre los dos textos. No se añadieron tests para decoración ni se repitió la suite completa. Entrega en main; Cloud/TestFlight de este ajuste pendientes de confirmación.
+
+## Recuperación de entrega — build fuente 26
+
+Confirmado fallo Cloud de `01f566d` (check `115246510250`, build remoto `102b9164-554f-4530-a62a-36f3d262696d`): faltaba @ViewBuilder en productionRunner. Ese cambio de fuente 25 no llegó por esa compilación a TestFlight. Corrección mínima de fuente 26: añadir el result builder a la propiedad auxiliar. Detalle en build-incidents.md. Release local pasó (`/private/tmp/VoiceInView26-release.log`, BUILD SUCCEEDED). Validación Cloud del nuevo SHA pendiente; no confundir los recorridos simulados locales con la compilación de la rama Apple Translation.
